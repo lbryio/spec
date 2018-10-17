@@ -4,6 +4,7 @@
   <title>LBRY: A Decentralized Digital Content Marketplace</title>
   <meta name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.nl">
   <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="normalize.css">
   <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
@@ -21,6 +22,8 @@
 <p>(introduction)</p>
 
 <h2 id="table-of-contents">Table of Contents</h2>
+
+<p><div id="toc"></p>
 
 <!--ts-->
 
@@ -48,7 +51,7 @@
 <li><a href="#urls">URLs</a>
 
 <ul>
-<li><a href="#schema">Schema</a></li>
+<li><a href="#components">Components</a></li>
 <li><a href="#design-notes">Design Notes</a></li>
 </ul></li>
 <li><a href="#transactions">Transactions</a>
@@ -108,6 +111,8 @@
 <!--te--></li>
 </ul>
 
+<p></div></p>
+
 <h2 id="overview">Overview</h2>
 
 <p>(overview)</p>
@@ -124,6 +129,18 @@
 
 <p>(Rather than this section, maybe we can use a syntax like brackets around keywords to inline key definitions?)</p>
 
+<ul>
+<li>file</li>
+<li>stream</li>
+<li>blob</li>
+<li>metadata</li>
+<li>hash</li>
+<li>name</li>
+<li>claim</li>
+<li>channel</li>
+<li>url</li>
+</ul>
+
 <h2 id="blockchain">Blockchain</h2>
 
 <p>The LBRY blockchain is a public, proof-of-work blockchain. It serves three key purposes:</p>
@@ -134,18 +151,15 @@
 <li>Trustful publisher identities (fixme: should this even be listed here?)</li>
 </ol>
 
-<p>The LBRY blockchain is a fork of the <a href="https://bitcoin.org/bitcoin.pdf">Bitcoin</a> blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and instead focus on the differences.</p>
+<p>The LBRY blockchain is a fork of the <a href="https://bitcoin.org/bitcoin.pdf">Bitcoin</a> blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.</p>
 
 <h3 id="claims">Claims</h3>
 
-<p>A single metadata entry in the blockchain is called a <em>[[claim]]</em>. It consists four primary pieces of information:</p>
+<p>A single metadata entry in the blockchain is called a <code>claim</code>. It records an item that was published to the network or a publisher&rsquo;s identity.</p>
 
-<ul>
-<li>ID - a unique identifier of this claim</li>
-<li>Name - a <a href="#normalization">normalized</a> version of the name being claimed, for purposes of creating human readable and memorable [[URLs]]</li>
-<li>Amount - how many credits will be set aside, or staked, to back the claim, which has ramifacations covered in [[URLs]]</li>
-<li>Data - information associated the name (e.g. SD hash, content metadata, etc)</li>
-</ul>
+<p>Every claim has a globally-unique <code>claimID</code>, an <code>amount</code> (how many credits were set aside to back the claim), and a <code>value</code>. The value may contain metadata about a piece of content,  a publisher&rsquo;s public key, or other information. See the <a href="#metadata">Metadata</a> for more information about what may be stored in the value.</p>
+
+<p>Every claim is associated with a <code>name</code>, which is a bytestring of 0-255 bytes. Every name must be a valid UTF8 string.</p>
 
 <p>Here is an example claim:</p>
 
@@ -165,27 +179,27 @@
 }
 </code></pre>
 
-<p>The value field contains the claim contents, including the source and the [[metadata]].</p>
-
 <h4 id="claim-operations">Claim Operations</h4>
 
-<p>There are four claim operations: <em>create</em>, <em>support</em>, <em>update</em>, and <em>abandon</em>.</p>
+<p>There are four claim operations: <code>create</code>, <code>support</code>, <code>update</code>, and <code>abandon</code>.</p>
 
-<p>The <em>create</em> operation is used to make a new claim for a name, or to submit a competing claim on an existing name.</p>
+<p>A <code>create</code> operation makes a new claim for a name, or submits a competing claim on an existing name.</p>
 
-<p>A <em>support</em> is a claim that adds to the credit total of an existing claim. A support does not have it’s own claim ID or data. Instead, it has the claim ID of the claim to which its amount will be added.</p>
+<p>A <code>support</code> is a claim that adds to the credit total of an existing claim. A support does not have it’s own claim ID or data. Instead, it has the claim ID of the claim to which its amount will be added.</p>
 
-<p>An <em>update</em> changes the data or the amount stored in an existing claim or support. Updates do not change the claim ID, so an updated claim retains any supports attached to it.</p>
+<p>An <code>update</code> changes the data or the amount stored in an existing claim or support. Updates do not change the claim ID, so an updated claim retains any supports attached to it.</p>
 
-<p>An <em>abandon</em> withdraws a claim or support, freeing the associated credits to be used for other purposes.</p>
+<p>An <code>abandon</code> withdraws a claim or support, freeing the associated credits to be used for other purposes.</p>
 
 <h4 id="claimtrie">Claimtrie</h4>
 
-<p>The blockchain adds a parallel [[Merkle tree]] for storing claims. The set of all claims is called the <em>[[claimtrie]]</em>.</p>
+<p>The <code>claimtrie</code> is the data structure that LBRY uses to store claims and prove the correctness of name resolution. It is a <a href="https://en.wikipedia.org/wiki/Merkle_tree">Merkle Tree</a> that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.</p>
 
-<p>The claimtrie is a [Merkle tree]() where the keys are the claimed names and values are claims for that name (sorted in decreasing order by total amount). The root hash of the claimtrie is stored in the block header of each LBRY block, enabling nodes in the LBRY network to efficiently and securely validate the state of the claimtrie without downloading the whole block.</p>
+<p>The hash of the root node  (the <code>root hash</code>) is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.</p>
 
-<p>For more details on the specific claimtrie impelementation, see <a href="#fixme">fix me</a>.</p>
+<p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the total amount of credits backing each claim.</p>
+
+<p>For more details on the specific claimtrie impelementation, see <a href="https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp">the source code</a>.</p>
 
 <h4 id="claim-states">Claim States</h4>
 
@@ -199,7 +213,7 @@
 
 <p>An abandoned claim or support is one that was withdrawn by its creator. It is no longer in contention to control a name. Spending the transaction that contains the claim will also cause the claim to become abandoned.</p>
 
-<p>While data related to abandoned claims technically still resides in the blockchain, it is considered inappropriate (and potentially illegal? #fixme), to use this data to actually fetch the associated content. Wallet servers MUST not return or resolve abandoned claim information.</p>
+<p>While data related to abandoned claims technically still resides in the blockchain, it is considered inappropriate (and potentially illegal? #fixme), to use this data to fetch the associated content.</p>
 
 <h5 id="active">Active</h5>
 
@@ -219,9 +233,9 @@
 
 <h5 id="controlling">Controlling</h5>
 
-<p>The controlling claim is the claim that is returned when a name is resolved (#fixme resolution hasn&rsquo;t been introduced yet. It may be better to define the controlling claim separate from URLs, and then define a vanity URL as returning the controlling claim) . The controlling claim must be active and cannot be a support.</p>
+<p>The controlling claim is the claim that has the highest total effective amount, which is the sum of its own amount and the amounts of all of its supports. It must be active and cannot itself be a support.</p>
 
-<p>Only one claim can be controlling for a given name at a given block. To determine which claim is controlling for a given name in a given block, the following algorithm is used:</p>
+<p>Only one claim can be controlling for a given name at a given block. To determine which claim is controlling for a given name at a given block, the following algorithm is used:</p>
 
 <ol>
 <li><p>For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim.</p></li>
@@ -229,41 +243,38 @@
 <li><p>Determine if a takeover is happening</p>
 
 <ol>
-<li>If the claim with the greatest total is the controlling claim from the previous block, then nothing changes. That claim is
-still controlling at this block.</li>
-<li>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports
-are now active, and then perform step 1 again.</li>
+<li><p>If the claim with the greatest total is the controlling claim from the previous block, then nothing changes. That claim is still controlling at this block.</p></li>
+
+<li><p>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and then perform step 1 again.</p></li>
 </ol></li>
 
 <li><p>At this point, the claim with the greatest total is the controlling claim at this block.</p></li>
 </ol>
 
-<p>The purpose of 2b is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those
-claims becomes active but another still-inactive claim has the greatest amount. Step 2b will cause this claim to also activate and become
-the controlling claim.</p>
+<p>The purpose of 2b is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 2b will cause this claim to also activate and become the controlling claim.</p>
 
 <p>Here is a step-by-step example to illustrate the different scenarios. All claims are for the same name.</p>
 
 <p><strong>Block 13:</strong> Claim A for 10LBC  is accepted. It is the first claim, so it immediately becomes active and controlling.
-State: A(10) is controlling</p>
+<br>State: A(10) is controlling</p>
 
-<p><strong>Block 1001:</strong> Claim B for 20LBC is accepted. It’s activation height is <code>1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031</code>
-State: A(10) is controlling, B(20) is accepted.</p>
+<p><strong>Block 1001:</strong> Claim B for 20LBC is accepted. It’s activation height is <code>1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031</code>.
+<br>State: A(10) is controlling, B(20) is accepted.</p>
 
 <p><strong>Block 1010:</strong> Support X for 14LBC for claim A is accepted. Since it is a support for the controlling  claim, it activates immediately.
-State: A(10+14) is controlling, B(20) is accepted.</p>
+<br>State: A(10+14) is controlling, B(20) is accepted.</p>
 
-<p><strong>Block 1020:</strong> Claim C for 50LBC is accepted. The activation height is <code>1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051</code>
-State: A(10+14) is controlling, B(20) is accepted, C(50) is accepted.</p>
+<p><strong>Block 1020:</strong> Claim C for 50LBC is accepted. The activation height is <code>1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051</code>.
+<br>State: A(10+14) is controlling, B(20) is accepted, C(50) is accepted.</p>
 
 <p><strong>Block 1031:</strong> Claim B activates. It has 20LBC, while claim A has 24LBC (10 original + 14 from support X). There is no takeover, and claim A remains controlling.
-State: A(10+14) is controlling, B(20) is active, C(50) is accepted.</p>
+<br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted.</p>
 
-<p><strong>Block 1040:</strong> Claim D for 300LBC is accepted. The activation height is <code>1040 + min(4032, floor((1040-13) / 32)) = 1040 + 32 = 1072</code>
-State: A(10+14) is controlling, B(20) is active, C(50) is accepted, D(300) is accepted.</p>
+<p><strong>Block 1040:</strong> Claim D for 300LBC is accepted. The activation height is <code>1040 + min(4032, floor((1040-13) / 32)) = 1040 + 32 = 1072</code>.
+<br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted, D(300) is accepted.</p>
 
 <p><strong>Block 1051:</strong> Claim C activates. It has 50LBC, while claim A has 24LBC, so a takeover is initiated. The takeover height for this name is set to 1051, and therefore the activation delay for all the claims becomes <code>min(4032, floor((1051-1051) / 32)) = 0</code>. All the claims become active. The totals for each claim are recalculated, and claim D becomes controlling because it has the highest total.
-State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlling.</p>
+<br>State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlling.</p>
 
 <h4 id="normalization">Normalization</h4>
 
@@ -275,7 +286,7 @@ State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlli
 
 <p>The ultimate purpose of much of the claim design, including controlling claims and the claimtrie structure, is to provide human readable URLs that can be trustfully resolved by [[Simple Payment Verification]] wallets.</p>
 
-<h4 id="schema">Schema</h4>
+<h4 id="components">Components</h4>
 
 <p>A URL is generally a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height, for reasons covered in [[Design Notes]]. The available modifiers are:</p>
 
@@ -293,7 +304,7 @@ State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlli
 
 <p><strong>Claim ID:</strong> a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed.</p>
 
-<p>lbry://meet-LBRY#7a0aa95c5023c21c098
+<p>lbry://meet-LBRY#7a0aa95c5023c21c098<br>
 lbry://meet-LBRY#7a</p>
 
 <p><strong>Claim Sequence:</strong> the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.</p>
@@ -302,43 +313,58 @@ lbry://meet-LBRY#7a</p>
 
 <p><strong>Bid Position:</strong> the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order if you, for example, want to list the top three winning claims in a voting contest or want to ignore the activation delay.</p>
 
-<p>lbry://meet-LBRY<span class="math inline">\(2
+<p>lbry://meet-LBRY<span class="math inline">\(2&lt;br&gt;
 lbry://meet-LBRY\)</span>3</p>
 
 <p><strong>Query Params:</strong> extra parameters (reserved for future use)</p>
 
-<p>lbry://meet-LBRY?arg=value</p>
+<p>lbry://meet-LBRY?arg=value+arg2=value2</p>
 
-<p>In consequence, the symbols <code>@</code>, <code>#</code>, <code>:</code>, <code>$</code>, <code>?</code>, and <code>/</code> are not allowed in name claims. The full URL schema
-can be defined as a regex:</p>
+<p>The full URL grammar is defined below using <a href="https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation">Xquery EBNF notation</a>:</p>
 
-<pre><code>(?P&lt;uri&gt;
-  ^
-  (?P&lt;protocol&gt;lbry\:\/\/)?
-  (?P&lt;content_or_channel_name&gt;
-    (?P&lt;content_name&gt;[^@#$?/:]+)
-    |
-    (?P&lt;channel_name&gt;\@[^@#$?/:]+)
-  )
-  (?P&lt;modifier&gt;
-    (?:\#(?P&lt;claim_id&gt;[0-9a-f]{1,40}))
-    |
-    (?:\$(?P&lt;bid_position&gt;\-?[1-9][0-9]*))
-    |
-    (?:\:(?P&lt;claim_sequence&gt;\-?[1-9][0-9]*))
-  )?
-  (?:\/(?P&lt;path&gt;[^@#$?/:]+))?
-  $
-)
+<!-- see http://bottlecaps.de/rr/ui for visuals-->
+
+<pre><code>URL ::=  Protocol (ChannelAndhModifier '/')? ClaimNameAndModifier Query?
+
+Protocol ::= 'lbry://'
+
+ClaimNameAndModifier ::= ClaimName Modifier?
+ChannelAndModifier ::= Channel Modifier?
+
+ClaimName ::= Allowed+
+Channel ::= '@' ClaimName
+
+Modifier ::= ClaimID | ClaimSequence | BidPosition
+ClaimID ::= '#' Hex+
+ClaimSequence ::= ':' Number
+BidPosition ::= '$' Number
+
+Path ::= '/' Allowed+
+
+Query ::= '?' QueryParameterList
+QueryParameterList ::= QueryParameter ( '&amp;' QueryParameterList )*
+QueryParameter ::= QueryParameterName ( '=' QueryParameterValue )?
+QueryParameterName ::= Allowed+
+QueryParameterValue ::= Allowed+
+
+PosDigit ::= [123456789]
+Digit ::= '0' | PosDigit
+Number ::= PosDigit Digit*
+
+HexAlpha ::= [abcdef]
+Hex ::= (Digit | HexAlpha)+
+
+Reserved ::= [=&amp;#:$@?/]
+Allowed ::= [^=&amp;#:$@?/]
 </code></pre>
 
 <h4 id="design-notes">Design Notes</h4>
 
-<p>Most existing public name schemes are first-come, first-serve. This leads to several bad outcomes. When the system is young, users are incentivized to register common names even if they don&rsquo;t intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. In a centralized system, the authority may allow for appeals to reassign names based on trademark or other common use reasons. There may also be a process to &ldquo;verify&rdquo; that a name belongs to the entity you think it does (e.g. Twitter&rsquo;s verified accounts). Such processes are often arbitrary, change over time, involve siggnificant transaction costs, and may still lead to names being used in ways that are contrary to user expectation (e.g. <a href="http://nissan.com">nissan.com</a> is not what you’d expect).</p>
+<p>Most existing public name schemes are first-come, first-serve. This leads to several bad outcomes. When the system is young, users are incentivized to register common names even if they don&rsquo;t intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. In a centralized system, the authority may allow for appeals to reassign names based on trademark or other common use reasons. There may also be a process to &ldquo;verify&rdquo; that a name belongs to the entity you think it does (e.g. Twitter&rsquo;s verified accounts). Such processes are often arbitrary, change over time, involve significant transaction costs, and may still lead to names being used in ways that are contrary to user expectation (e.g. <a href="http://nissan.com">nissan.com</a> is not what you’d expect).</p>
 
-<p>In a decentralized system, such approaches are not possible, so name squatting is especially dangerous (see Namecoin). Instead, LBRY creates an efficient allocation of names via a market. Following <a href="https://en.wikipedia.org/wiki/Coase_theorem">Coase</a>,  we believe that if the rules for name ownership and exchange are clearly defined, transaction costs are low, and there is no information asymmetry, then control of URLs will flow to their highest-valued use.</p>
+<p>In a decentralized system, such approaches are not possible, so name squatting is especially dangerous (see Namecoin). Instead, LBRY creates an efficient allocation of names via a market. Following <a href="https://en.wikipedia.org/wiki/Coase_theorem">Coase</a>, we believe that if the rules for name ownership and exchange are clearly defined, transaction costs are low, and there is no information asymmetry, then control of URLs will flow to their highest-valued use.</p>
 
-<p>Note that only naked LBRY URLs (i.e. URLs with no claim identifiers or sequence numbers included), also sometimes called vanity URLs, have this property. Permanent URLs like <code>lbry://myclaimname#abc</code> exist and are available for the small cost of issuing a <code>create</code> claim transactions.</p>
+<p>Note that only vanity URLs (i.e. URLs without a ClaimID or or ClaimSequence modifier) have this property. Permanent URLs like <code>lbry://myclaimname#abc</code> exist and are available for the small cost of issuing a <code>create</code> claim transactions.</p>
 
 <h3 id="transactions">Transactions</h3>
 
@@ -346,7 +372,7 @@ can be defined as a regex:</p>
 
 <h4 id="operations-and-opcodes">Operations and Opcodes</h4>
 
-<p>To enable [[claim operations]], 3 new opcodes were added to the blockchain scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_SUPPORT_CLAIM</code>, and <code>OP_UPDATE_CLAIM</code> (in Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>). Each op code will push a zero on to the execution stack, and will trigger the claimtrie to perform calculations necessary for each bid type. Below are the three supported transactions scripts using these opcodes.</p>
+<p>To enable <a href="#claim-operations">claim operations</a>, 3 new opcodes were added to the blockchain scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_SUPPORT_CLAIM</code>, and <code>OP_UPDATE_CLAIM</code> (in Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>). Each op code will push a zero on to the execution stack, and will trigger the claimtrie to perform calculations necessary for each bid type. Below are the three supported transactions scripts using these opcodes.</p>
 
 <pre><code>OP_CLAIM_NAME &lt;name&gt; &lt;value&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 OP_UPDATE_CLAIM &lt;name&gt; &lt;claimId&gt; &lt;value&gt; OP_2DROP OP_2DROP &lt;pubKey&gt;

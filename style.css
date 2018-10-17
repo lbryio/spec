@@ -2,15 +2,47 @@ body {
     margin: 40px auto;
     max-width: 800px;
     font-size: 18px;
-    line-height: 1.6;
+    line-height: 1.5;
     padding: 0 10px;
     color: #333;
     font-family: Constantia, "Lucida Bright", Lucidabright, "Lucida Serif", Lucida, "DejaVu Serif," "Bitstream Vera Serif", "Liberation Serif", Georgia, serif;
     /* font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif; */
 }
 
-h1, h2, h3 {
-    line-height: 1.2
+p {
+    margin-bottom: 1.4rem;
+}
+
+h1, h2, h3, h4, h5 {
+    line-height: 1.2;
+}
+
+h1 {
+    margin-top: 0;
+    font-size: 4rem;
+}
+
+h2 {
+    font-size: 3rem;
+}
+
+h3 {
+    font-size: 2.25rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+h5 {
+    font-size: 1.25rem;
+    font-variant: small-caps;
+    margin-bottom: 1rem;
+}
+
+small {
+    font-size: 0.8rem;
 }
 
 a {
@@ -19,11 +51,13 @@ a {
 
 code {
     /* font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace; */
-    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9rem;
+    color: #B10DC9;
 }
+
 pre {
     display: block;
-    font-size: 14px;
     color: #212529;
     overflow: auto;
     margin-top: 0;
@@ -40,9 +74,23 @@ aside {
     background-color: #d1ecf1;
     border-color: #bee5eb;
 }
+
 aside p:first-child {
     margin-top: 0;
 }
+
 aside p:last-child {
     margin-bottom: 0;
+}
+
+ol ol {
+    list-style-type: lower-alpha;
+}
+
+#toc ul {
+    list-style-type: none;
+}
+
+#toc>ul {
+    padding-left: 0;
 }
