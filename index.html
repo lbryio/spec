@@ -66,7 +66,8 @@
 <ul>
 <li><a href="#block-timing">Block Timing</a></li>
 <li><a href="#difficulty-adjustment">Difficulty Adjustment</a></li>
-<li><a href="#hash-algorithm">Hash Algorithm</a></li>
+<li><a href="#block-hash-algorithm">Block Hash Algorithm</a></li>
+<li><a href="#block-rewards">Block Rewards</a></li>
 </ul></li>
 <li><a href="#urls-1">URLs</a></li>
 </ul></li>
@@ -426,11 +427,15 @@ OP_2DROP OP_DUP OP_HASH160 &lt;addressThree&gt; OP_EQUALVERIFY OP_CHECKSIG
 
 <h4 id="difficulty-adjustment">Difficulty Adjustment</h4>
 
-<p>The proof-of-work target is adjusted every block to better adapt to sudden changes in hashrate. The exact adjustment algorithm can be seen <a href="#fixme">here</a>.</p>
+<p>The proof-of-work target is adjusted every block to better adapt to sudden changes in hashrate. The exact adjustment algorithm can be seen <a href="https://github.com/lbryio/lbrycrd/blob/e90d7f54cede3c1c5bfc3590351054bdc5a99480/src/lbry.cpp">here</a>.</p>
 
-<h4 id="hash-algorithm">Hash Algorithm</h4>
+<h4 id="block-hash-algorithm">Block Hash Algorithm</h4>
 
-<p>LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algorithm can be seen <a href="#fixme">here</a>.</p>
+<p>LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algorithm can be seen <a href="https://github.com/lbryio/lbrycrd/blob/e90d7f54cede3c1c5bfc3590351054bdc5a99480/src/hash.cpp#L18">here</a>.</p>
+
+<h4 id="block-rewards">Block Rewards</h4>
+
+<p>The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is <a href="https://github.com/lbryio/lbrycrd/blob/ebeb2bd092734035887ca3d8d0e69628bd2d3900/src/main.cpp#L1594">here</a>.</p>
 
 <h3 id="urls-1">URLs</h3>
 

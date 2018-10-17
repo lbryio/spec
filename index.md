@@ -58,7 +58,8 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
    * [Consensus](#consensus)
       * [Block Timing](#block-timing)
       * [Difficulty Adjustment](#difficulty-adjustment)
-      * [Hash Algorithm](#hash-algorithm)
+      * [Block Hash Algorithm](#block-hash-algorithm)
+      * [Block Rewards](#block-rewards)
    * [URLs](#urls-1)
 * [Metadata](#metadata)
    * [Metadata Specification](#metadata-specification)
@@ -408,17 +409,24 @@ Explain how transactions serve as proof that a client has made a valid payment f
 
 LBRY makes some small changes to consensus timing and methodology.
 
+
 #### Block Timing 
 
 The target block time was lowered from 10 to 2.5 minutes to facilitate faster transaction confirmation.
 
 #### Difficulty Adjustment
 
-The proof-of-work target is adjusted every block to better adapt to sudden changes in hashrate. The exact adjustment algorithm can be seen [here](#fixme).
+The proof-of-work target is adjusted every block to better adapt to sudden changes in hashrate. The exact adjustment algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/e90d7f54cede3c1c5bfc3590351054bdc5a99480/src/lbry.cpp).
 
-#### Hash Algorithm
+#### Block Hash Algorithm
 
-LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algorithm can be seen [here](#fixme).
+LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/e90d7f54cede3c1c5bfc3590351054bdc5a99480/src/hash.cpp#L18).
+
+#### Block Rewards
+
+The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here](https://github.com/lbryio/lbrycrd/blob/ebeb2bd092734035887ca3d8d0e69628bd2d3900/src/main.cpp#L1594).
+
+
 
 ### URLs
 
