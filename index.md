@@ -28,7 +28,14 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
 
 ## Introduction
 
-(introduction)
+LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Participants can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
+
+TODO:
+
+- why is it significant
+- whom does it help
+- why is it different/better than what existed before
+
 
 
 ## Table of Contents
@@ -73,11 +80,13 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
    * [Encoding and Decoding](#encoding-and-decoding)
       * [Blobs](#blobs)
       * [Streams](#streams)
+      * [How to Turn Files into Streams, and Vice Versa](#how-to-turn-files-into-streams-and-vice-versa)
    * [Download](#download)
       * [Distributed Hash Table](#distributed-hash-table)
+      * [Blob Exchange Protocol](#blob-exchange-protocol)
       * [Blob Mirrors](#blob-mirrors)
    * [Announcing](#announcing)
-      * [Stream Descriptor Blob Contruction (better title)](#stream-descriptor-blob-contruction-better-title)
+      * [Reflector / BlobEx Upload](#reflector--blobex-upload)
       * [Blob Mirrors](#blob-mirrors-1)
    * [Data Markets](#data-markets)
 * [Conclusion](#conclusion)
@@ -89,13 +98,9 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
 
 ## Overview
 
-(overview)
+This document defines the LBRY protocol, its components, and how they fit together. At its core, LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several sets of rules for data structure, transformation, and retrieval. 
 
-The LBRY protocol consists of n discrete parts (sub-protocols?) designed to be used in conjunction in order to provide the end-to-end capabilities covered in the [[Introduction]]:
-
-- [[Blockchain]]
-- [[Metadata]]
-- [[Data]]
+This document assumes that the reader is familiar with Bitcoin and blockchain technology. It does not attempt to document the Bitcoin protocol or explain how it works. The [Bitcoin developer reference](https://bitcoin.org/en/developer-reference) is recommended for anyone wishing to implement the protocol.
 
 
 
@@ -103,15 +108,38 @@ The LBRY protocol consists of n discrete parts (sub-protocols?) designed to be u
 
 (Rather than this section, maybe we can use a syntax like brackets around keywords to inline key definitions?)
 
-- file
-- stream
-- blob
-- metadata
-- hash
-- name
-- claim
-- channel
-- url
+<dl>
+  <dt>file</dt>
+  <dd>A unit of content</dd>
+
+  <dt>blob</dt>
+  <dd>The unit of data transmission on the data network</dd>
+
+  <dt>stream</dt>
+  <dd>A set of blobs that can be reassembled into a file</dd>
+
+  <dt>blob hash</dt>
+  <dd>The output when a cryptographic hash function is applied to a blob. Unless otherwise specified, LBRY uses SHA384 as the hash function.</dd>
+
+  <dt>metadata</dt>
+  <dd>Information about the contents of a stream (e.g. creator, description, stream descriptor hash, etc)</dd>
+
+  <dt>claim</dt>
+  <dd>The unit of metadata storage in the blockchain.</dd>
+
+  <dt>channel</dt>
+  <dd>The unit of pseudonymous publisher identity. Claims may be part of a channel.</dd>
+
+  <dt>URL</dt>
+  <dd>A reference to a claim that specifies how to retrieve it</dd>
+
+  <dt></dt>
+  <dd></dd>
+
+  <dt></dt>
+  <dd></dd>
+
+</dl>
 
 
 ## Blockchain
@@ -175,7 +203,7 @@ The hash of the root node  (the `root hash`) is stored in the header of each blo
 
 Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the total amount of credits backing each claim.
 
-For more details on the specific claimtrie impelementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
+For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
 
 #### Claim States
@@ -301,14 +329,16 @@ The full URL grammar is defined below using [Xquery EBNF notation](https://www.w
 <!-- see http://bottlecaps.de/rr/ui for visuals-->
 
 ```
-URL ::=  Protocol (ChannelAndhModifier '/')? ClaimNameAndModifier Query?
+URL ::= Scheme Path Query?
 
-Protocol ::= 'lbry://'
+Scheme ::= 'lbry:'
+
+Path ::=  ClaimNameAndModifier | ChannelAndModifier ( '/' ClaimNameAndModifier )?
 
 ClaimNameAndModifier ::= ClaimName Modifier?
 ChannelAndModifier ::= Channel Modifier?
 
-ClaimName ::= Allowed+
+ClaimName ::= AllowedChar+
 Channel ::= '@' ClaimName
 
 Modifier ::= ClaimID | ClaimSequence | BidPosition
@@ -316,13 +346,11 @@ ClaimID ::= '#' Hex+
 ClaimSequence ::= ':' Number
 BidPosition ::= '$' Number
 
-Path ::= '/' Allowed+
-
 Query ::= '?' QueryParameterList
 QueryParameterList ::= QueryParameter ( '&' QueryParameterList )*
 QueryParameter ::= QueryParameterName ( '=' QueryParameterValue )?
-QueryParameterName ::= Allowed+
-QueryParameterValue ::= Allowed+
+QueryParameterName ::= AllowedChar+
+QueryParameterValue ::= AllowedChar+
 
 PosDigit ::= [123456789]
 Digit ::= '0' | PosDigit
@@ -331,8 +359,7 @@ Number ::= PosDigit Digit*
 HexAlpha ::= [abcdef]
 Hex ::= (Digit | HexAlpha)+
 
-Reserved ::= [=&#:$@?/]
-Allowed ::= [^=&#:$@?/]
+AllowedChar ::= [^=&#:$@?/]  /* any UTF8 character that is not reserved */
 ```
 
 
@@ -357,7 +384,9 @@ To enable [claim operations](#claim-operations), 3 new opcodes were added to the
 
 ```
 OP_CLAIM_NAME <name> <value> OP_2DROP OP_DROP <pubKey>
+
 OP_UPDATE_CLAIM <name> <claimId> <value> OP_2DROP OP_2DROP <pubKey>
+
 OP_SUPPORT_CLAIM <name> <claimId> OP_2DROP OP_DROP <pubKey>
 ```
 
@@ -366,8 +395,7 @@ OP_SUPPORT_CLAIM <name> <claimId> OP_2DROP OP_DROP <pubKey>
 For example, a claim transaction setting the name “Fruit” to “Apple” and using a pay-to-pubkey script will have the following payout script:
 
 ```
-OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 <addressOne>
-OP_EQUALVERIFY OP_CHECKSIG
+OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 <addressOne> OP_EQUALVERIFY OP_CHECKSIG
 ```
 
 Like any standard Bitcoin transaction output script, it will be associated with a transaction hash and output index. The transaction hash and output index are concatenated and hashed to create the claimID for this claim. For the example above, let's say the above transaction hash is `7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43` and the output index is `1`. Then the claimID would be `529357c3422c6046d3fec76be2358004ba22e323`.
@@ -375,8 +403,7 @@ Like any standard Bitcoin transaction output script, it will be associated with 
 A support for this bid will have the following payout script:
 
 ```
-OP_SUPPORT_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 OP_2DROP OP_DROP
-OP_DUP OP_HASH160 <addressTwo> OP_EQUALVERIFY OP_CHECKSIG
+OP_SUPPORT_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 OP_2DROP OP_DROP OP_DUP OP_HASH160 <addressTwo> OP_EQUALVERIFY OP_CHECKSIG
 ```
 
 And now let's say we want to update the original claim to change the value to “Banana”. An update transaction has a special requirement that it must spend the existing claim that it wishes to update in its redeem script. Otherwise, it will be considered invalid and will not make it into the claimtrie. Thus it will have the following redeem script:
@@ -390,14 +417,13 @@ This is identical to the standard way of redeeming a pay-to-pubkey script in Bit
 The payout script for the update transaction is:
 
 ```
-OP_UPDATE_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 Banana OP_2DROP
-OP_2DROP OP_DUP OP_HASH160 <addressThree> OP_EQUALVERIFY OP_CHECKSIG
+OP_UPDATE_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 Banana OP_2DROP OP_2DROP OP_DUP OP_HASH160 <addressThree> OP_EQUALVERIFY OP_CHECKSIG
 ```
 
 
 #### Addresses
 
-The address version byte is set to `0x55` for standard (pay-to-public-key-hash) addresses and `0x7a` for multisig (pay-to-script-hash) addresses. P2PKH addresses start with the letter **b**, and P2SH addresses start with **r**.
+The address version byte is set to `0x55` for standard (pay-to-public-key-hash) addresses and `0x7a` for multisig (pay-to-script-hash) addresses. P2PKH addresses start with the letter `b`, and P2SH addresses start with `r`.
 
 
 #### Proof of Payment
@@ -492,7 +518,7 @@ Despite not covering the full metadata structure, a few specific metadata fields
 
 ### Identities
 
-Channels are the unit of identity in the LBRY system. A channel is simply a claim that start with @ and contains a metadata structure for identities rather than content. Once a channel claim is accepted on the blockchain, content claims that are signed with the channel’s private key will appear in lists under that channel (fixme: how does the protocol enforce/provide this?).
+Channels are the unit of identity in the LBRY system. A channel is a claim that start with `@` and contains a metadata structure for identities rather than content. Once a channel claim is accepted on the blockchain, content claims that are signed with the channel’s private key will appear in lists under that channel (fixme: how does the protocol enforce/provide this?).
 
 The purpose of channels is to allow content to be clustered under a single pseudonym or identity, sort of like a username.
 
@@ -547,9 +573,11 @@ The unit of content in our network is called a _[[blob]]_. A blob is an encrypte
 
 Multiple blobs may be combined into a *stream*. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the *stream descriptor* blob, which contains a JSON list of the hashes and keys of the _[[content blobs]]_. The content blobs hold the actual content of the stream. Every stream ends with an empty content blob, to signify that the stream has finished (this is similar to a null-terminated string, and is necessary to support streaming content).
 
+#### How to Turn Files into Streams, and Vice Versa
+
 ### Download
 
-Data can be downloaded via one of two methods: the distriuted data network and from centralized blob providers.
+Data can be downloaded via one of two methods: the distributed data network and from centralized blob providers.
 
 #### Distributed Hash Table
 
@@ -560,6 +588,9 @@ A distributed hash table is a key-value store that is spread over multiple host 
 
 When a host connects to the DHT, it advertises the blob hash for every blob it wishes to share. Downloading a blob from the network requires querying DHT for a list of hosts that advertised that blob’s hash (called peers), then requesting the blob from the peers directly.
 
+#### Blob Exchange Protocol
+
+
 #### Blob Mirrors
 
 (fill me in)
@@ -568,9 +599,7 @@ When a host connects to the DHT, it advertises the blob hash for every blob it w
 
 (how stuff gets created / published)
 
-#### Stream Descriptor Blob Contruction (better title)
-
-(talk about this)
+#### Reflector / BlobEx Upload
 
 #### Blob Mirrors
 
