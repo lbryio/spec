@@ -28,7 +28,7 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
 
 ## Introduction
 
-LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Participants can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
+LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
 
 TODO:
 
@@ -290,33 +290,47 @@ A URL is a name with one or more modifiers. A bare name on its own will resolve 
 
 **Name:** a basic claim for a name
 
+```
 lbry:meet-LBRY
+```
 
 **Claim ID:** a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed.
 
-lbry:meet-LBRY#7a0aa95c5023c21c098<br>
+```
+lbry:meet-LBRY#7a0aa95c5023c21c098
 lbry:meet-LBRY#7a
+```
 
 **Claim Sequence:** the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.
 
+```
 lbry:meet-LBRY:1
+```
 
 **Bid Position:** the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.
 
-lbry:meet-LBRY$2<br>
+```
+lbry:meet-LBRY$2
 lbry:meet-LBRY$3
+```
 
 **Query Params:** extra parameters (reserved for future use)
 
+```
 lbry:meet-LBRY?arg=value+arg2=value2
+```
 
 **Channel:** a claim for a channel
 
+```
 lbry:@lbry
+```
 
 **Claim in Channel:** URLS with a channel and a claim name are resolved in two steps. First the channel is resolved to get the claim for that channel. Then the name is resolved to get the appropriate claim from among the claims in the channel.
 
+```
 lbry:@lbry/meet-LBRY
+```
 
 
 The full URL grammar is defined below using [Xquery EBNF notation](https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation):
@@ -446,7 +460,7 @@ LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algo
 
 #### Block Rewards
 
-The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here]https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594).
+The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here](https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594).
 
 
 
@@ -481,11 +495,11 @@ Here’s an example:
   "thumbnail": "http://www.thetoydiscounter.com/happy.jpg",
   "title": "Holly singing The Happy Working Song",
   "source": {
-  "contentType": "video/mp4",
-  "source": "92b8aae7a901c56901fd5602c1f1acc0e63fb5492ef2a3cd5b9c631d92cab2e060e2a908baa922c24dee6c5229a98136",
-  "sourceType": "lbry_sd_hash",
-  "version": "_0_0_1"
-},
+    "contentType": "video/mp4",
+    "source": "92b8aae7a901c56901fd5602c1f1acc0e63fb5492ef2a3cd5b9c631d92cab2e060e2a908baa922c24dee6c5229a98136",
+    "sourceType": "lbry_sd_hash",
+    "version": "_0_0_1"
+  },
   "version": "_0_1_0"
 }
 ```

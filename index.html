@@ -19,7 +19,7 @@
 
 <h2 id="introduction">Introduction</h2>
 
-<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Participants can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
+<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
 
 <p>TODO:</p>
 
@@ -313,33 +313,40 @@
 
 <p><strong>Name:</strong> a basic claim for a name</p>
 
-<p>lbry:meet-LBRY</p>
+<pre><code>lbry:meet-LBRY
+</code></pre>
 
 <p><strong>Claim ID:</strong> a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed.</p>
 
-<p>lbry:meet-LBRY#7a0aa95c5023c21c098<br>
-lbry:meet-LBRY#7a</p>
+<pre><code>lbry:meet-LBRY#7a0aa95c5023c21c098
+lbry:meet-LBRY#7a
+</code></pre>
 
 <p><strong>Claim Sequence:</strong> the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.</p>
 
-<p>lbry:meet-LBRY:1</p>
+<pre><code>lbry:meet-LBRY:1
+</code></pre>
 
 <p><strong>Bid Position:</strong> the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.</p>
 
-<p>lbry:meet-LBRY<span class="math inline">\(2&lt;br&gt;
-lbry:meet-LBRY\)</span>3</p>
+<pre><code>lbry:meet-LBRY$2
+lbry:meet-LBRY$3
+</code></pre>
 
 <p><strong>Query Params:</strong> extra parameters (reserved for future use)</p>
 
-<p>lbry:meet-LBRY?arg=value+arg2=value2</p>
+<pre><code>lbry:meet-LBRY?arg=value+arg2=value2
+</code></pre>
 
 <p><strong>Channel:</strong> a claim for a channel</p>
 
-<p>lbry:@lbry</p>
+<pre><code>lbry:@lbry
+</code></pre>
 
 <p><strong>Claim in Channel:</strong> URLS with a channel and a claim name are resolved in two steps. First the channel is resolved to get the claim for that channel. Then the name is resolved to get the appropriate claim from among the claims in the channel.</p>
 
-<p>lbry:@lbry/meet-LBRY</p>
+<pre><code>lbry:@lbry/meet-LBRY
+</code></pre>
 
 <p>The full URL grammar is defined below using <a href="https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation">Xquery EBNF notation</a>:</p>
 
@@ -455,7 +462,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h4 id="block-rewards">Block Rewards</h4>
 
-<p>The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here]<a href="https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594)">https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594)</a>.</p>
+<p>The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is <a href="https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594">here</a>.</p>
 
 <h2 id="metadata">Metadata</h2>
 
@@ -488,11 +495,11 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
   &quot;thumbnail&quot;: &quot;http://www.thetoydiscounter.com/happy.jpg&quot;,
   &quot;title&quot;: &quot;Holly singing The Happy Working Song&quot;,
   &quot;source&quot;: {
-  &quot;contentType&quot;: &quot;video/mp4&quot;,
-  &quot;source&quot;: &quot;92b8aae7a901c56901fd5602c1f1acc0e63fb5492ef2a3cd5b9c631d92cab2e060e2a908baa922c24dee6c5229a98136&quot;,
-  &quot;sourceType&quot;: &quot;lbry_sd_hash&quot;,
-  &quot;version&quot;: &quot;_0_0_1&quot;
-},
+    &quot;contentType&quot;: &quot;video/mp4&quot;,
+    &quot;source&quot;: &quot;92b8aae7a901c56901fd5602c1f1acc0e63fb5492ef2a3cd5b9c631d92cab2e060e2a908baa922c24dee6c5229a98136&quot;,
+    &quot;sourceType&quot;: &quot;lbry_sd_hash&quot;,
+    &quot;version&quot;: &quot;_0_0_1&quot;
+  },
   &quot;version&quot;: &quot;_0_1_0&quot;
 }
 </code></pre>
