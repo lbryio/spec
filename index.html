@@ -46,7 +46,7 @@
 <ul>
 <li><a href="#claim-operations">Claim Operations</a></li>
 <li><a href="#claimtrie">Claimtrie</a></li>
-<li><a href="#claim-states">Claim States</a>
+<li><a href="#claim-properties">Claim Properties</a>
 
 <ul>
 <li><a href="#accepted">Accepted</a></li>
@@ -77,7 +77,6 @@
 <li><a href="#block-hash-algorithm">Block Hash Algorithm</a></li>
 <li><a href="#block-rewards">Block Rewards</a></li>
 </ul></li>
-<li><a href="#urls-1">URLs</a></li>
 </ul></li>
 <li><a href="#metadata">Metadata</a>
 
@@ -126,9 +125,9 @@
 
 <h2 id="overview">Overview</h2>
 
-<p>This document defines the LBRY protocol, its components, and how they fit together. At its core, LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several sets of rules for data structure, transformation, and retrieval.</p>
+<p>This document defines the LBRY protocol, its components, and how they fit together. At its core, LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, transformation, and retrieval.</p>
 
-<p>This document assumes that the reader is familiar with Bitcoin and blockchain technology. It does not attempt to document the Bitcoin protocol or explain how it works. The <a href="https://bitcoin.org/en/developer-reference">Bitcoin developer reference</a> is recommended for anyone wishing to implement the protocol.</p>
+<p>This document assumes that the reader is familiar with Bitcoin and blockchain technology. It does not attempt to document the Bitcoin protocol or explain how it works. The <a href="https://bitcoin.org/en/developer-reference">Bitcoin developer reference</a> is recommended for anyone wishing to understand the technical details.</p>
 
 <h2 id="conventions-and-terminology">Conventions and Terminology</h2>
 
@@ -136,35 +135,31 @@
 
 <dl>
   <dt>file</dt>
-  <dd>A unit of content</dd>
+  <dd>A single piece of content published using LBRY.</dd>
 
   <dt>blob</dt>
-  <dd>The unit of data transmission on the data network</dd>
+  <dd>The unit of data transmission on the data network. A published file is split into many blobs.</dd>
 
   <dt>stream</dt>
-  <dd>A set of blobs that can be reassembled into a file</dd>
+  <dd>A set of blobs that can be reassembled into a file. Every stream has a descriptor blob and one or more content blobs.</dd>
 
   <dt>blob hash</dt>
-  <dd>The output when a cryptographic hash function is applied to a blob. Unless otherwise specified, LBRY uses SHA384 as the hash function.</dd>
+  <dd>The output of a cryptographic hash function is applied to a blob. Hashes are used to uniquely identify blobs and to verify that the contents of the blob are correct. Unless otherwise specified, LBRY uses SHA384 as the hash function.</dd>
 
   <dt>metadata</dt>
-  <dd>Information about the contents of a stream (e.g. creator, description, stream descriptor hash, etc)</dd>
+  <dd>Information about the contents of a stream (e.g. creator, description, stream descriptor hash, etc). Metadata is stored in the blockchain.</dd>
 
   <dt>claim</dt>
-  <dd>The unit of metadata storage in the blockchain.</dd>
+  <dd>A single metadata entry in the blockchain.</dd>
+
+  <dt>name</dt>
+  <dd>A human-readable UTF8 string that is associated with a published claim.</dd>
 
   <dt>channel</dt>
   <dd>The unit of pseudonymous publisher identity. Claims may be part of a channel.</dd>
 
   <dt>URL</dt>
-  <dd>A reference to a claim that specifies how to retrieve it</dd>
-
-  <dt></dt>
-  <dd></dd>
-
-  <dt></dt>
-  <dd></dd>
-
+  <dd>A reference to a claim that specifies how to retrieve it.</dd>
 </dl>
 
 <h2 id="blockchain">Blockchain</h2>
@@ -173,7 +168,7 @@
 
 <ol>
 <li>An index of the content available on the network</li>
-<li>A payment and proof system for priced content</li>
+<li>A payment system and record of purchases for priced content</li>
 <li>Trustful publisher identities (fixme: should this even be listed here?)</li>
 </ol>
 
@@ -183,7 +178,7 @@
 
 <p>A single metadata entry in the blockchain is called a <code>claim</code>. It records an item that was published to the network or a publisher&rsquo;s identity.</p>
 
-<p>Every claim has a globally-unique <code>claimID</code>, an <code>amount</code> (how many credits were set aside to back the claim), and a <code>value</code>. The value may contain metadata about a piece of content,  a publisher&rsquo;s public key, or other information. See the <a href="#metadata">Metadata</a> for more information about what may be stored in the value.</p>
+<p>Every claim has a globally-unique <code>claimID</code>, an <code>amount</code> (how many credits were set aside to back the claim), and a <code>value</code>. The value may contain metadata about a piece of content, a publisher&rsquo;s public key, or other information. See the <a href="#metadata">Metadata</a> section for more information about what may be stored in the value.</p>
 
 <p>Every claim is associated with a <code>name</code>, which is a bytestring of 0-255 bytes. Every name must be a valid UTF8 string.</p>
 
@@ -219,7 +214,7 @@
 
 <h4 id="claimtrie">Claimtrie</h4>
 
-<p>The <code>claimtrie</code> is the data structure that LBRY uses to store claims and prove the correctness of name resolution. It is a <a href="https://en.wikipedia.org/wiki/Merkle_tree">Merkle Tree</a> that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.</p>
+<p>The <code>claimtrie</code> is the data structure that LBRY uses to store claims and prove the correctness of name resolution. It is a <a href="https://en.wikipedia.org/wiki/Merkle_tree">Merkle tree</a> that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.</p>
 
 <p>The hash of the root node  (the <code>root hash</code>) is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.</p>
 
@@ -227,9 +222,9 @@
 
 <p>For more details on the specific claimtrie implementation, see <a href="https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp">the source code</a>.</p>
 
-<h4 id="claim-states">Claim States</h4>
+<h4 id="claim-properties">Claim Properties</h4>
 
-<p>A claim can have the following states at a given block:</p>
+<p>A claim can have one or more the following properties at a given block:</p>
 
 <h5 id="accepted">Accepted</h5>
 
@@ -239,7 +234,7 @@
 
 <p>An abandoned claim or support is one that was withdrawn by its creator. It is no longer in contention to control a name. Spending the transaction that contains the claim will also cause the claim to become abandoned.</p>
 
-<p>While data related to abandoned claims technically still resides in the blockchain, it is considered inappropriate (and potentially illegal? #fixme), to use this data to fetch the associated content.</p>
+<p>While data related to abandoned claims technically still resides in the blockchain, it is considered inappropriate to use this data to fetch the associated content.</p>
 
 <h5 id="active">Active</h5>
 
@@ -277,7 +272,7 @@
 <li><p>At this point, the claim with the greatest total is the controlling claim at this block.</p></li>
 </ol>
 
-<p>The purpose of 2b is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 2b will cause this claim to also activate and become the controlling claim.</p>
+<p>The purpose of 2b is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 2b will cause the greater claim to also activate and become the controlling claim.</p>
 
 <p>Here is a step-by-step example to illustrate the different scenarios. All claims are for the same name.</p>
 
@@ -304,47 +299,47 @@
 
 <h4 id="normalization">Normalization</h4>
 
-<p>(Talk about how claim names are normalized.)</p>
+<p>TODO: Talk about how claim names are normalized.</p>
+
+<p><a href="https://github.com/lbryio/lbrycrd/issues/208">https://github.com/lbryio/lbrycrd/issues/208</a></p>
 
 <h3 id="urls">URLs</h3>
 
-<p>LBRY has URLs that can be resolved to return claim metadata or directly fetched to retrieve the content referenced by the metadata.</p>
-
-<p>The ultimate purpose of much of the claim design, including controlling claims and the claimtrie structure, is to provide human readable URLs that can be trustfully resolved by [[Simple Payment Verification]] wallets.</p>
+<p>URLs are human-readable references to claims. All URLs contain a name, and can be resolved to a specific claim for that name. The ultimate purpose of much of the claim design, including controlling claims and the claimtrie structure, is to provide human-readable URLs that can be trustfully resolved by clients that have don&rsquo;t have a full copy of the blockchain.</p>
 
 <h4 id="components">Components</h4>
 
-<p>A URL is generally a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height, for reasons covered in [[Design Notes]]. The available modifiers are:</p>
+<p>A URL is a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height, for reasons covered in <a href="#design-notes">Design Notes</a>. Common URL structures are:</p>
 
 <p><strong>Name:</strong> a basic claim for a name</p>
 
-<p>lbry://meet-LBRY</p>
-
-<p><strong>Channel:</strong> a claim for a channel</p>
-
-<p>lbry://@lbry</p>
-
-<p><strong>Claim in Channel:</strong> a claim for this name that has been signed with a key connected to the controlling claim for this channel</p>
-
-<p>lbry://@lbry/meet-LBRY</p>
+<p>lbry:meet-LBRY</p>
 
 <p><strong>Claim ID:</strong> a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed.</p>
 
-<p>lbry://meet-LBRY#7a0aa95c5023c21c098<br>
-lbry://meet-LBRY#7a</p>
+<p>lbry:meet-LBRY#7a0aa95c5023c21c098<br>
+lbry:meet-LBRY#7a</p>
 
 <p><strong>Claim Sequence:</strong> the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.</p>
 
-<p>lbry://meet-LBRY:1</p>
+<p>lbry:meet-LBRY:1</p>
 
-<p><strong>Bid Position:</strong> the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order if you, for example, want to list the top three winning claims in a voting contest or want to ignore the activation delay.</p>
+<p><strong>Bid Position:</strong> the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.</p>
 
-<p>lbry://meet-LBRY<span class="math inline">\(2&lt;br&gt;
-lbry://meet-LBRY\)</span>3</p>
+<p>lbry:meet-LBRY<span class="math inline">\(2&lt;br&gt;
+lbry:meet-LBRY\)</span>3</p>
 
 <p><strong>Query Params:</strong> extra parameters (reserved for future use)</p>
 
-<p>lbry://meet-LBRY?arg=value+arg2=value2</p>
+<p>lbry:meet-LBRY?arg=value+arg2=value2</p>
+
+<p><strong>Channel:</strong> a claim for a channel</p>
+
+<p>lbry:@lbry</p>
+
+<p><strong>Claim in Channel:</strong> URLS with a channel and a claim name are resolved in two steps. First the channel is resolved to get the claim for that channel. Then the name is resolved to get the appropriate claim from among the claims in the channel.</p>
+
+<p>lbry:@lbry/meet-LBRY</p>
 
 <p>The full URL grammar is defined below using <a href="https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation">Xquery EBNF notation</a>:</p>
 
@@ -364,8 +359,8 @@ Channel ::= '@' ClaimName
 
 Modifier ::= ClaimID | ClaimSequence | BidPosition
 ClaimID ::= '#' Hex+
-ClaimSequence ::= ':' Number
-BidPosition ::= '$' Number
+ClaimSequence ::= ':' PositiveNumber
+BidPosition ::= '$' PositiveNumber
 
 Query ::= '?' QueryParameterList
 QueryParameterList ::= QueryParameter ( '&amp;' QueryParameterList )*
@@ -373,9 +368,9 @@ QueryParameter ::= QueryParameterName ( '=' QueryParameterValue )?
 QueryParameterName ::= AllowedChar+
 QueryParameterValue ::= AllowedChar+
 
-PosDigit ::= [123456789]
-Digit ::= '0' | PosDigit
-Number ::= PosDigit Digit*
+PositiveDigit ::= [123456789]
+Digit ::= '0' | PositiveDigit
+PositiveNumber ::= PositiveDigit Digit*
 
 HexAlpha ::= [abcdef]
 Hex ::= (Digit | HexAlpha)+
@@ -393,11 +388,11 @@ AllowedChar ::= [^=&amp;#:$@?/]  /* any UTF8 character that is not reserved */
 
 <h3 id="transactions">Transactions</h3>
 
-<p>To support claims, the LBRY blockchain adds or modifies behavior related to transactions.</p>
+<p>To support claims, the LBRY blockchain makes the following changes on top of Bitcoin.</p>
 
 <h4 id="operations-and-opcodes">Operations and Opcodes</h4>
 
-<p>To enable <a href="#claim-operations">claim operations</a>, 3 new opcodes were added to the blockchain scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_SUPPORT_CLAIM</code>, and <code>OP_UPDATE_CLAIM</code> (in Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>). Each op code will push a zero on to the execution stack, and will trigger the claimtrie to perform calculations necessary for each bid type. Below are the three supported transactions scripts using these opcodes.</p>
+<p>To enable <a href="#claim-operations">claim operations</a>, three new opcodes were added to the blockchain scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_SUPPORT_CLAIM</code>, and <code>OP_UPDATE_CLAIM</code> (in Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>). Each op code will push a zero on to the execution stack, and will trigger the claimtrie to perform calculations necessary for each operation. Below are the three supported transactions scripts using these opcodes.</p>
 
 <pre><code>OP_CLAIM_NAME &lt;name&gt; &lt;value&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
@@ -436,43 +431,47 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <p>The address version byte is set to <code>0x55</code> for standard (pay-to-public-key-hash) addresses and <code>0x7a</code> for multisig (pay-to-script-hash) addresses. P2PKH addresses start with the letter <code>b</code>, and P2SH addresses start with <code>r</code>.</p>
 
+<p>All the chain parameters are defined <a href="https://github.com/lbryio/lbrycrd/blob/master/src/chainparams.cpp">here</a>.</p>
+
 <h4 id="proof-of-payment">Proof of Payment</h4>
 
-<p>Explain how transactions serve as proof that a client has made a valid payment for a piece of content.</p>
+<p>TODO: Explain how transactions serve as proof that a client has made a valid payment for a piece of content.</p>
 
 <h3 id="consensus">Consensus</h3>
 
-<p>LBRY makes some small changes to consensus timing and methodology.</p>
+<p>LBRY makes a few small changes to consensus rules.</p>
 
 <h4 id="block-timing">Block Timing</h4>
 
-<p>The target block time was lowered from 10 to 2.5 minutes to facilitate faster transaction confirmation.</p>
+<p>The target block time was lowered from 10 minutes to 2.5 minutes to facilitate faster transaction confirmation.</p>
 
 <h4 id="difficulty-adjustment">Difficulty Adjustment</h4>
 
-<p>The proof-of-work target is adjusted every block to better adapt to sudden changes in hashrate. The exact adjustment algorithm can be seen <a href="https://github.com/lbryio/lbrycrd/blob/e90d7f54cede3c1c5bfc3590351054bdc5a99480/src/lbry.cpp">here</a>.</p>
+<p>The proof-of-work target is adjusted every block to better adapt to sudden changes in hash rate. The exact adjustment algorithm can be seen <a href="https://github.com/lbryio/lbrycrd/blob/master/src/lbry.cpp">here</a>.</p>
 
 <h4 id="block-hash-algorithm">Block Hash Algorithm</h4>
 
-<p>LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algorithm can be seen <a href="https://github.com/lbryio/lbrycrd/blob/e90d7f54cede3c1c5bfc3590351054bdc5a99480/src/hash.cpp#L18">here</a>.</p>
+<p>LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algorithm can be seen <a href="https://github.com/lbryio/lbrycrd/blob/master/src/hash.cpp#L18">here</a>.</p>
 
 <h4 id="block-rewards">Block Rewards</h4>
 
-<p>The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is <a href="https://github.com/lbryio/lbrycrd/blob/ebeb2bd092734035887ca3d8d0e69628bd2d3900/src/main.cpp#L1594">here</a>.</p>
-
-<h3 id="urls-1">URLs</h3>
-
-<p>The purpose of including a name value in claims is to create human readable URLs like <code>lbry://whatever</code>.</p>
+<p>The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here]<a href="https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594)">https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594)</a>.</p>
 
 <h2 id="metadata">Metadata</h2>
 
-<p>Claim metadata is stored in a structured, stored, and validated in a serialized format via <a href="https://developers.google.com/protocol-buffers/">[Protocol Buffers]</a>. This facilitate interoperability across varied systems and languages as well as making it easy to add properties in backwards-compatible way.</p>
+<p>Claim metadata is stored in a serialized format using <a href="https://developers.google.com/protocol-buffers/">Protocol Buffers</a>. This was chosen for several reasons:</p>
 
-<p>No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation happens at the client level. This allows evolution of the metadata without soft or hard forks.</p>
+<ul>
+<li><strong>Extensibility</strong>. The metadata structure could grow to encompass thousands of fields for dozens of types of content. It should be easy to modify the structure while maintaining backward compatibility. Blockchain data is permanent and cannot be migrated.</li>
+<li><strong>Compactness</strong>. Blockchain space is expensive. Data should be stored as compactly as possible.</li>
+<li><strong>Interoperability</strong>. These definitions will be used by many projects written in different languages. Protocol buffers are language-independent and have great support for most popular languages.</li>
+</ul>
+
+<p>No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.</p>
 
 <h3 id="metadata-specification">Metadata Specification</h3>
 
-<p>A useful index of LBRY’s content must be succinct yet meaningful. It should be machine-readable, comprehensive, and should ideally point you toward the content you’re looking for. LBRY achieves this by defining a set of common properties for streams.</p>
+<p>A useful index of available content must be succinct yet meaningful. It should be machine-readable, comprehensive, and should ideally point you toward the content you’re looking for. LBRY achieves this by defining a set of common properties for streams.</p>
 
 <p>The metadata contains structured information describing the content, such as the title, author, language, and so on.</p>
 
@@ -498,11 +497,11 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 }
 </code></pre>
 
-<p>Because the metadata structure can and does change frequently, a complete specification is omitted from this document. Instead, <a href="https://github.com/lbryio/types">https://github.com/lbryio/types</a> should be consulted for the precise definition of current metadata structure.</p>
+<p>Because the metadata structure can and does change frequently, a complete specification is omitted from this document. Instead, <a href="https://github.com/lbryio/types">github.com/lbryio/types</a> should be consulted for the precise definition of current metadata structure.</p>
 
 <h3 id="key-metadata-fields">Key Metadata Fields</h3>
 
-<p>Despite not covering the full metadata structure, a few specific metadata fields are extremely unlikely to ever change.</p>
+<p>Despite not covering the full metadata structure, a few important metadata fields are highlighted below.</p>
 
 <h4 id="streams-and-stream-hashes">Streams and Stream Hashes</h4>
 
@@ -519,9 +518,9 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h3 id="identities">Identities</h3>
 
-<p>Channels are the unit of identity in the LBRY system. A channel is a claim that start with <code>@</code> and contains a metadata structure for identities rather than content. Once a channel claim is accepted on the blockchain, content claims that are signed with the channel’s private key will appear in lists under that channel (fixme: how does the protocol enforce/provide this?).</p>
+<p>Channels are the unit of identity in the LBRY system. A channel is a claim that start with <code>@</code> and contains a metadata structure for identities rather than content. The most important part of channel&rsquo;s metadata is the public key. Claims belonging to a channel are signed with the corresponding private key. A valid signature proves channel membership.</p>
 
-<p>The purpose of channels is to allow content to be clustered under a single pseudonym or identity, sort of like a username.</p>
+<p>The purpose of channels is to allow content to be clustered under a single pseudonym or identity. This allows publishers to easily list all their content, maintain attribution, and build their brand.</p>
 
 <p>Here’s the value of an example channel claim:</p>
 
@@ -564,11 +563,11 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h4 id="blobs">Blobs</h4>
 
-<p>The unit of content in our network is called a <em>[[blob]]</em>. A blob is an encrypted chunk of data up to 2MB in size. Each blob is indexed by its <em>[[blob hash]]</em>, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.</p>
+<p>The unit of content in our network is called a <code>blob</code>. A blob is an encrypted chunk of data up to 2MB in size. Each blob is indexed by its <code>blob hash</code>, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.</p>
 
 <h4 id="streams">Streams</h4>
 
-<p>Multiple blobs may be combined into a <em>stream</em>. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the <em>stream descriptor</em> blob, which contains a JSON list of the hashes and keys of the <em>[[content blobs]]</em>. The content blobs hold the actual content of the stream. Every stream ends with an empty content blob, to signify that the stream has finished (this is similar to a null-terminated string, and is necessary to support streaming content).</p>
+<p>Multiple blobs may be combined into a <code>stream</code>. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the <code>stream descriptor</code> blob, which contains a JSON list of the hashes and keys of the <code>content blobs</code>. The content blobs hold the actual content of the stream. Every stream ends with an empty content blob, to signify that the stream has finished (this is similar to a null-terminated string, and is necessary to support streaming content).</p>
 
 <h4 id="how-to-turn-files-into-streams-and-vice-versa">How to Turn Files into Streams, and Vice Versa</h4>
 
@@ -581,9 +580,9 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 <p>Distributed hash tables have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf">Kademlia</a>
 spec fairly closely, with some modifications.</p>
 
-<p>A distributed hash table is a key-value store that is spread over multiple host nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are able to store.</p>
+<p>A distributed hash table is a key-value store that is spread over multiple host nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.</p>
 
-<p>When a host connects to the DHT, it advertises the blob hash for every blob it wishes to share. Downloading a blob from the network requires querying DHT for a list of hosts that advertised that blob’s hash (called peers), then requesting the blob from the peers directly.</p>
+<p>When a host connects to the DHT, it advertises the blob hash for every blob it wishes to share. Downloading a blob from the network requires querying the DHT for a list of hosts that advertised that blob’s hash (called peers), then requesting the blob from the peers directly.</p>
 
 <h4 id="blob-exchange-protocol">Blob Exchange Protocol</h4>
 
@@ -657,22 +656,10 @@ One of our core beliefs is that people want to pay the legitimate content owners
 long as the content reasonably-priced and the payment process is convenient.
 
 
-Principles (maybe?)
-
 Conclusion
 
 Summary
 
-Acknowledgements
-
-- Thanks, Satoshi!
-- Thanks Jimmy
-
-References / Further Reading
-
-- satoshi paper
-- coase theorem
-- https://lbry.io/what
 
 -->
 
