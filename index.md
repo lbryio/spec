@@ -139,22 +139,36 @@ This document assumes that the reader is familiar with Bitcoin and blockchain te
 
 ## Blockchain
 
+<!-- done -->
+
 The LBRY blockchain is a public, proof-of-work blockchain. It serves three key purposes: 
 
 1. An index of the content available on the network 
 2. A payment system and record of purchases for priced content
-3. Trustful publisher identities (fixme: should this even be listed here?)
+3. Trustful publisher identities
 
 The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.
 
-
-### Claims
+### Claims <!-- done -->
  
-A single metadata entry in the blockchain is called a `claim`. It records an item that was published to the network or a publisher's identity.
+A single metadata entry in the blockchain is called a _claim_. It records a file that was published to the network or a publisher's identity.
 
-Every claim has a globally-unique `claimID`, an `amount` (how many credits were set aside to back the claim), and a `value`. The value may contain metadata about a piece of content, a publisher's public key, or other information. See the [Metadata](#metadata) section for more information about what may be stored in the value.
+#### Claim Properties <!-- done -->
 
-Every claim is associated with a `name`, which is a bytestring of 0-255 bytes. Every name must be a valid UTF8 string.
+Every claim contains 4 properties:
+
+<dl>
+  <dt>claimId</dt>
+  <dd>A 20-byte hash unique among all claims. See [Claim Identifier Generation](#claim-identifier-generation).</dd>
+  <dt>name</dt>
+  <dd>A normalized UTF-8 string of up to 255 bytes used to address the claim. See [URLs](#urls) and [Normalization](#normalization).</dd>
+  <dt>amount</dt>
+  <dd>A quantity of tokens used to stake the claim. See [Controlling](#controlling).</dd>
+  <dt>value</dt>
+  <dd>Metadata about a piece of content, a publisher's public key, or other information. See [Metadata](#metadata).</dd>
+</dl>
+  
+#### Claim Example <!-- done -->
 
 Here is an example claim:
 
@@ -175,24 +189,26 @@ Here is an example claim:
 }
 ```
 
+#### Claim Operations <!-- done -->
 
+There are four claim operations: _create_, _support_, _update_, and _abandon_.
 
-#### Claim Operations
+<dl>
+  <dt>create</dt>
+  <dd>Makes a new claim.</dd>
+  <dt>support</dt>
+  <dd>Adds its [[amount]] to the stake of an already existing claim. It contains no metadata.</dd>
+  <dt>update</dt>
+  <dd>Changes the data or the amount stored in an existing claim or support. Updates do not change the claim ID, so an updated claim retains any supports attached to it. </dd>
+  <dt>abandon</dt>
+  <dd>Withdraws a claim or support, freeing the associated credits to be used for other purposes.</dd>
+</dl>
 
-There are four claim operations: `create`, `support`, `update`, and `abandon`.
+#### Claimtrie <!-- done -->
 
-A `create` operation makes a new claim for a name, or submits a competing claim on an existing name. 
+The _claimtrie_ is the data structure used to store the set of all claims and prove the correctness of claim resolution. 
 
-A `support` is a claim that adds to the credit total of an existing claim. A support does not have it’s own claim ID or data. Instead, it has the claim ID of the claim to which its amount will be added. 
-
-An `update` changes the data or the amount stored in an existing claim or support. Updates do not change the claim ID, so an updated claim retains any supports attached to it. 
-
-An `abandon` withdraws a claim or support, freeing the associated credits to be used for other purposes.
-
-
-#### Claimtrie
-
-The `claimtrie` is the data structure that LBRY uses to store claims and prove the correctness of name resolution. It is a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.
+The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.
 
 The hash of the root node  (the `root hash`) is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.
 
@@ -200,18 +216,17 @@ Multiple claims can exist for the same name. They are all stored in the leaf nod
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
+#### Claim Statuses <!-- done -->
 
-#### Claim Properties
+A claim can have one or more the following properties at a given block.
 
-A claim can have one or more the following properties at a given block:
+##### Accepted <!-- done -->
 
-##### Accepted
+An accepted claim or support is one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.
 
-An accepted claim or support is simply one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.
+##### Abandoned <!-- done -->
 
-##### Abandoned
-
-An abandoned claim or support is one that was withdrawn by its creator. It is no longer in contention to control a name. Spending the transaction that contains the claim will also cause the claim to become abandoned.
+An abandoned claim or support is one that was withdrawn by its creator. It is no longer in contention to control a name. Spending a transaction that contains a claim will cause that claim to become abandoned.
 
 While data related to abandoned claims technically still resides in the blockchain, it is considered inappropriate to use this data to fetch the associated content.
 
@@ -718,4 +733,3 @@ Summary
 
 
 -->
-
