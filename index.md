@@ -47,9 +47,11 @@ TODO:
 * [Conventions and Terminology](#conventions-and-terminology)
 * [Blockchain](#blockchain)
    * [Claims](#claims)
+      * [Claim Properties](#claim-properties)
+      * [Claim Example](#claim-example)
       * [Claim Operations](#claim-operations)
       * [Claimtrie](#claimtrie)
-      * [Claim Properties](#claim-properties)
+      * [Claim Statuses](#claim-statuses)
          * [Accepted](#accepted)
          * [Abandoned](#abandoned)
          * [Active](#active)
@@ -57,6 +59,7 @@ TODO:
       * [Normalization](#normalization)
    * [URLs](#urls)
       * [Components](#components)
+      * [Grammar](#grammar)
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
@@ -72,14 +75,17 @@ TODO:
    * [Key Metadata Fields](#key-metadata-fields)
       * [Streams and Stream Hashes](#streams-and-stream-hashes)
       * [Fees and Fee Structure](#fees-and-fee-structure)
-      * [More?](#more)
    * [Identities](#identities)
    * [Metadata Validation](#metadata-validation)
 * [Data](#data)
    * [Encoding and Decoding](#encoding-and-decoding)
       * [Blobs](#blobs)
       * [Streams](#streams)
-      * [How to Turn Files into Streams, and Vice Versa](#how-to-turn-files-into-streams-and-vice-versa)
+         * [Manifest Encoding](#manifest-encoding)
+      * [Stream Creation](#stream-creation)
+         * [Setup](#setup)
+         * [Content Blobs](#content-blobs)
+         * [Manifest Blob](#manifest-blob)
    * [Download](#download)
       * [Distributed Hash Table](#distributed-hash-table)
       * [Blob Exchange Protocol](#blob-exchange-protocol)
@@ -149,11 +155,15 @@ The LBRY blockchain is a public, proof-of-work blockchain. It serves three key p
 
 The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.
 
-### Claims <!-- done -->
+### Claims
+
+<!-- done -->
  
 A single metadata entry in the blockchain is called a _claim_. It records a file that was published to the network or a publisher's identity.
 
-#### Claim Properties <!-- done -->
+#### Claim Properties
+
+<!-- done -->
 
 Every claim contains 4 properties:
 
@@ -168,7 +178,9 @@ Every claim contains 4 properties:
   <dd>Metadata about a piece of content, a publisher's public key, or other information. See [Metadata](#metadata).</dd>
 </dl>
   
-#### Claim Example <!-- done -->
+#### Claim Example
+
+<!-- done -->
 
 Here is an example claim:
 
@@ -189,7 +201,9 @@ Here is an example claim:
 }
 ```
 
-#### Claim Operations <!-- done -->
+#### Claim Operations
+
+<!-- done -->
 
 There are four claim operations: _create_, _support_, _update_, and _abandon_.
 
@@ -204,7 +218,9 @@ There are four claim operations: _create_, _support_, _update_, and _abandon_.
   <dd>Withdraws a claim or support, freeing the associated credits to be used for other purposes.</dd>
 </dl>
 
-#### Claimtrie <!-- done -->
+#### Claimtrie
+
+<!-- done -->
 
 The _claimtrie_ is the data structure used to store the set of all claims and prove the correctness of claim resolution. 
 
@@ -216,15 +232,21 @@ Multiple claims can exist for the same name. They are all stored in the leaf nod
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
-#### Claim Statuses <!-- done -->
+#### Claim Statuses
+
+<!-- done -->
 
 A claim can have one or more the following properties at a given block.
 
-##### Accepted <!-- done -->
+##### Accepted
+
+<!-- done -->
 
 An accepted claim or support is one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.
 
-##### Abandoned <!-- done -->
+##### Abandoned
+
+<!-- done -->
 
 An abandoned claim or support is one that was withdrawn by its creator. It is no longer in contention to control a name. Spending a transaction that contains a claim will cause that claim to become abandoned.
 
@@ -592,53 +614,82 @@ Clients are responsible for validating metadata, including data structure and si
 
 #### Blobs
 
-The unit of content in our network is called a `blob`. A blob is an encrypted chunk of data up to 2MB in size. Each blob is indexed by its `blob hash`, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.
+The unit of data in our network is called a _blob_. A blob is an encrypted chunk of data up to 2MB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.
+
+Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MB max, a blob can hold at most 2097151 bytes (2MB minus 1 byte) of plaintext data. The source code for exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and IV for each blob is stored as described below. 
 
 #### Streams
 
-Multiple blobs are combined into a `stream`. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the `stream descriptor blob` (or SD blob), followed by one or more `content blobs`. The content blobs hold the actual content of the stream. The SD blob contains information necessary to find the content blobs and assemble them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.
+Multiple blobs are combined into a _stream_. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the _manifest blob_, followed by one or more _content blobs_. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and convert them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.
 
-Here's an example SD blob. It's hash is `053b2f0f0e82e7f022837382733d5f5817dcd67027103fe43f00fa7a6f9fa8742c1022a851616c1ac15d1c60e89db3f4`.
+The blob hash of the manifest blob is called the _stream hash_. It uniquely identifies each stream.
+
+##### Manifest Encoding
+
+A manifest blob's contents are encoded using a canonical JSON encoding. The JSON encoding must be canonical to support consistent hashing and validation. The encoding is the same as standard JSON, but adds the following rules:
+
+- Object keys must be quoted and lexicographically sorted.
+- All strings are hex-encoded. Hex letters must be lowercase.
+- Whitespace before, after, or between tokens is not permitted.
+- Floating point numbers, leading zeros, and "minus 0" for integers are not permitted.
+- Trailing commas after the last item in an array or object are not permitted.
+
+Here's an example manifest, with whitespace added for readability: 
+
+<!-- originally from 053b2f0f0e82e7f022837382733d5f5817dcd67027103fe43f00fa7a6f9fa8742c1022a851616c1ac15d1c60e89db3f4 -->
 
 ```
 {
-   "stream_type":"lbryfile",
-   "key":"94d89c0493c576057ac5f32eb0871180",
-   "suggested_file_name":"6b706a7977755477704d632e6d7034",
-   "stream_hash":"8cef6280f36f7e6590a6218da6b2eb8184ab1435c3f8d77f008088f5d2bc6bd2252a2beb9cfa3d9d40b9ce36d2d7b2ce"
-   "stream_name":"6b706a7977755477704d632e6d7034",
-   "blobs":[
-      {
-         "length":2097152,
-         "blob_num":0,
-         "blob_hash":"a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61",
-         "iv":"ef6caef207a207ca5b14c0282d25ce21"
-      },
-      {
-         "length":2097152,
-         "blob_num":1,
-         "blob_hash":"bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc",
-         "iv":"a37b291a37337fc1ff90ae655c244c1d"
-      },
-      ...,
-      {
-         "length":0,
-         "blob_num":45,
-         "iv":"53677e463ddb3bf060a40b99f8236432"
-      }
-   ]
+  "blobs":[
+    {
+      "blob_hash":"a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61",
+      "iv":"ef6caef207a207ca5b14c0282d25ce21",
+      "length":2097152
+    },
+    {
+      "blob_hash":"bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc",
+      "iv":"a37b291a37337fc1ff90ae655c244c1d",
+      "length":2097152
+    },
+    ...,
+    {
+      "blob_hash":"322973617221ddfec6e53bff4b74b9c21c968cd32ba5a5094d84210e660c4b2ed0882b114a2392a08b06183f19330aaf",
+      "iv": "a00f5f458695bdc9d50d3dbbc7905abc",
+      "length": 600160
+    }  
+  ],
+  "filename":"6b706a7977755477704d632e6d7034",
+  "key":"94d89c0493c576057ac5f32eb0871180"
 }
 ```
 
-Every field except 'stream_type' is either an integer or a hex-encoded string. The `key` field contains the key to decrypt the stream, and is optional. The key may be stored externally on a keyserver. The keyserver would make the key available to a client when presented with proof that the content was purchased.
+The `key` field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The `length` field for each blob is the length of the encrypted blob, not the original file chunk.
 
-The last blob in the `blobs` list of the SD hash is always an empty blob with no hash. This signifies the end of the stream. This is similar to a null-terminated string, and is necessary to support content where the length is not known in advance (e.g. live video).
+Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.
 
-Every stream must have at least two blobs - an SD blob and a content blob. Zero-length streams are not allowed.
+#### Stream Creation
 
-#### How to Turn Files into Streams, and Vice Versa
+A file must be converted into a stream before it can be published. Conversion involves breaking the file into chunks, encrypting the chunks into content blobs, and creating the manifest blob. Here are the steps:
 
-https://github.com/lbryio/lbry.go/tree/master/stream
+##### Setup
+
+1. Generate a random 32-byte key for the stream.
+
+##### Content Blobs
+
+1. Break the file into chunks of at most 2097151 bytes.
+1. Generate a random IV for each chuck.
+1. Pad each chunk using PKCS7 padding
+1. Encrypt each chunk with AES-CBC using the stream key and the IV for that chunk.
+1. An encrypted chunk is a blob.
+
+##### Manifest Blob
+
+1. Fill in the manifest data.
+1. Encode the data using the canonical JSON encoding described above.
+1. Compute the stream hash 
+
+An implementation of this process is available [here](https://github.com/lbryio/lbry.go/tree/master/stream).
 
 ### Download
 
