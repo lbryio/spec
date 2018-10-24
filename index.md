@@ -274,9 +274,7 @@ Here is a step-by-step example to illustrate the different scenarios. All claims
 
 #### Normalization
 
-TODO: Talk about how claim names are normalized.
-
-https://github.com/lbryio/lbrycrd/issues/208
+Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are normalized using the NFD normalization form, then lowercased using the en_US locale. 
 
 
 ### URLs
@@ -332,22 +330,23 @@ lbry:@lbry
 lbry:@lbry/meet-LBRY
 ```
 
+#### Grammar
 
-The full URL grammar is defined below using [Xquery EBNF notation](https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation):
+The full URL grammar is defined using [Xquery EBNF notation](https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation):
 
 <!-- see http://bottlecaps.de/rr/ui for visuals-->
 
 ```
 URL ::= Scheme Path Query?
 
-Scheme ::= 'lbry:'
+Scheme ::= 'lbry://'
 
 Path ::=  ClaimNameAndModifier | ChannelAndModifier ( '/' ClaimNameAndModifier )?
 
 ClaimNameAndModifier ::= ClaimName Modifier?
 ChannelAndModifier ::= Channel Modifier?
 
-ClaimName ::= AllowedChar+
+ClaimName ::= NameChar+
 Channel ::= '@' ClaimName
 
 Modifier ::= ClaimID | ClaimSequence | BidPosition
@@ -358,8 +357,8 @@ BidPosition ::= '$' PositiveNumber
 Query ::= '?' QueryParameterList
 QueryParameterList ::= QueryParameter ( '&' QueryParameterList )*
 QueryParameter ::= QueryParameterName ( '=' QueryParameterValue )?
-QueryParameterName ::= AllowedChar+
-QueryParameterValue ::= AllowedChar+
+QueryParameterName ::= NameChar+
+QueryParameterValue ::= NameChar+
 
 PositiveDigit ::= [123456789]
 Digit ::= '0' | PositiveDigit
@@ -368,7 +367,8 @@ PositiveNumber ::= PositiveDigit Digit*
 HexAlpha ::= [abcdef]
 Hex ::= (Digit | HexAlpha)+
 
-AllowedChar ::= [^=&#:$@?/]  /* any UTF8 character that is not reserved */
+NameChar ::= Char - [=&#:$@?/]  /* any character that is not reserved */
+Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] /* any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. */
 ```
 
 
@@ -513,14 +513,14 @@ Despite not covering the full metadata structure, a few important metadata field
 
 #### Streams and Stream Hashes
 
-(The metadata property `sd_hash` contains a unique identifier to locate and find the content in the data network. Reference [[Data]].)
+(The metadata property `lbry_sd_hash` contains a unique identifier to locate and find the content in the data network. Reference [[Data]].)
 
 #### Fees and Fee Structure
 
 - LBC
 - Currencies?
+- channel signatures and private keys
 
-#### More?
 
 
 
@@ -560,6 +560,8 @@ When a claim published into a channel, the claim data is signed and the followin
 
 ### Metadata Validation
 
+Clients are responsible for validating metadata, including data structure and signatures. 
+
 (expand)
 
 - Validation 101
@@ -579,9 +581,49 @@ The unit of content in our network is called a `blob`. A blob is an encrypted ch
 
 #### Streams
 
-Multiple blobs may be combined into a `stream`. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the `stream descriptor` blob, which contains a JSON list of the hashes and keys of the `content blobs`. The content blobs hold the actual content of the stream. Every stream ends with an empty content blob, to signify that the stream has finished (this is similar to a null-terminated string, and is necessary to support streaming content).
+Multiple blobs are combined into a `stream`. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the `stream descriptor blob` (or SD blob), followed by one or more `content blobs`. The content blobs hold the actual content of the stream. The SD blob contains information necessary to find the content blobs and assemble them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.
+
+Here's an example SD blob. It's hash is `053b2f0f0e82e7f022837382733d5f5817dcd67027103fe43f00fa7a6f9fa8742c1022a851616c1ac15d1c60e89db3f4`.
+
+```
+{
+   "stream_type":"lbryfile",
+   "key":"94d89c0493c576057ac5f32eb0871180",
+   "suggested_file_name":"6b706a7977755477704d632e6d7034",
+   "stream_hash":"8cef6280f36f7e6590a6218da6b2eb8184ab1435c3f8d77f008088f5d2bc6bd2252a2beb9cfa3d9d40b9ce36d2d7b2ce"
+   "stream_name":"6b706a7977755477704d632e6d7034",
+   "blobs":[
+      {
+         "length":2097152,
+         "blob_num":0,
+         "blob_hash":"a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61",
+         "iv":"ef6caef207a207ca5b14c0282d25ce21"
+      },
+      {
+         "length":2097152,
+         "blob_num":1,
+         "blob_hash":"bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc",
+         "iv":"a37b291a37337fc1ff90ae655c244c1d"
+      },
+      ...,
+      {
+         "length":0,
+         "blob_num":45,
+         "iv":"53677e463ddb3bf060a40b99f8236432"
+      }
+   ]
+}
+```
+
+Every field except 'stream_type' is either an integer or a hex-encoded string. The `key` field contains the key to decrypt the stream, and is optional. The key may be stored externally on a keyserver. The keyserver would make the key available to a client when presented with proof that the content was purchased.
+
+The last blob in the `blobs` list of the SD hash is always an empty blob with no hash. This signifies the end of the stream. This is similar to a null-terminated string, and is necessary to support content where the length is not known in advance (e.g. live video).
+
+Every stream must have at least two blobs - an SD blob and a content blob. Zero-length streams are not allowed.
 
 #### How to Turn Files into Streams, and Vice Versa
+
+https://github.com/lbryio/lbry.go/tree/master/stream
 
 ### Download
 
