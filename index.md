@@ -305,15 +305,13 @@ Only one claim can be controlling for a given name at a given block. To determin
 
 1. For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim. 
 
-1. Determine if the order of competeting claims at a leaf is changing:
+1. If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.
 
-  1. If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.
-
-  1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and then perform step 1 again.
+1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.
 
 1. At this point, the claim with the greatest total is the controlling claim at this block.
 
-The purpose of 2b is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 2b will cause the greater claim to also activate and become the controlling claim.
+The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.
 
 ###### Claim Controlling Example
 
