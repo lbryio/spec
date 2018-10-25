@@ -165,15 +165,13 @@ The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) 
 
 <!-- done -->
 
-A _claim_ is a single metadata entry in the blockchain. There are three types of claims:
+A _claim_ is a single metadata entry in the blockchain. There are two types of claims:
 
 <dl>
   <dt>stream</dt>
-  <dd>Declare the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
+  <dd>Declares the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
   <dt>identity</dt>
-  <dd>Create a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
-  <dt>support</dt>
-  <dd>Add their amount to a stream or identity claim.</dd>
+  <dd>Creates a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
 </dl>
 
 #### Claim Properties
@@ -188,7 +186,7 @@ Claims have 4 properties:
   <dt>amount</dt>
   <dd>A quantity of tokens used to stake the claim. See [Controlling](#controlling).</dd>
   <dt>value</dt>
-  <dd>Metadata about a piece of content or an identity. Empty for support claims. See [Metadata](#metadata).</dd>
+  <dd>Metadata about a piece of content or an identity. See [Metadata](#metadata).</dd>
 </dl>
   
 #### Claim Example
@@ -224,10 +222,16 @@ There are three claim operations: _create_, _update_, and _abandon_.
   <dt>create</dt>
   <dd>Makes a new claim.</dd>
   <dt>update</dt>
-  <dd>Changes the value or amount of an existing claim. Updates do not change the claim ID, so an updated claim retains any supports attached to it. </dd>
+  <dd>Changes the value or amount of an existing claim, without changing the claim ID.</dd>
   <dt>abandon</dt>
   <dd>Withdraws a claim, freeing the associated credits to be used for other purposes.</dd>
 </dl>
+
+#### Supports
+
+A _support_ is an additional transaction type that lends its _amount_ to an existing claim.
+
+A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses).
 
 #### Claimtrie
 
@@ -263,17 +267,19 @@ Accepted claims do not appear in or affect the claimtrie state until they are [A
 
 An _abandoned_ claim is one that was withdrawn by its creator. Spending a transaction that contains a claim will cause that claim to become abandoned.
 
-Abandoned stream and identity claims are no longer stored in the claimtrie. Abandoned support claims no longer contribute their amount to the sort order of claims listed in a leaf.
+Abandoned claims are no longer stored in the claimtrie.
 
-While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content.
+While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content, and active claims signed by abandoned identities will no longer be reported as valid.
 
 ##### Active
+
+<!-- done -->
 
 An _active_ claim is an accepted and non-abandoned claim that has been in the blockchain long enough to be activated. The length of time required is called the _activation delay_.
 
 The activation delay depends on the claim operation, the height of the current block, and the height at which the claimtrie state for that name last changed.
 
-If the claim is an update or support to an already active claim, or if it is the first claim for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:
+If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:
 
 ```
 C + min(4032, floor((H-T) / 32))
@@ -285,25 +291,33 @@ Where:
 - H = current height
 - T = takeover height (the most recent height at which the claimtrie state for the name changed)
 
-In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. The goal of this delay function is to give long-standing claimants time to respond to takeover attempts, while still keeping takeover times reasonable and allowing recent or contentious claims to be taken over quickly.
+In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
+
+The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
 
 ##### Controlling
 
-The controlling claim is the claim that has the highest total effective amount, which is the sum of its own amount and the amounts of all of its supports. It must be active and cannot itself be a support.
+<!-- done -->
+
+A _controlling_ claim is the active claim that has the highest total effective amount, which is the sum of its own amount and the amounts of all of its [supports](#supports). 
 
 Only one claim can be controlling for a given name at a given block. To determine which claim is controlling for a given name at a given block, the following algorithm is used:
 
 1. For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim. 
 
-1. Determine if a takeover is happening
+1. Determine if the order of competeting claims at a leaf is changing:
 
-  1. If the claim with the greatest total is the controlling claim from the previous block, then nothing changes. That claim is still controlling at this block.
+  1. If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.
 
   1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and then perform step 1 again.
 
 1. At this point, the claim with the greatest total is the controlling claim at this block.
 
 The purpose of 2b is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 2b will cause the greater claim to also activate and become the controlling claim.
+
+###### Claim Controlling Example
+
+<!-- done -->
 
 Here is a step-by-step example to illustrate the different scenarios. All claims are for the same name.
 
@@ -328,12 +342,11 @@ Here is a step-by-step example to illustrate the different scenarios. All claims
 **Block 1051:** Claim C activates. It has 50LBC, while claim A has 24LBC, so a takeover is initiated. The takeover height for this name is set to 1051, and therefore the activation delay for all the claims becomes `min(4032, floor((1051-1051) / 32)) = 0`. All the claims become active. The totals for each claim are recalculated, and claim D becomes controlling because it has the highest total.
 <br>State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlling.
 
-
-
 #### Normalization
 
-Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are normalized using the NFD normalization form, then lowercased using the en_US locale. 
+<!-- done -->
 
+Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are normalized using the NFD normalization form, then lowercased using the en_US locale. 
 
 ### URLs
 
