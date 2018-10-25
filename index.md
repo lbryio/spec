@@ -275,9 +275,12 @@ The activation delay depends on the claim operation, the height of the current b
 
 If the claim is an update or support to an already active claim, or if it is the first claim for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:
 
-`C + min(4032, floor((H-T) / 32))`
+```
+C + min(4032, floor((H-T) / 32))
+```
 
 Where: 
+
 - C = claim height (height when the claim was accepted)
 - H = current height
 - T = takeover height (the most recent height at which the claimtrie state for the name changed)
@@ -836,6 +839,8 @@ Talk about how lightning can be used for streaming payments.
 
 *TODO*
 
+
+_Edit this on Github: https://github.com/lbryio/spec_
 
 <!---
 

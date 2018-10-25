@@ -308,12 +308,16 @@
 
 <p>If the claim is an update or support to an already active claim, or if it is the first claim for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:</p>
 
-<p><code>C + min(4032, floor((H-T) / 32))</code></p>
+<pre><code>C + min(4032, floor((H-T) / 32))
+</code></pre>
 
-<p>Where:
-- C = claim height (height when the claim was accepted)
-- H = current height
-- T = takeover height (the most recent height at which the claimtrie state for the name changed)</p>
+<p>Where:</p>
+
+<ul>
+<li>C = claim height (height when the claim was accepted)</li>
+<li>H = current height</li>
+<li>T = takeover height (the most recent height at which the claimtrie state for the name changed)</li>
+</ul>
 
 <p>In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. The goal of this delay function is to give long-standing claimants time to respond to takeover attempts, while still keeping takeover times reasonable and allowing recent or contentious claims to be taken over quickly.</p>
 
@@ -835,6 +839,8 @@ Talk about how lightning can be used for streaming payments.
 <h2 id="conclusion">Conclusion</h2>
 
 <p><em>TODO</em></p>
+
+<p><em>Edit this on Github: <a href="https://github.com/lbryio/spec">https://github.com/lbryio/spec</a></em></p>
 
 <!---
 
