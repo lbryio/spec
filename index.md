@@ -81,18 +81,24 @@ TODO:
    * [Encoding and Decoding](#encoding-and-decoding)
       * [Blobs](#blobs)
       * [Streams](#streams)
-         * [Manifest Encoding](#manifest-encoding)
-      * [Stream Creation](#stream-creation)
+      * [Manifest Contents](#manifest-contents)
+      * [Stream Encoding](#stream-encoding)
          * [Setup](#setup)
          * [Content Blobs](#content-blobs)
          * [Manifest Blob](#manifest-blob)
-   * [Download](#download)
+      * [Stream Decoding](#stream-decoding)
+   * [Announce](#announce)
       * [Distributed Hash Table](#distributed-hash-table)
+      * [Announcing to the DHT](#announcing-to-the-dht)
+   * [Download](#download)
+      * [Querying the DHT](#querying-the-dht)
       * [Blob Exchange Protocol](#blob-exchange-protocol)
-      * [Blob Mirrors](#blob-mirrors)
-   * [Announcing](#announcing)
-      * [Reflector / BlobEx Upload](#reflector--blobex-upload)
-      * [Blob Mirrors](#blob-mirrors-1)
+         * [PriceCheck](#pricecheck)
+         * [DownloadCheck](#downloadcheck)
+         * [Download](#download-1)
+         * [UploadCheck](#uploadcheck)
+         * [Upload](#upload)
+   * [Reflector / BlobEx Upload](#reflector--blobex-upload)
    * [Data Markets](#data-markets)
 * [Conclusion](#conclusion)
 <!--te-->
@@ -206,7 +212,7 @@ Here is an example stream claim:
   "n": 0,
   "height": 146117
 }
-```	
+```
 
 #### Claim Operations
 
@@ -622,21 +628,31 @@ Clients are responsible for validating metadata, including data structure and si
 
 (This portion covers how content is actually encoded and decoded, fetched, and announced. Expand/fix.)
 
+
+
 ### Encoding and Decoding
+
+<!-- done -->
 
 #### Blobs
 
-The unit of data in our network is called a _blob_. A blob is an encrypted chunk of data up to 2MB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.
+<!-- done -->
 
-Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MB max, a blob can hold at most 2097151 bytes (2MB minus 1 byte) of plaintext data. The source code for exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and IV for each blob is stored as described below. 
+The unit of data in our network is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.
+
+Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and IV for each blob is stored as described below. 
 
 #### Streams
+
+<!-- done -->
 
 Multiple blobs are combined into a _stream_. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the _manifest blob_, followed by one or more _content blobs_. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and convert them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.
 
 The blob hash of the manifest blob is called the _stream hash_. It uniquely identifies each stream.
 
-##### Manifest Encoding
+#### Manifest Contents
+
+<!-- done -->
 
 A manifest blob's contents are encoded using a canonical JSON encoding. The JSON encoding must be canonical to support consistent hashing and validation. The encoding is the same as standard JSON, but adds the following rules:
 
@@ -671,23 +687,32 @@ Here's an example manifest, with whitespace added for readability:
     }  
   ],
   "filename":"6b706a7977755477704d632e6d7034",
-  "key":"94d89c0493c576057ac5f32eb0871180"
+  "key":"94d89c0493c576057ac5f32eb0871180",
+  "version":1
 }
 ```
 
-The `key` field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The `length` field for each blob is the length of the encrypted blob, not the original file chunk.
+The `key` field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The `version` field is always 1. It is intended to signal structure changes in the future. The `length` field for each blob is the length of the encrypted blob, not the original file chunk.
 
 Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.
 
-#### Stream Creation
 
-A file must be converted into a stream before it can be published. Conversion involves breaking the file into chunks, encrypting the chunks into content blobs, and creating the manifest blob. Here are the steps:
+
+#### Stream Encoding
+
+<!-- done -->
+
+A file must be encoded into a stream before it can be published. Encoding involves breaking the file into chunks, encrypting the chunks into content blobs, and creating the manifest blob. Here are the steps:
 
 ##### Setup
+
+<!-- done -->
 
 1. Generate a random 32-byte key for the stream.
 
 ##### Content Blobs
+
+<!-- done -->
 
 1. Break the file into chunks of at most 2097151 bytes.
 1. Generate a random IV for each chuck.
@@ -697,43 +722,99 @@ A file must be converted into a stream before it can be published. Conversion in
 
 ##### Manifest Blob
 
+<!-- done -->
+
 1. Fill in the manifest data.
 1. Encode the data using the canonical JSON encoding described above.
-1. Compute the stream hash 
+1. Compute the stream hash.
 
 An implementation of this process is available [here](https://github.com/lbryio/lbry.go/tree/master/stream).
+fixme: this link is for v0, not v1. need to implement v1 or drop the link.
 
-### Download
 
-Data can be downloaded via one of two methods: the distributed data network and from centralized blob providers.
+#### Stream Decoding
+
+<!-- done -->
+
+Decoding a stream is like encoding in reverse, and with the added step of verifying that the expected blob hashes match the actual data.
+
+1. Verify that the manifest blob hash matches the stream hash you expect.
+1. Parse the manifest blob contents.
+1. Verify the hashes of the content blobs.
+1. Decrypt and remove the padding from each content blob using the key and IVs in the manifest.
+1. Concatenate the decrypted chunks in order.
+
+
+
+### Announce
+
+After a [[stream]] is encoded, it must be _announced_ to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. The LBRY networks tracks announced content using a distributed hash table.
 
 #### Distributed Hash Table
 
-Distributed hash tables have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
+_Distributed hash tables_ (or DHTs) have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
 spec fairly closely, with some modifications.
 
 A distributed hash table is a key-value store that is spread over multiple host nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.
 
-When a host connects to the DHT, it advertises the blob hash for every blob it wishes to share. Downloading a blob from the network requires querying the DHT for a list of hosts that advertised that blob’s hash (called peers), then requesting the blob from the peers directly.
+When a host connects to the DHT, it announces the hash for every [[blob]] it wishes to share. Downloading a blob from the network requires querying the DHT for a list of hosts that announced that blob’s hash (called _peers_), then requesting the blob from the peers directly.
+
+#### Announcing to the DHT
+
+A host announces a hash to the DHT in two steps. First, the host looks for nodes that are closest to the target hash that will be announced. Then the host announces the target hash to those nodes.
+
+Finding the closest nodes is done via iterative `FindNode` DHT requests. The host starts with the closest nodes it knows about and sends a `FindNode(target_hash)` request to each of them. If any of the requests return nodes that are closer to the target hash, the host sends `FindNode` requests to those nodes to try to get even closer. When the `FindNode` requests no longer return nodes that are closer, the search ends.
+
+Once the search is over, the host takes the 8 closest nodes it found and sends a `Store(target_hash)` request to them. The nodes receiving this request store the fact that the host is a peer for the target hash. 
+
+
+### Download
+
+A client wishing to download a [[stream]] must first query the [[DHT]] to find peers hosting the [[blobs]] in that stream, then contact those peers directly to download the blobs directly.
+
+#### Querying the DHT
+
+Querying works almost the same way as [[announcing]]. A client looking for a target hash will start by sending iterative `FindValue(target_hash)` requests to the nodes it knows that are closest to the target hash. If a node receives a `FindValue` request and knows of any peers for the target hash, it will respond with a list of those peers. Otherwise, it will respond with the closest nodes to the target hash that it knows about. The client then queries those closer nodes using the same `FindValue` call. This way, each call either finds the client some peers, or brings it closer to finding those peers. If no peers are found and no closer nodes are being returned, the client will determine that the target hash is not available and will give up.
+
 
 #### Blob Exchange Protocol
 
+Downloading a blob from a peer is governed by the _Blob Exchange Protocol_. It is used by hosts and clients to check blob availability, exchange blobs, and negotiate data prices. The protocol is an RPC protocol using Protocol Buffers and the gRPC framework. It has five types of requests.
 
-#### Blob Mirrors
+fixme: protocol does not **negotiate** anything right now. It just checks the price. Should we include negotiation in v1?
 
-(fill me in)
+##### PriceCheck
 
-### Announcing
+PriceCheck gets the price that the server is charging for data transfer. It returns the prices in [[deweys]] per KB.
 
-(how stuff gets created / published)
+##### DownloadCheck
 
-#### Reflector / BlobEx Upload
+DownloadCheck checks whether the server has certain blobs available for download. For each hash in the request, the server returns a true or false to indicate whether the blob is available.
 
-#### Blob Mirrors
+##### Download
 
-(Blob mirrors can also help you announce your content.)
+Download requests the blob for a given hash. The response contains the blob, its hash, and the address where to send payment for the data transfer. If the blob is not available on the server, the response will instead contain an error.
+
+##### UploadCheck
+
+UploadCheck asks the server whether blobs can be uploaded to it. For each hash in the request, the server returns a true or false to indicate whether it would accept a given blob for upload. In addition, if any of the hashes in the request is a stream hash and the server has the manifest blob for that stream but is missing some content blobs, it may include the hashes of those content blobs in the response.
+
+##### Upload
+
+Upload sends a blob to the server. If uploading many blobs, the client should use the UploadCheck request to check which blobs the server actually needs. This avoids needlessly uploading blobs that the server already has. If a client tries to upload too many blobs that the server does not want, this may be consider a denial of service attack.
+
+
+The protocol calls and message types are defined in detail [here](https://github.com/lbryio/lbry.go/blob/master/blobex/blobex.proto).
+
+
+
+
+### Reflector / BlobEx Upload
+
 
 ### Data Markets
+
+To incentivize hosts and reflectors, the blob exchange protocol supports payment for data.
 
 (Price negotiation.)
 

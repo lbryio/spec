@@ -101,32 +101,38 @@
 
 <ul>
 <li><a href="#blobs">Blobs</a></li>
-<li><a href="#streams">Streams</a>
-
-<ul>
-<li><a href="#manifest-encoding">Manifest Encoding</a></li>
-</ul></li>
-<li><a href="#stream-creation">Stream Creation</a>
+<li><a href="#streams">Streams</a></li>
+<li><a href="#manifest-contents">Manifest Contents</a></li>
+<li><a href="#stream-encoding">Stream Encoding</a>
 
 <ul>
 <li><a href="#setup">Setup</a></li>
 <li><a href="#content-blobs">Content Blobs</a></li>
 <li><a href="#manifest-blob">Manifest Blob</a></li>
 </ul></li>
+<li><a href="#stream-decoding">Stream Decoding</a></li>
+</ul></li>
+<li><a href="#announce">Announce</a>
+
+<ul>
+<li><a href="#distributed-hash-table">Distributed Hash Table</a></li>
+<li><a href="#announcing-to-the-dht">Announcing to the DHT</a></li>
 </ul></li>
 <li><a href="#download">Download</a>
 
 <ul>
-<li><a href="#distributed-hash-table">Distributed Hash Table</a></li>
-<li><a href="#blob-exchange-protocol">Blob Exchange Protocol</a></li>
-<li><a href="#blob-mirrors">Blob Mirrors</a></li>
-</ul></li>
-<li><a href="#announcing">Announcing</a>
+<li><a href="#querying-the-dht">Querying the DHT</a></li>
+<li><a href="#blob-exchange-protocol">Blob Exchange Protocol</a>
 
 <ul>
-<li><a href="#reflector--blobex-upload">Reflector / BlobEx Upload</a></li>
-<li><a href="#blob-mirrors-1">Blob Mirrors</a></li>
+<li><a href="#pricecheck">PriceCheck</a></li>
+<li><a href="#downloadcheck">DownloadCheck</a></li>
+<li><a href="#download-1">Download</a></li>
+<li><a href="#uploadcheck">UploadCheck</a></li>
+<li><a href="#upload">Upload</a></li>
 </ul></li>
+</ul></li>
+<li><a href="#reflector--blobex-upload">Reflector / BlobEx Upload</a></li>
 <li><a href="#data-markets">Data Markets</a></li>
 </ul></li>
 <li><a href="#conclusion">Conclusion</a>
@@ -192,13 +198,20 @@
 
 <!-- done -->
 
-<p>A single metadata entry in the blockchain is called a <em>claim</em>. It records a file that was published to the network or a publisher&rsquo;s identity.</p>
+<p>A <em>claim</em> is a single metadata entry in the blockchain. There are three types of claims:</p>
+
+<dl>
+  <dt>stream</dt>
+  <dd>Declare the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
+  <dt>identity</dt>
+  <dd>Create a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
+  <dt>support</dt>
+  <dd>Add their amount to a stream or identity claim.</dd>
+</dl>
 
 <h4 id="claim-properties">Claim Properties</h4>
 
-<!-- done -->
-
-<p>Every claim contains 4 properties:</p>
+<p>Claims have 4 properties:</p>
 
 <dl>
   <dt>claimId</dt>
@@ -208,7 +221,7 @@
   <dt>amount</dt>
   <dd>A quantity of tokens used to stake the claim. See [Controlling](#controlling).</dd>
   <dt>value</dt>
-  <dd>Metadata about a piece of content, a publisher's public key, or other information. See [Metadata](#metadata).</dd>
+  <dd>Metadata about a piece of content or an identity. Empty for support claims. See [Metadata](#metadata).</dd>
 </dl>
   
 
@@ -216,7 +229,7 @@
 
 <!-- done -->
 
-<p>Here is an example claim:</p>
+<p>Here is an example stream claim:</p>
 
 <pre><code>{
   &quot;claimId&quot;: &quot;fa3d002b67c4ff439463fcc0d4c80758e38a0aed&quot;,
@@ -238,17 +251,15 @@
 
 <!-- done -->
 
-<p>There are four claim operations: <em>create</em>, <em>support</em>, <em>update</em>, and <em>abandon</em>.</p>
+<p>There are three claim operations: <em>create</em>, <em>update</em>, and <em>abandon</em>.</p>
 
 <dl>
   <dt>create</dt>
   <dd>Makes a new claim.</dd>
-  <dt>support</dt>
-  <dd>Adds its [[amount]] to the stake of an already existing claim. It contains no metadata.</dd>
   <dt>update</dt>
-  <dd>Changes the data or the amount stored in an existing claim or support. Updates do not change the claim ID, so an updated claim retains any supports attached to it. </dd>
+  <dd>Changes the value or amount of an existing claim. Updates do not change the claim ID, so an updated claim retains any supports attached to it. </dd>
   <dt>abandon</dt>
-  <dd>Withdraws a claim or support, freeing the associated credits to be used for other purposes.</dd>
+  <dd>Withdraws a claim, freeing the associated credits to be used for other purposes.</dd>
 </dl>
 
 <h4 id="claimtrie">Claimtrie</h4>
@@ -259,7 +270,7 @@
 
 <p>The claimtrie is implemented as a <a href="https://en.wikipedia.org/wiki/Merkle_tree">Merkle tree</a> that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.</p>
 
-<p>The hash of the root node  (the <code>root hash</code>) is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.</p>
+<p>The <em>root hash</em> is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.</p>
 
 <p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the total amount of credits backing each claim.</p>
 
@@ -269,35 +280,40 @@
 
 <!-- done -->
 
-<p>A claim can have one or more the following properties at a given block.</p>
+<p>A claim can have one or more the following statuses at a given block.</p>
 
 <h5 id="accepted">Accepted</h5>
 
 <!-- done -->
 
-<p>An accepted claim or support is one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.</p>
+<p>An <em>accepted</em> claim is one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.</p>
+
+<p>Accepted claims do not appear in or affect the claimtrie state until they are <a href="#active">Active</a>.</p>
 
 <h5 id="abandoned">Abandoned</h5>
 
 <!-- done -->
 
-<p>An abandoned claim or support is one that was withdrawn by its creator. It is no longer in contention to control a name. Spending a transaction that contains a claim will cause that claim to become abandoned.</p>
+<p>An <em>abandoned</em> claim is one that was withdrawn by its creator. Spending a transaction that contains a claim will cause that claim to become abandoned.</p>
 
-<p>While data related to abandoned claims technically still resides in the blockchain, it is considered inappropriate to use this data to fetch the associated content.</p>
+<p>Abandoned stream and identity claims are no longer stored in the claimtrie. Abandoned support claims no longer contribute their amount to the sort order of claims listed in a leaf.</p>
+
+<p>While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content.</p>
 
 <h5 id="active">Active</h5>
 
-<p>A claim is active when it is in contention for controlling a name (or a support for such a claim). An active claim must be accepted and not abandoned. The time it takes an accepted claim to become active is called the activation delay, and it depends on the claim type, the height of the current block, and the height at which the last takeover occurred for the claim’s name.</p>
+<p>An <em>active</em> claim is an accepted and non-abandoned claim that has been in the blockchain long enough to be activated. The length of time required is called the <em>activation delay</em>.</p>
 
-<p>If the claim is an update or support to the current controlling claim, or if it is the first claim for a name (T = 0), the claim becomes active as soon as it is accepted. Otherwise it becomes active at height A, where <code>A = C + D</code>, and <code>D = min(4032, floor((H-T) / 32))</code>.</p>
+<p>The activation delay depends on the claim operation, the height of the current block, and the height at which the claimtrie state for that name last changed.</p>
 
-<ul>
-<li>A = activation height</li>
-<li>D = activation delay</li>
-<li>C = claim height (height when the claim was accepted)</li>
-<li>H = current height</li>
-<li>T = takeover height (the most recent height at which the controlling claim for the name changed)</li>
-</ul>
+<p>If the claim is an update or support to an already active claim, or if it is the first claim for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:</p>
+
+<p><code>C + min(4032, floor((H-T) / 32))</code></p>
+
+<p>Where:
+- C = claim height (height when the claim was accepted)
+- H = current height
+- T = takeover height (the most recent height at which the claimtrie state for the name changed)</p>
 
 <p>In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. The goal of this delay function is to give long-standing claimants time to respond to takeover attempts, while still keeping takeover times reasonable and allowing recent or contentious claims to be taken over quickly.</p>
 
@@ -619,19 +635,27 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h3 id="encoding-and-decoding">Encoding and Decoding</h3>
 
+<!-- done -->
+
 <h4 id="blobs">Blobs</h4>
 
-<p>The unit of data in our network is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.</p>
+<!-- done -->
 
-<p>Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MB max, a blob can hold at most 2097151 bytes (2MB minus 1 byte) of plaintext data. The source code for exact algorithm is available <a href="https://github.com/lbryio/lbry.go/blob/master/stream/blob.go">here</a>. The encryption key and IV for each blob is stored as described below.</p>
+<p>The unit of data in our network is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.</p>
+
+<p>Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available <a href="https://github.com/lbryio/lbry.go/blob/master/stream/blob.go">here</a>. The encryption key and IV for each blob is stored as described below.</p>
 
 <h4 id="streams">Streams</h4>
+
+<!-- done -->
 
 <p>Multiple blobs are combined into a <em>stream</em>. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the <em>manifest blob</em>, followed by one or more <em>content blobs</em>. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and convert them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.</p>
 
 <p>The blob hash of the manifest blob is called the <em>stream hash</em>. It uniquely identifies each stream.</p>
 
-<h5 id="manifest-encoding">Manifest Encoding</h5>
+<h4 id="manifest-contents">Manifest Contents</h4>
+
+<!-- done -->
 
 <p>A manifest blob&rsquo;s contents are encoded using a canonical JSON encoding. The JSON encoding must be canonical to support consistent hashing and validation. The encoding is the same as standard JSON, but adds the following rules:</p>
 
@@ -667,25 +691,32 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
     }  
   ],
   &quot;filename&quot;:&quot;6b706a7977755477704d632e6d7034&quot;,
-  &quot;key&quot;:&quot;94d89c0493c576057ac5f32eb0871180&quot;
+  &quot;key&quot;:&quot;94d89c0493c576057ac5f32eb0871180&quot;,
+  &quot;version&quot;:1
 }
 </code></pre>
 
-<p>The <code>key</code> field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The <code>length</code> field for each blob is the length of the encrypted blob, not the original file chunk.</p>
+<p>The <code>key</code> field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The <code>version</code> field is always 1. It is intended to signal structure changes in the future. The <code>length</code> field for each blob is the length of the encrypted blob, not the original file chunk.</p>
 
 <p>Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.</p>
 
-<h4 id="stream-creation">Stream Creation</h4>
+<h4 id="stream-encoding">Stream Encoding</h4>
 
-<p>A file must be converted into a stream before it can be published. Conversion involves breaking the file into chunks, encrypting the chunks into content blobs, and creating the manifest blob. Here are the steps:</p>
+<!-- done -->
+
+<p>A file must be encoded into a stream before it can be published. Encoding involves breaking the file into chunks, encrypting the chunks into content blobs, and creating the manifest blob. Here are the steps:</p>
 
 <h5 id="setup">Setup</h5>
+
+<!-- done -->
 
 <ol>
 <li>Generate a random 32-byte key for the stream.</li>
 </ol>
 
 <h5 id="content-blobs">Content Blobs</h5>
+
+<!-- done -->
 
 <ol>
 <li>Break the file into chunks of at most 2097151 bytes.</li>
@@ -697,44 +728,93 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h5 id="manifest-blob">Manifest Blob</h5>
 
+<!-- done -->
+
 <ol>
 <li>Fill in the manifest data.</li>
 <li>Encode the data using the canonical JSON encoding described above.</li>
-<li>Compute the stream hash</li>
+<li>Compute the stream hash.</li>
 </ol>
 
-<p>An implementation of this process is available <a href="https://github.com/lbryio/lbry.go/tree/master/stream">here</a>.</p>
+<p>An implementation of this process is available <a href="https://github.com/lbryio/lbry.go/tree/master/stream">here</a>.
+fixme: this link is for v0, not v1. need to implement v1 or drop the link.</p>
 
-<h3 id="download">Download</h3>
+<h4 id="stream-decoding">Stream Decoding</h4>
 
-<p>Data can be downloaded via one of two methods: the distributed data network and from centralized blob providers.</p>
+<!-- done -->
+
+<p>Decoding a stream is like encoding in reverse, and with the added step of verifying that the expected blob hashes match the actual data.</p>
+
+<ol>
+<li>Verify that the manifest blob hash matches the stream hash you expect.</li>
+<li>Parse the manifest blob contents.</li>
+<li>Verify the hashes of the content blobs.</li>
+<li>Decrypt and remove the padding from each content blob using the key and IVs in the manifest.</li>
+<li>Concatenate the decrypted chunks in order.</li>
+</ol>
+
+<h3 id="announce">Announce</h3>
+
+<p>After a [[stream]] is encoded, it must be <em>announced</em> to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. The LBRY networks tracks announced content using a distributed hash table.</p>
 
 <h4 id="distributed-hash-table">Distributed Hash Table</h4>
 
-<p>Distributed hash tables have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf">Kademlia</a>
+<p><em>Distributed hash tables</em> (or DHTs) have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf">Kademlia</a>
 spec fairly closely, with some modifications.</p>
 
 <p>A distributed hash table is a key-value store that is spread over multiple host nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.</p>
 
-<p>When a host connects to the DHT, it advertises the blob hash for every blob it wishes to share. Downloading a blob from the network requires querying the DHT for a list of hosts that advertised that blob’s hash (called peers), then requesting the blob from the peers directly.</p>
+<p>When a host connects to the DHT, it announces the hash for every [[blob]] it wishes to share. Downloading a blob from the network requires querying the DHT for a list of hosts that announced that blob’s hash (called <em>peers</em>), then requesting the blob from the peers directly.</p>
+
+<h4 id="announcing-to-the-dht">Announcing to the DHT</h4>
+
+<p>A host announces a hash to the DHT in two steps. First, the host looks for nodes that are closest to the target hash that will be announced. Then the host announces the target hash to those nodes.</p>
+
+<p>Finding the closest nodes is done via iterative <code>FindNode</code> DHT requests. The host starts with the closest nodes it knows about and sends a <code>FindNode(target_hash)</code> request to each of them. If any of the requests return nodes that are closer to the target hash, the host sends <code>FindNode</code> requests to those nodes to try to get even closer. When the <code>FindNode</code> requests no longer return nodes that are closer, the search ends.</p>
+
+<p>Once the search is over, the host takes the 8 closest nodes it found and sends a <code>Store(target_hash)</code> request to them. The nodes receiving this request store the fact that the host is a peer for the target hash.</p>
+
+<h3 id="download">Download</h3>
+
+<p>A client wishing to download a [[stream]] must first query the [[DHT]] to find peers hosting the [[blobs]] in that stream, then contact those peers directly to download the blobs directly.</p>
+
+<h4 id="querying-the-dht">Querying the DHT</h4>
+
+<p>Querying works almost the same way as [[announcing]]. A client looking for a target hash will start by sending iterative <code>FindValue(target_hash)</code> requests to the nodes it knows that are closest to the target hash. If a node receives a <code>FindValue</code> request and knows of any peers for the target hash, it will respond with a list of those peers. Otherwise, it will respond with the closest nodes to the target hash that it knows about. The client then queries those closer nodes using the same <code>FindValue</code> call. This way, each call either finds the client some peers, or brings it closer to finding those peers. If no peers are found and no closer nodes are being returned, the client will determine that the target hash is not available and will give up.</p>
 
 <h4 id="blob-exchange-protocol">Blob Exchange Protocol</h4>
 
-<h4 id="blob-mirrors">Blob Mirrors</h4>
+<p>Downloading a blob from a peer is governed by the <em>Blob Exchange Protocol</em>. It is used by hosts and clients to check blob availability, exchange blobs, and negotiate data prices. The protocol is an RPC protocol using Protocol Buffers and the gRPC framework. It has five types of requests.</p>
 
-<p>(fill me in)</p>
+<p>fixme: protocol does not <strong>negotiate</strong> anything right now. It just checks the price. Should we include negotiation in v1?</p>
 
-<h3 id="announcing">Announcing</h3>
+<h5 id="pricecheck">PriceCheck</h5>
 
-<p>(how stuff gets created / published)</p>
+<p>PriceCheck gets the price that the server is charging for data transfer. It returns the prices in [[deweys]] per KB.</p>
 
-<h4 id="reflector-blobex-upload">Reflector / BlobEx Upload</h4>
+<h5 id="downloadcheck">DownloadCheck</h5>
 
-<h4 id="blob-mirrors-1">Blob Mirrors</h4>
+<p>DownloadCheck checks whether the server has certain blobs available for download. For each hash in the request, the server returns a true or false to indicate whether the blob is available.</p>
 
-<p>(Blob mirrors can also help you announce your content.)</p>
+<h5 id="download-1">Download</h5>
+
+<p>Download requests the blob for a given hash. The response contains the blob, its hash, and the address where to send payment for the data transfer. If the blob is not available on the server, the response will instead contain an error.</p>
+
+<h5 id="uploadcheck">UploadCheck</h5>
+
+<p>UploadCheck asks the server whether blobs can be uploaded to it. For each hash in the request, the server returns a true or false to indicate whether it would accept a given blob for upload. In addition, if any of the hashes in the request is a stream hash and the server has the manifest blob for that stream but is missing some content blobs, it may include the hashes of those content blobs in the response.</p>
+
+<h5 id="upload">Upload</h5>
+
+<p>Upload sends a blob to the server. If uploading many blobs, the client should use the UploadCheck request to check which blobs the server actually needs. This avoids needlessly uploading blobs that the server already has. If a client tries to upload too many blobs that the server does not want, this may be consider a denial of service attack.</p>
+
+<p>The protocol calls and message types are defined in detail <a href="https://github.com/lbryio/lbry.go/blob/master/blobex/blobex.proto">here</a>.</p>
+
+<h3 id="reflector-blobex-upload">Reflector / BlobEx Upload</h3>
 
 <h3 id="data-markets">Data Markets</h3>
+
+<p>To incentivize hosts and reflectors, the blob exchange protocol supports payment for data.</p>
 
 <p>(Price negotiation.)</p>
 
