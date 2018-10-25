@@ -158,14 +158,21 @@ The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) 
 ### Claims
 
 <!-- done -->
- 
-A single metadata entry in the blockchain is called a _claim_. It records a file that was published to the network or a publisher's identity.
+
+A _claim_ is a single metadata entry in the blockchain. There are three types of claims:
+
+<dl>
+  <dt>stream</dt>
+  <dd>Declare the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
+  <dt>identity</dt>
+  <dd>Create a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
+  <dt>support</dt>
+  <dd>Add their amount to a stream or identity claim.</dd>
+</dl>
 
 #### Claim Properties
 
-<!-- done -->
-
-Every claim contains 4 properties:
+Claims have 4 properties:
 
 <dl>
   <dt>claimId</dt>
@@ -175,14 +182,14 @@ Every claim contains 4 properties:
   <dt>amount</dt>
   <dd>A quantity of tokens used to stake the claim. See [Controlling](#controlling).</dd>
   <dt>value</dt>
-  <dd>Metadata about a piece of content, a publisher's public key, or other information. See [Metadata](#metadata).</dd>
+  <dd>Metadata about a piece of content or an identity. Empty for support claims. See [Metadata](#metadata).</dd>
 </dl>
   
 #### Claim Example
 
 <!-- done -->
 
-Here is an example claim:
+Here is an example stream claim:
 
 ```
 {
@@ -199,23 +206,21 @@ Here is an example claim:
   "n": 0,
   "height": 146117
 }
-```
+```	
 
 #### Claim Operations
 
 <!-- done -->
 
-There are four claim operations: _create_, _support_, _update_, and _abandon_.
+There are three claim operations: _create_, _update_, and _abandon_.
 
 <dl>
   <dt>create</dt>
   <dd>Makes a new claim.</dd>
-  <dt>support</dt>
-  <dd>Adds its [[amount]] to the stake of an already existing claim. It contains no metadata.</dd>
   <dt>update</dt>
-  <dd>Changes the data or the amount stored in an existing claim or support. Updates do not change the claim ID, so an updated claim retains any supports attached to it. </dd>
+  <dd>Changes the value or amount of an existing claim. Updates do not change the claim ID, so an updated claim retains any supports attached to it. </dd>
   <dt>abandon</dt>
-  <dd>Withdraws a claim or support, freeing the associated credits to be used for other purposes.</dd>
+  <dd>Withdraws a claim, freeing the associated credits to be used for other purposes.</dd>
 </dl>
 
 #### Claimtrie
@@ -226,7 +231,7 @@ The _claimtrie_ is the data structure used to store the set of all claims and pr
 
 The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.
 
-The hash of the root node  (the `root hash`) is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.
+The _root hash_ is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.
 
 Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the total amount of credits backing each claim.
 
@@ -236,33 +241,40 @@ For more details on the specific claimtrie implementation, see [the source code]
 
 <!-- done -->
 
-A claim can have one or more the following properties at a given block.
+A claim can have one or more the following statuses at a given block.
 
 ##### Accepted
 
 <!-- done -->
 
-An accepted claim or support is one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.
+An _accepted_ claim is one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.
+
+Accepted claims do not appear in or affect the claimtrie state until they are [Active](#active).
 
 ##### Abandoned
 
 <!-- done -->
 
-An abandoned claim or support is one that was withdrawn by its creator. It is no longer in contention to control a name. Spending a transaction that contains a claim will cause that claim to become abandoned.
+An _abandoned_ claim is one that was withdrawn by its creator. Spending a transaction that contains a claim will cause that claim to become abandoned.
 
-While data related to abandoned claims technically still resides in the blockchain, it is considered inappropriate to use this data to fetch the associated content.
+Abandoned stream and identity claims are no longer stored in the claimtrie. Abandoned support claims no longer contribute their amount to the sort order of claims listed in a leaf.
+
+While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content.
 
 ##### Active
 
-A claim is active when it is in contention for controlling a name (or a support for such a claim). An active claim must be accepted and not abandoned. The time it takes an accepted claim to become active is called the activation delay, and it depends on the claim type, the height of the current block, and the height at which the last takeover occurred for the claim’s name.
+An _active_ claim is an accepted and non-abandoned claim that has been in the blockchain long enough to be activated. The length of time required is called the _activation delay_.
 
-If the claim is an update or support to the current controlling claim, or if it is the first claim for a name (T = 0), the claim becomes active as soon as it is accepted. Otherwise it becomes active at height A, where `A = C + D`, and `D = min(4032, floor((H-T) / 32))`.
+The activation delay depends on the claim operation, the height of the current block, and the height at which the claimtrie state for that name last changed.
 
-- A = activation height
-- D = activation delay
+If the claim is an update or support to an already active claim, or if it is the first claim for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:
+
+`C + min(4032, floor((H-T) / 32))`
+
+Where: 
 - C = claim height (height when the claim was accepted)
 - H = current height
-- T = takeover height (the most recent height at which the controlling claim for the name changed)
+- T = takeover height (the most recent height at which the claimtrie state for the name changed)
 
 In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. The goal of this delay function is to give long-standing claimants time to respond to takeover attempts, while still keeping takeover times reasonable and allowing recent or contentious claims to be taken over quickly.
 
