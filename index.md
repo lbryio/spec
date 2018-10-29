@@ -50,16 +50,25 @@ TODO:
       * [Claim Properties](#claim-properties)
       * [Claim Example](#claim-example)
       * [Claim Operations](#claim-operations)
+      * [Supports](#supports)
       * [Claimtrie](#claimtrie)
       * [Claim Statuses](#claim-statuses)
          * [Accepted](#accepted)
          * [Abandoned](#abandoned)
          * [Active](#active)
          * [Controlling](#controlling)
+            * [Claim Controlling Example](#claim-controlling-example)
       * [Normalization](#normalization)
    * [URLs](#urls)
       * [Components](#components)
       * [Grammar](#grammar)
+      * [Resolution](#resolution)
+         * [No Modifier](#no-modifier)
+         * [ClaimID](#claimid)
+         * [ClaimSequence](#claimsequence)
+         * [BidPosition](#bidposition)
+         * [ChannelName and ClaimName](#channelname-and-claimname)
+         * [Example](#example)
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
@@ -98,9 +107,7 @@ TODO:
          * [Download](#download-1)
          * [UploadCheck](#uploadcheck)
          * [Upload](#upload)
-   * [Reflector / BlobEx Upload](#reflector--blobex-upload)
-   * [Data Markets](#data-markets)
-* [Conclusion](#conclusion)
+   * [Reflectors and Data Markets](#reflectors-and-data-markets)
 <!--te-->
 
 </div>
@@ -355,48 +362,48 @@ URLs are human-readable references to claims. All URLs contain a name, and can b
 
 A URL is a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height, for reasons covered in [Design Notes](#design-notes). Common URL structures are:
 
-**Name:** a basic claim for a name
+**Stream Claim Name:** a basic claim for a name
 
 ```
-lbry:meet-LBRY
+lbry://meet-LBRY
 ```
 
 **Claim ID:** a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed.
 
 ```
-lbry:meet-LBRY#7a0aa95c5023c21c098
-lbry:meet-LBRY#7a
+lbry://meet-LBRY#7a0aa95c5023c21c098
+lbry://meet-LBRY#7a
 ```
 
 **Claim Sequence:** the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.
 
 ```
-lbry:meet-LBRY:1
+lbry://meet-LBRY:1
 ```
 
 **Bid Position:** the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.
 
 ```
-lbry:meet-LBRY$2
-lbry:meet-LBRY$3
+lbry://meet-LBRY$2
+lbry://meet-LBRY$3
 ```
 
 **Query Params:** extra parameters (reserved for future use)
 
 ```
-lbry:meet-LBRY?arg=value+arg2=value2
+lbry://meet-LBRY?arg=value+arg2=value2
 ```
 
-**Channel:** a claim for a channel
+**Channel Claim Name:** a claim for a channel
 
 ```
-lbry:@lbry
+lbry://@lbry
 ```
 
-**Claim in Channel:** URLS with a channel and a claim name are resolved in two steps. First the channel is resolved to get the claim for that channel. Then the name is resolved to get the appropriate claim from among the claims in the channel.
+**Channel Claim Name and Stream Claim Name:** URLS with a channel and a stream claim name are resolved in two steps. First the channel is resolved to get the appropriate claim for that channel. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
 
 ```
-lbry:@lbry/meet-LBRY
+lbry://@lbry/meet-LBRY
 ```
 
 #### Grammar
@@ -410,13 +417,13 @@ URL ::= Scheme Path Query?
 
 Scheme ::= 'lbry://'
 
-Path ::=  ClaimNameAndModifier | ChannelAndModifier ( '/' ClaimNameAndModifier )?
+Path ::=  StreamClaimNameAndModifier | ChannelClaimNameAndModifier ( '/' StreamClaimNameAndModifier )?
 
-ClaimNameAndModifier ::= ClaimName Modifier?
-ChannelAndModifier ::= Channel Modifier?
+StreamClaimNameAndModifier ::= StreamClaimName Modifier?
+ChannelClaimNameAndModifier ::= ChannelClaimName Modifier?
 
-ClaimName ::= NameChar+
-Channel ::= '@' ClaimName
+StreamClaimName ::= NameChar+
+ChannelClaimName ::= '@' NameChar+
 
 Modifier ::= ClaimID | ClaimSequence | BidPosition
 ClaimID ::= '#' Hex+
@@ -440,6 +447,73 @@ NameChar ::= Char - [=&#:$@?/]  /* any character that is not reserved */
 Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] /* any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. */
 ```
 
+#### Resolution
+
+URL _resolution_ is the process of translating a URL into a [[claim ID]]. 
+
+##### No Modifier
+
+Return the controlling claim for the name. Stream claims and channel claims are resolved the same way.
+
+##### ClaimID
+
+Get all claims for the claim name whose IDs start with the given `ClaimID`. Sort the claims in ascending order by block height and position within the block. Return the first claim.
+
+##### ClaimSequence
+
+Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the Nth claim, where N is the given `ClaimSequence` value.
+
+##### BidPosition
+
+Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the Nth claim, where N is the given `BidSequence` value.
+
+##### ChannelName and ClaimName
+
+If both a channel name and a claim name is present, resolution happens in two steps. First, remove the `/` and `StreamClaimNameAndModifier` from the path, and resolve the URL as if it only had a `ChannelClaimNameAndModifier`. Then get the list of all claims in that channel. Finally, resolve the `StreamClaimNameAndModifier` as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.
+
+Note: claims in a channel are stream claims, so they compete for the non-channel name too. fixme: Expand on this
+
+( fixme: explain how claim signing works, and what it means to be **in** a channel )
+
+##### Example
+
+Suppose the following names were claimed in the following order:
+
+
+Name            | Claim ID  | Amount
+:---            | :---      | :---
+apple           | 690eea    | 1
+banana          | 714a3f    | 2
+cherry          | bfaabb    | 100
+apple           | 690eea    | 10
+@Arthur         | b7bab5    | 1
+@Bryan          | 0da517    | 1
+@Chris          | b3f7b1    | 1
+@Chris/banana   | fc861c    | 1
+@Arthur/apple   | 37ee1     | 20
+@Bryan/cherry   | a18bca    | 10
+@Chris          | 005a7d    | 100
+@Arthur/cherry  | d39aa0    | 20
+
+
+
+Here is how the following URLs should resolve:
+
+URL                          | Claim ID     | Note
+:---                         | :---         | :---
+`lbry://apple`               | a37ee1 
+`lbry://banana`              | 714a3f 
+`lbry://@Chris`              | 005a7d 
+`lbry://@Chris/banana`       | _not found_  | the controlling `@Chris` does not have a `banana`
+`lbry://@Chris:1/banana`     | fc861c
+`lbry://@Chris:#fc8/banana`  | fc861c
+`lbry://cherry`              | bfaabb 
+`lbry://@Arthur/cherry`      | d39aa0 
+`lbry://@Bryan`              | 0da517 
+`lbry://banana$1`            | 714a3f 
+`lbry://banana$2`            | fc861c 
+`lbry://banana$3`            | _not found_
+`lbry://@Arthur:1`           |  b7bab5
 
 #### Design Notes
 
@@ -634,7 +708,7 @@ Clients are responsible for validating metadata, including data structure and si
 (expand)
 
 - Validation 101
-- Channel / identity validation
+- ChannelName / identity validation
 
 
 
@@ -648,11 +722,13 @@ Clients are responsible for validating metadata, including data structure and si
 
 <!-- done -->
 
+Content on the LBRY network is encoded to facilitate distribution.
+
 #### Blobs
 
 <!-- done -->
 
-The unit of data in our network is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.
+The unit of data in the LBRY network is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hash protects against naming collisions and ensures that the content you get is what you expect.
 
 Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and IV for each blob is stored as described below. 
 
@@ -660,7 +736,7 @@ Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to kee
 
 <!-- done -->
 
-Multiple blobs are combined into a _stream_. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the _manifest blob_, followed by one or more _content blobs_. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and convert them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.
+Multiple blobs are combined into a _stream_. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the _manifest blob_, followed by one or more _content blobs_. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and decode them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.
 
 The blob hash of the manifest blob is called the _stream hash_. It uniquely identifies each stream.
 
@@ -676,9 +752,15 @@ A manifest blob's contents are encoded using a canonical JSON encoding. The JSON
 - Floating point numbers, leading zeros, and "minus 0" for integers are not permitted.
 - Trailing commas after the last item in an array or object are not permitted.
 
-Here's an example manifest, with whitespace added for readability: 
+Here's an example manifest: 
 
 <!-- originally from 053b2f0f0e82e7f022837382733d5f5817dcd67027103fe43f00fa7a6f9fa8742c1022a851616c1ac15d1c60e89db3f4 -->
+
+```
+{"blobs":[{"blob_hash":"a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61","iv":"ef6caef207a207ca5b14c0282d25ce21","length":2097152},{"blob_hash":"bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc","iv":"a37b291a37337fc1ff90ae655c244c1d","length":2097152},...,{"blob_hash":"322973617221ddfec6e53bff4b74b9c21c968cd32ba5a5094d84210e660c4b2ed0882b114a2392a08b06183f19330aaf","iv": "a00f5f458695bdc9d50d3dbbc7905abc","length":600160}],"filename":"6b706a7977755477704d632e6d7034","key":"94d89c0493c576057ac5f32eb0871180","version":1}
+```
+
+Here's the same manifest, with whitespace added for readability:
 
 ```
 {
@@ -706,7 +788,7 @@ Here's an example manifest, with whitespace added for readability:
 }
 ```
 
-The `key` field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The `version` field is always 1. It is intended to signal structure changes in the future. The `length` field for each blob is the length of the encrypted blob, not the original file chunk.
+The `key` field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The `version` field is always 1. It is intended to signal structure changes in future versions of this protocol. The `length` field for each blob is the length of the encrypted blob, not the original file chunk.
 
 Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.
 
@@ -762,20 +844,20 @@ Decoding a stream is like encoding in reverse, and with the added step of verify
 
 ### Announce
 
-After a [[stream]] is encoded, it must be _announced_ to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. The LBRY networks tracks announced content using a distributed hash table.
+After a [[stream]] is encoded, it must be _announced_ to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. The LBRY network tracks announced content using a distributed hash table.
 
 #### Distributed Hash Table
 
 _Distributed hash tables_ (or DHTs) have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
-spec fairly closely, with some modifications.
+specification fairly closely, with some modifications.
 
-A distributed hash table is a key-value store that is spread over multiple host nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.
+A distributed hash table is a key-value store that is spread over multiple nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.
 
 When a host connects to the DHT, it announces the hash for every [[blob]] it wishes to share. Downloading a blob from the network requires querying the DHT for a list of hosts that announced that blob’s hash (called _peers_), then requesting the blob from the peers directly.
 
 #### Announcing to the DHT
 
-A host announces a hash to the DHT in two steps. First, the host looks for nodes that are closest to the target hash that will be announced. Then the host announces the target hash to those nodes.
+A host announces a hash to the DHT in two steps. First, the host looks for nodes that are closest to the target hash. Then the host asks those nodes to store the fact that the host has the target hash available for download.
 
 Finding the closest nodes is done via iterative `FindNode` DHT requests. The host starts with the closest nodes it knows about and sends a `FindNode(target_hash)` request to each of them. If any of the requests return nodes that are closer to the target hash, the host sends `FindNode` requests to those nodes to try to get even closer. When the `FindNode` requests no longer return nodes that are closer, the search ends.
 
@@ -784,7 +866,7 @@ Once the search is over, the host takes the 8 closest nodes it found and sends a
 
 ### Download
 
-A client wishing to download a [[stream]] must first query the [[DHT]] to find peers hosting the [[blobs]] in that stream, then contact those peers directly to download the blobs directly.
+A client wishing to download a [[stream]] must first query the [[DHT]] to find [[peers]] hosting the [[blobs]] in that stream, then contact those peers to download the blobs directly.
 
 #### Querying the DHT
 
@@ -823,32 +905,15 @@ The protocol calls and message types are defined in detail [here](https://github
 
 
 
-### Reflector / BlobEx Upload
+### Reflectors and Data Markets
+
+In order for a client to download content, there must be hosts online that have the content the client wants, when the client wants it. To incentivize the continued hosting of data, the blob exchange protocol supports data upload and payment for data. _Reflectors_ are hosts that accept data uploads. They rehost (reflect) the uploaded data and charge for downloads. Using a reflector is optional, but most publishers will probably choose to use them. Doing so obviates the need for the publisher's server to be online and connectable, which can be especially useful for mobile clients or those behind a firewall.
+
+The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it will charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.
 
 
-### Data Markets
 
-To incentivize hosts and reflectors, the blob exchange protocol supports payment for data.
-
-(Price negotiation.)
-
-<!--
-
-### Data Market
-
-Hosts in the DHT can treat blobs as opaque chunks of data. There is price negotiation mechanism for data. So some hosts can be
-purely interested in storing data and selling it. They may create algorithms for what data is more in demand (e.g. the first content
-blob in a stream is probably requested more often than the last blob).
-
-Talk about reputation system for hosts.
-
-Talk about how lightning can be used for streaming payments.
-
--->
-
-## Conclusion
-
-*TODO*
+---
 
 
 _Edit this on Github: https://github.com/lbryio/spec_

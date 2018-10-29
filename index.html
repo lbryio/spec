@@ -47,6 +47,7 @@
 <li><a href="#claim-properties">Claim Properties</a></li>
 <li><a href="#claim-example">Claim Example</a></li>
 <li><a href="#claim-operations">Claim Operations</a></li>
+<li><a href="#supports">Supports</a></li>
 <li><a href="#claimtrie">Claimtrie</a></li>
 <li><a href="#claim-statuses">Claim Statuses</a>
 
@@ -55,6 +56,7 @@
 <li><a href="#abandoned">Abandoned</a></li>
 <li><a href="#active">Active</a></li>
 <li><a href="#controlling">Controlling</a></li>
+<li><a href="#claim-controlling-example">Claim Controlling Example</a></li>
 </ul></li>
 <li><a href="#normalization">Normalization</a></li>
 </ul></li>
@@ -63,6 +65,16 @@
 <ul>
 <li><a href="#components">Components</a></li>
 <li><a href="#grammar">Grammar</a></li>
+<li><a href="#resolution">Resolution</a>
+
+<ul>
+<li><a href="#no-modifier">No Modifier</a></li>
+<li><a href="#claimid">ClaimID</a></li>
+<li><a href="#claimsequence">ClaimSequence</a></li>
+<li><a href="#bidposition">BidPosition</a></li>
+<li><a href="#channelname-and-claimname">ChannelName and ClaimName</a></li>
+<li><a href="#example">Example</a></li>
+</ul></li>
 <li><a href="#design-notes">Design Notes</a></li>
 </ul></li>
 <li><a href="#transactions">Transactions</a>
@@ -132,11 +144,9 @@
 <li><a href="#upload">Upload</a></li>
 </ul></li>
 </ul></li>
-<li><a href="#reflector--blobex-upload">Reflector / BlobEx Upload</a></li>
-<li><a href="#data-markets">Data Markets</a></li>
-</ul></li>
-<li><a href="#conclusion">Conclusion</a>
+<li><a href="#reflectors-and-data-markets">Reflectors and Data Markets</a>
 <!--te--></li>
+</ul></li>
 </ul>
 
 <p></div></p>
@@ -198,15 +208,13 @@
 
 <!-- done -->
 
-<p>A <em>claim</em> is a single metadata entry in the blockchain. There are three types of claims:</p>
+<p>A <em>claim</em> is a single metadata entry in the blockchain. There are two types of claims:</p>
 
 <dl>
   <dt>stream</dt>
-  <dd>Declare the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
+  <dd>Declares the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
   <dt>identity</dt>
-  <dd>Create a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
-  <dt>support</dt>
-  <dd>Add their amount to a stream or identity claim.</dd>
+  <dd>Creates a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
 </dl>
 
 <h4 id="claim-properties">Claim Properties</h4>
@@ -221,7 +229,7 @@
   <dt>amount</dt>
   <dd>A quantity of tokens used to stake the claim. See [Controlling](#controlling).</dd>
   <dt>value</dt>
-  <dd>Metadata about a piece of content or an identity. Empty for support claims. See [Metadata](#metadata).</dd>
+  <dd>Metadata about a piece of content or an identity. See [Metadata](#metadata).</dd>
 </dl>
   
 
@@ -257,10 +265,16 @@
   <dt>create</dt>
   <dd>Makes a new claim.</dd>
   <dt>update</dt>
-  <dd>Changes the value or amount of an existing claim. Updates do not change the claim ID, so an updated claim retains any supports attached to it. </dd>
+  <dd>Changes the value or amount of an existing claim, without changing the claim ID.</dd>
   <dt>abandon</dt>
   <dd>Withdraws a claim, freeing the associated credits to be used for other purposes.</dd>
 </dl>
+
+<h4 id="supports">Supports</h4>
+
+<p>A <em>support</em> is an additional transaction type that lends its <em>amount</em> to an existing claim.</p>
+
+<p>A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of <a href="#claim-operations">Claim Operations</a> and <a href="#claim-statuses">Claim Statuses</a>.</p>
 
 <h4 id="claimtrie">Claimtrie</h4>
 
@@ -296,17 +310,19 @@
 
 <p>An <em>abandoned</em> claim is one that was withdrawn by its creator. Spending a transaction that contains a claim will cause that claim to become abandoned.</p>
 
-<p>Abandoned stream and identity claims are no longer stored in the claimtrie. Abandoned support claims no longer contribute their amount to the sort order of claims listed in a leaf.</p>
+<p>Abandoned claims are no longer stored in the claimtrie.</p>
 
-<p>While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content.</p>
+<p>While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content, and active claims signed by abandoned identities will no longer be reported as valid.</p>
 
 <h5 id="active">Active</h5>
+
+<!-- done -->
 
 <p>An <em>active</em> claim is an accepted and non-abandoned claim that has been in the blockchain long enough to be activated. The length of time required is called the <em>activation delay</em>.</p>
 
 <p>The activation delay depends on the claim operation, the height of the current block, and the height at which the claimtrie state for that name last changed.</p>
 
-<p>If the claim is an update or support to an already active claim, or if it is the first claim for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:</p>
+<p>If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:</p>
 
 <pre><code>C + min(4032, floor((H-T) / 32))
 </code></pre>
@@ -319,29 +335,33 @@
 <li>T = takeover height (the most recent height at which the claimtrie state for the name changed)</li>
 </ul>
 
-<p>In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. The goal of this delay function is to give long-standing claimants time to respond to takeover attempts, while still keeping takeover times reasonable and allowing recent or contentious claims to be taken over quickly.</p>
+<p>In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover.</p>
+
+<p>The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.</p>
 
 <h5 id="controlling">Controlling</h5>
 
-<p>The controlling claim is the claim that has the highest total effective amount, which is the sum of its own amount and the amounts of all of its supports. It must be active and cannot itself be a support.</p>
+<!-- done -->
+
+<p>A <em>controlling</em> claim is the active claim that has the highest total effective amount, which is the sum of its own amount and the amounts of all of its <a href="#supports">supports</a>.</p>
 
 <p>Only one claim can be controlling for a given name at a given block. To determine which claim is controlling for a given name at a given block, the following algorithm is used:</p>
 
 <ol>
 <li><p>For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim.</p></li>
 
-<li><p>Determine if a takeover is happening</p>
+<li><p>If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.</p></li>
 
-<ol>
-<li><p>If the claim with the greatest total is the controlling claim from the previous block, then nothing changes. That claim is still controlling at this block.</p></li>
-
-<li><p>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and then perform step 1 again.</p></li>
-</ol></li>
+<li><p>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.</p></li>
 
 <li><p>At this point, the claim with the greatest total is the controlling claim at this block.</p></li>
 </ol>
 
-<p>The purpose of 2b is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 2b will cause the greater claim to also activate and become the controlling claim.</p>
+<p>The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.</p>
+
+<h6 id="claim-controlling-example">Claim Controlling Example</h6>
+
+<!-- done -->
 
 <p>Here is a step-by-step example to illustrate the different scenarios. All claims are for the same name.</p>
 
@@ -368,6 +388,8 @@
 
 <h4 id="normalization">Normalization</h4>
 
+<!-- done -->
+
 <p>Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are normalized using the NFD normalization form, then lowercased using the en_US locale.</p>
 
 <h3 id="urls">URLs</h3>
@@ -378,41 +400,41 @@
 
 <p>A URL is a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height, for reasons covered in <a href="#design-notes">Design Notes</a>. Common URL structures are:</p>
 
-<p><strong>Name:</strong> a basic claim for a name</p>
+<p><strong>Stream Claim Name:</strong> a basic claim for a name</p>
 
-<pre><code>lbry:meet-LBRY
+<pre><code>lbry://meet-LBRY
 </code></pre>
 
 <p><strong>Claim ID:</strong> a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed.</p>
 
-<pre><code>lbry:meet-LBRY#7a0aa95c5023c21c098
-lbry:meet-LBRY#7a
+<pre><code>lbry://meet-LBRY#7a0aa95c5023c21c098
+lbry://meet-LBRY#7a
 </code></pre>
 
 <p><strong>Claim Sequence:</strong> the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.</p>
 
-<pre><code>lbry:meet-LBRY:1
+<pre><code>lbry://meet-LBRY:1
 </code></pre>
 
 <p><strong>Bid Position:</strong> the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.</p>
 
-<pre><code>lbry:meet-LBRY$2
-lbry:meet-LBRY$3
+<pre><code>lbry://meet-LBRY$2
+lbry://meet-LBRY$3
 </code></pre>
 
 <p><strong>Query Params:</strong> extra parameters (reserved for future use)</p>
 
-<pre><code>lbry:meet-LBRY?arg=value+arg2=value2
+<pre><code>lbry://meet-LBRY?arg=value+arg2=value2
 </code></pre>
 
-<p><strong>Channel:</strong> a claim for a channel</p>
+<p><strong>Channel Claim Name:</strong> a claim for a channel</p>
 
-<pre><code>lbry:@lbry
+<pre><code>lbry://@lbry
 </code></pre>
 
-<p><strong>Claim in Channel:</strong> URLS with a channel and a claim name are resolved in two steps. First the channel is resolved to get the claim for that channel. Then the name is resolved to get the appropriate claim from among the claims in the channel.</p>
+<p><strong>Channel Claim Name and Stream Claim Name:</strong> URLS with a channel and a stream claim name are resolved in two steps. First the channel is resolved to get the appropriate claim for that channel. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.</p>
 
-<pre><code>lbry:@lbry/meet-LBRY
+<pre><code>lbry://@lbry/meet-LBRY
 </code></pre>
 
 <h4 id="grammar">Grammar</h4>
@@ -425,13 +447,13 @@ lbry:meet-LBRY$3
 
 Scheme ::= 'lbry://'
 
-Path ::=  ClaimNameAndModifier | ChannelAndModifier ( '/' ClaimNameAndModifier )?
+Path ::=  StreamClaimNameAndModifier | ChannelClaimNameAndModifier ( '/' StreamClaimNameAndModifier )?
 
-ClaimNameAndModifier ::= ClaimName Modifier?
-ChannelAndModifier ::= Channel Modifier?
+StreamClaimNameAndModifier ::= StreamClaimName Modifier?
+ChannelClaimNameAndModifier ::= ChannelClaimName Modifier?
 
-ClaimName ::= NameChar+
-Channel ::= '@' ClaimName
+StreamClaimName ::= NameChar+
+ChannelClaimName ::= '@' NameChar+
 
 Modifier ::= ClaimID | ClaimSequence | BidPosition
 ClaimID ::= '#' Hex+
@@ -454,6 +476,213 @@ Hex ::= (Digit | HexAlpha)+
 NameChar ::= Char - [=&amp;#:$@?/]  /* any character that is not reserved */
 Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] /* any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. */
 </code></pre>
+
+<h4 id="resolution">Resolution</h4>
+
+<p>URL <em>resolution</em> is the process of translating a URL into a [[claim ID]].</p>
+
+<h5 id="no-modifier">No Modifier</h5>
+
+<p>Return the controlling claim for the name. Stream claims and channel claims are resolved the same way.</p>
+
+<h5 id="claimid">ClaimID</h5>
+
+<p>Get all claims for the claim name whose IDs start with the given <code>ClaimID</code>. Sort the claims in ascending order by block height and position within the block. Return the first claim.</p>
+
+<h5 id="claimsequence">ClaimSequence</h5>
+
+<p>Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the Nth claim, where N is the given <code>ClaimSequence</code> value.</p>
+
+<h5 id="bidposition">BidPosition</h5>
+
+<p>Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the Nth claim, where N is the given <code>BidSequence</code> value.</p>
+
+<h5 id="channelname-and-claimname">ChannelName and ClaimName</h5>
+
+<p>If both a channel name and a claim name is present, resolution happens in two steps. First, remove the <code>/</code> and <code>StreamClaimNameAndModifier</code> from the path, and resolve the URL as if it only had a <code>ChannelClaimNameAndModifier</code>. Then get the list of all claims in that channel. Finally, resolve the <code>StreamClaimNameAndModifier</code> as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.</p>
+
+<p>Note: claims in a channel are stream claims, so they compete for the non-channel name too. fixme: Expand on this</p>
+
+<p>( fixme: explain how claim signing works, and what it means to be <strong>in</strong> a channel )</p>
+
+<h5 id="example">Example</h5>
+
+<p>Suppose the following names were claimed in the following order:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Claim ID</th>
+<th align="left">Amount</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left">apple</td>
+<td align="left">690eea</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">banana</td>
+<td align="left">714a3f</td>
+<td align="left">2</td>
+</tr>
+
+<tr>
+<td align="left">cherry</td>
+<td align="left">bfaabb</td>
+<td align="left">100</td>
+</tr>
+
+<tr>
+<td align="left">apple</td>
+<td align="left">690eea</td>
+<td align="left">10</td>
+</tr>
+
+<tr>
+<td align="left">@Arthur</td>
+<td align="left">b7bab5</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Bryan</td>
+<td align="left">0da517</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Chris</td>
+<td align="left">b3f7b1</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Chris/banana</td>
+<td align="left">fc861c</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Arthur/apple</td>
+<td align="left">37ee1</td>
+<td align="left">20</td>
+</tr>
+
+<tr>
+<td align="left">@Bryan/cherry</td>
+<td align="left">a18bca</td>
+<td align="left">10</td>
+</tr>
+
+<tr>
+<td align="left">@Chris</td>
+<td align="left">005a7d</td>
+<td align="left">100</td>
+</tr>
+
+<tr>
+<td align="left">@Arthur/cherry</td>
+<td align="left">d39aa0</td>
+<td align="left">20</td>
+</tr>
+</tbody>
+</table>
+<p>Here is how the following URLs should resolve:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left">URL</th>
+<th align="left">Claim ID</th>
+<th align="left">Note</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><code>lbry://apple</code></td>
+<td align="left">a37ee1</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana</code></td>
+<td align="left">714a3f</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris</code></td>
+<td align="left">005a7d</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris/banana</code></td>
+<td align="left"><em>not found</em></td>
+<td align="left">the controlling <code>@Chris</code> does not have a <code>banana</code></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris:1/banana</code></td>
+<td align="left">fc861c</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris:#fc8/banana</code></td>
+<td align="left">fc861c</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://cherry</code></td>
+<td align="left">bfaabb</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Arthur/cherry</code></td>
+<td align="left">d39aa0</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Bryan</code></td>
+<td align="left">0da517</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana$1</code></td>
+<td align="left">714a3f</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana$2</code></td>
+<td align="left">fc861c</td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana$3</code></td>
+<td align="left"><em>not found</em></td>
+<td align="left"></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Arthur:1</code></td>
+<td align="left">b7bab5</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
 
 <h4 id="design-notes">Design Notes</h4>
 
@@ -630,7 +859,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <ul>
 <li>Validation 101</li>
-<li>Channel / identity validation</li>
+<li>ChannelName / identity validation</li>
 </ul>
 
 <h2 id="data">Data</h2>
@@ -641,11 +870,13 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <!-- done -->
 
+<p>Content on the LBRY network is encoded to facilitate distribution.</p>
+
 <h4 id="blobs">Blobs</h4>
 
 <!-- done -->
 
-<p>The unit of data in our network is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA384 hash of the blob contents. Addressing blobs by their hashes simultaneously protects against naming collisions and ensures that the content you get is what you expect.</p>
+<p>The unit of data in the LBRY network is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA384 hash of the blob contents. Addressing blobs by their hash protects against naming collisions and ensures that the content you get is what you expect.</p>
 
 <p>Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available <a href="https://github.com/lbryio/lbry.go/blob/master/stream/blob.go">here</a>. The encryption key and IV for each blob is stored as described below.</p>
 
@@ -653,7 +884,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <!-- done -->
 
-<p>Multiple blobs are combined into a <em>stream</em>. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the <em>manifest blob</em>, followed by one or more <em>content blobs</em>. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and convert them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.</p>
+<p>Multiple blobs are combined into a <em>stream</em>. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the <em>manifest blob</em>, followed by one or more <em>content blobs</em>. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and decode them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.</p>
 
 <p>The blob hash of the manifest blob is called the <em>stream hash</em>. It uniquely identifies each stream.</p>
 
@@ -671,9 +902,14 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 <li>Trailing commas after the last item in an array or object are not permitted.</li>
 </ul>
 
-<p>Here&rsquo;s an example manifest, with whitespace added for readability:</p>
+<p>Here&rsquo;s an example manifest:</p>
 
 <!-- originally from 053b2f0f0e82e7f022837382733d5f5817dcd67027103fe43f00fa7a6f9fa8742c1022a851616c1ac15d1c60e89db3f4 -->
+
+<pre><code>{&quot;blobs&quot;:[{&quot;blob_hash&quot;:&quot;a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61&quot;,&quot;iv&quot;:&quot;ef6caef207a207ca5b14c0282d25ce21&quot;,&quot;length&quot;:2097152},{&quot;blob_hash&quot;:&quot;bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc&quot;,&quot;iv&quot;:&quot;a37b291a37337fc1ff90ae655c244c1d&quot;,&quot;length&quot;:2097152},...,{&quot;blob_hash&quot;:&quot;322973617221ddfec6e53bff4b74b9c21c968cd32ba5a5094d84210e660c4b2ed0882b114a2392a08b06183f19330aaf&quot;,&quot;iv&quot;: &quot;a00f5f458695bdc9d50d3dbbc7905abc&quot;,&quot;length&quot;:600160}],&quot;filename&quot;:&quot;6b706a7977755477704d632e6d7034&quot;,&quot;key&quot;:&quot;94d89c0493c576057ac5f32eb0871180&quot;,&quot;version&quot;:1}
+</code></pre>
+
+<p>Here&rsquo;s the same manifest, with whitespace added for readability:</p>
 
 <pre><code>{
   &quot;blobs&quot;:[
@@ -700,7 +936,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 }
 </code></pre>
 
-<p>The <code>key</code> field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The <code>version</code> field is always 1. It is intended to signal structure changes in the future. The <code>length</code> field for each blob is the length of the encrypted blob, not the original file chunk.</p>
+<p>The <code>key</code> field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The <code>version</code> field is always 1. It is intended to signal structure changes in future versions of this protocol. The <code>length</code> field for each blob is the length of the encrypted blob, not the original file chunk.</p>
 
 <p>Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.</p>
 
@@ -759,20 +995,20 @@ fixme: this link is for v0, not v1. need to implement v1 or drop the link.</p>
 
 <h3 id="announce">Announce</h3>
 
-<p>After a [[stream]] is encoded, it must be <em>announced</em> to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. The LBRY networks tracks announced content using a distributed hash table.</p>
+<p>After a [[stream]] is encoded, it must be <em>announced</em> to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. The LBRY network tracks announced content using a distributed hash table.</p>
 
 <h4 id="distributed-hash-table">Distributed Hash Table</h4>
 
 <p><em>Distributed hash tables</em> (or DHTs) have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf">Kademlia</a>
-spec fairly closely, with some modifications.</p>
+specification fairly closely, with some modifications.</p>
 
-<p>A distributed hash table is a key-value store that is spread over multiple host nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.</p>
+<p>A distributed hash table is a key-value store that is spread over multiple nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.</p>
 
 <p>When a host connects to the DHT, it announces the hash for every [[blob]] it wishes to share. Downloading a blob from the network requires querying the DHT for a list of hosts that announced that blob’s hash (called <em>peers</em>), then requesting the blob from the peers directly.</p>
 
 <h4 id="announcing-to-the-dht">Announcing to the DHT</h4>
 
-<p>A host announces a hash to the DHT in two steps. First, the host looks for nodes that are closest to the target hash that will be announced. Then the host announces the target hash to those nodes.</p>
+<p>A host announces a hash to the DHT in two steps. First, the host looks for nodes that are closest to the target hash. Then the host asks those nodes to store the fact that the host has the target hash available for download.</p>
 
 <p>Finding the closest nodes is done via iterative <code>FindNode</code> DHT requests. The host starts with the closest nodes it knows about and sends a <code>FindNode(target_hash)</code> request to each of them. If any of the requests return nodes that are closer to the target hash, the host sends <code>FindNode</code> requests to those nodes to try to get even closer. When the <code>FindNode</code> requests no longer return nodes that are closer, the search ends.</p>
 
@@ -780,7 +1016,7 @@ spec fairly closely, with some modifications.</p>
 
 <h3 id="download">Download</h3>
 
-<p>A client wishing to download a [[stream]] must first query the [[DHT]] to find peers hosting the [[blobs]] in that stream, then contact those peers directly to download the blobs directly.</p>
+<p>A client wishing to download a [[stream]] must first query the [[DHT]] to find [[peers]] hosting the [[blobs]] in that stream, then contact those peers to download the blobs directly.</p>
 
 <h4 id="querying-the-dht">Querying the DHT</h4>
 
@@ -814,31 +1050,13 @@ spec fairly closely, with some modifications.</p>
 
 <p>The protocol calls and message types are defined in detail <a href="https://github.com/lbryio/lbry.go/blob/master/blobex/blobex.proto">here</a>.</p>
 
-<h3 id="reflector-blobex-upload">Reflector / BlobEx Upload</h3>
+<h3 id="reflectors-and-data-markets">Reflectors and Data Markets</h3>
 
-<h3 id="data-markets">Data Markets</h3>
+<p>In order for a client to download content, there must be hosts online that have the content the client wants, when the client wants it. To incentivize the continued hosting of data, the blob exchange protocol supports data upload and payment for data. <em>Reflectors</em> are hosts that accept data uploads. They rehost (reflect) the uploaded data and charge for downloads. Using a reflector is optional, but most publishers will probably choose to use them. Doing so obviates the need for the publisher&rsquo;s server to be online and connectable, which can be especially useful for mobile clients or those behind a firewall.</p>
 
-<p>To incentivize hosts and reflectors, the blob exchange protocol supports payment for data.</p>
+<p>The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it will charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.</p>
 
-<p>(Price negotiation.)</p>
-
-<!--
-
-### Data Market
-
-Hosts in the DHT can treat blobs as opaque chunks of data. There is price negotiation mechanism for data. So some hosts can be
-purely interested in storing data and selling it. They may create algorithms for what data is more in demand (e.g. the first content
-blob in a stream is probably requested more often than the last blob).
-
-Talk about reputation system for hosts.
-
-Talk about how lightning can be used for streaming payments.
-
--->
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p><em>TODO</em></p>
+<hr>
 
 <p><em>Edit this on Github: <a href="https://github.com/lbryio/spec">https://github.com/lbryio/spec</a></em></p>
 
