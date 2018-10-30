@@ -351,7 +351,7 @@ Here is a step-by-step example to illustrate the different scenarios. All claims
 
 <!-- done -->
 
-Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are normalized using the NFD normalization form, then lowercased using the en_US locale. 
+Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are converted using [Unicode Normalization Form D](http://unicode.org/reports/tr15/#Norm_Forms) (NFD), then lowercased using the en_US locale when possible. 
 
 ### URLs
 
