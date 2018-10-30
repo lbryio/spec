@@ -177,7 +177,7 @@ A _claim_ is a single metadata entry in the blockchain. There are two types of c
 <dl>
   <dt>stream</dt>
   <dd>Declares the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
-  <dt>identity</dt>
+  <dt>channel</dt>
   <dd>Creates a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
 </dl>
 
@@ -193,7 +193,7 @@ Claims have 4 properties:
   <dt>amount</dt>
   <dd>A quantity of tokens used to stake the claim. See [Controlling](#controlling).</dd>
   <dt>value</dt>
-  <dd>Metadata about a stream or an identity. See [Metadata](#metadata).</dd>
+  <dd>Metadata about a stream or a channel. See [Metadata](#metadata).</dd>
 </dl>
   
 #### Claim Example
@@ -383,38 +383,14 @@ The ultimate purpose of much of the claim and blockchain design is to provide hu
 
 #### Components
 
-A URL is a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height. Common URL structures are:
+<!-- done -->
+
+A URL is a name with one or more modifiers. A bare name on its own will resolve to the [controlling claim](#controlling) at the latest block height. Common URL structures are:
 
 **Stream Claim Name:** a basic claim for a name
 
 ```
-lbry://meet-LBRY
-```
-
-**Claim ID:** a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed.
-
-```
-lbry://meet-LBRY#7a0aa95c5023c21c098
-lbry://meet-LBRY#7a
-```
-
-**Claim Sequence:** the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.
-
-```
-lbry://meet-LBRY:1
-```
-
-**Bid Position:** the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.
-
-```
-lbry://meet-LBRY$2
-lbry://meet-LBRY$3
-```
-
-**Query Params:** extra parameters (reserved for future use)
-
-```
-lbry://meet-LBRY?arg=value+arg2=value2
+lbry://meet-lbry
 ```
 
 **Channel Claim Name:** a claim for a channel
@@ -426,7 +402,36 @@ lbry://@lbry
 **Channel Claim Name and Stream Claim Name:** URLS with a channel and a stream claim name are resolved in two steps. First the channel is resolved to get the appropriate claim for that channel. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
 
 ```
-lbry://@lbry/meet-LBRY
+lbry://@lbry/meet-lbry
+```
+
+**Claim ID:** a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed (see [Resolution](#resolution)).
+
+```
+lbry://meet-lbry#7a0aa95c5023c21c098
+lbry://meet-lbry#7a
+lbry://@lbry#3f/meet-lbry
+```
+
+**Claim Sequence:** the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.
+
+```
+lbry://meet-lbry:1
+lbry://@lbry:1/meet-lbry
+```
+
+**Bid Position:** the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.
+
+```
+lbry://meet-lbry$2
+lbry://meet-lbry$3
+lbry://@lbry$2/meet-lbry
+```
+
+**Query Params:** extra parameters, reserved for future use
+
+```
+lbry://meet-lbry?arg=value+arg2=value2
 ```
 
 #### Grammar
@@ -472,7 +477,7 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 #### Resolution
 
-URL _resolution_ is the process of translating a URL into a [[claim ID]]. 
+URL _resolution_ is the process of translating a URL into it's associated claim id and metadata. 
 
 ##### No Modifier
 
@@ -492,13 +497,13 @@ Get all claims for the claim name. Sort the claims in descending order by total 
 
 ##### ChannelName and ClaimName
 
+<!-- fix me: explain how claim signing works, and what it means to be **in** a channel ->
+
 If both a channel name and a claim name is present, resolution happens in two steps. First, remove the `/` and `StreamClaimNameAndModifier` from the path, and resolve the URL as if it only had a `ChannelClaimNameAndModifier`. Then get the list of all claims in that channel. Finally, resolve the `StreamClaimNameAndModifier` as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.
 
-Note: claims in a channel are stream claims, so they compete for the non-channel name too. fixme: Expand on this
+Technically, if multiple claims for the same name exist inside the same channel, they are resolved via the same resolution rules applied entirely within the sub-scope of the channel. Pragmatically, it rarely makes sense for channels to use the same name twice and support for this functionality may be unreliable in current tooling.
 
-( fixme: explain how claim signing works, and what it means to be **in** a channel )
-
-##### Example
+##### Examples
 
 Suppose the following names were claimed in the following order:
 
@@ -517,8 +522,6 @@ apple           | 690eea    | 10
 @Bryan/cherry   | a18bca    | 10
 @Chris          | 005a7d    | 100
 @Arthur/cherry  | d39aa0    | 20
-
-
 
 Here is how the following URLs should resolve:
 
@@ -540,12 +543,19 @@ URL                          | Claim ID     | Note
 
 #### Design Notes
 
-Most existing public name schemes are first-come, first-serve. This leads to several bad outcomes. When the system is young, users are incentivized to register common names even if they don't intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. In a centralized system, the authority may allow for appeals to reassign names based on trademark or other common use reasons. There may also be a process to "verify" that a name belongs to the entity you think it does (e.g. Twitter's verified accounts). Such processes are often arbitrary, change over time, involve significant transaction costs, and may still lead to names being used in ways that are contrary to user expectation (e.g. [nissan.com](http://nissan.com) is not what you’d expect).
+The most contentious aspect of this design has been the choice to resolve naked names (sometimes called _vanity names_) to the claim with the largest number of staked credits.
 
-In a decentralized system, such approaches are not possible, so name squatting is especially dangerous (see Namecoin). Instead, LBRY creates an efficient allocation of names via a market. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), we believe that if the rules for name ownership and exchange are clearly defined, transaction costs are low, and there is no information asymmetry, then control of URLs will flow to their highest-valued use.
+First, it is important to note the problems in existing domain allocation design. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:
 
-Note that only vanity URLs (i.e. URLs without a ClaimID or or ClaimSequence modifier) have this property. Permanent URLs like `lbry://myclaimname#abc` exist and are available for the small cost of issuing a `create` claim transactions.
+1. Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don't intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities, in this case it is pure value extraction. It also harms the user experience of users, who will see the vast majority of URLs sitting unused (c.f. Namecoin).
 
+1. Bureaucracy and transaction costs. While a centralized system can allow for an authority to use a process to reassign names based on trademark or other common use reasons, this system is also imperfect. Most importantly, it is a censorship point and an avenue for complete exclusion. Additionally, such processes are often arbitrary, change over time, involve significant transaction costs, and _still_ lead to names being used in ways that are contrary to user expectation (e.g. [nissan.com](http://nissan.com)).
+
+1. Inefficencies from price controls. Any system that does not allow a price to float completely freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase. 
+
+Thus, we need an algorithmic design built into consensus that allows URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this design allows for clearly defined rules, low transaction costs, and no information asymmetry, ensuring minimal inefficiency in URL allocation.
+
+It's also important to note that _only_ vanity URLs have this property. Extremely short, memorable URLs like `lbry://myclaimname#a` exist and are available for the minimal cost of issuing a transaction.
 
 
 ### Transactions
