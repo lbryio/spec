@@ -193,7 +193,7 @@ Claims have 4 properties:
   <dt>amount</dt>
   <dd>A quantity of tokens used to stake the claim. See [Controlling](#controlling).</dd>
   <dt>value</dt>
-  <dd>Metadata about a piece of content or an identity. See [Metadata](#metadata).</dd>
+  <dd>Metadata about a stream or an identity. See [Metadata](#metadata).</dd>
 </dl>
   
 #### Claim Example
@@ -238,7 +238,7 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 A _support_ is an additional transaction type that lends its _amount_ to an existing claim.
 
-A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses).
+A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated..
 
 #### Claimtrie
 
@@ -280,13 +280,15 @@ While data related to abandoned claims technically still resides in the blockcha
 
 ##### Active
 
-<!-- done -->
+<!-- fix me a lot -->
 
-An _active_ claim is an accepted and non-abandoned claim that has been in the blockchain long enough to be activated. The length of time required is called the _activation delay_.
+An _active_ claim is an accepted and non-abandoned claim that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the _activation delay_.
 
-The activation delay depends on the claim operation, the height of the current block, and the height at which the claimtrie state for that name last changed.
+The activation delay depends on the claim operation, the height of the current block, and the height at which the relevant claimtrie state for the name being considered last changed.
 
-If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the claim becomes active as soon as it is accepted. Otherwise it becomes active at the block heigh determined by the following formula:
+If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the claim becomes active as soon as it is accepted. 
+
+Otherwise, it becomes active at the block heigh determined by the following formula:
 
 ```
 C + min(4032, floor((H-T) / 32))
@@ -296,15 +298,17 @@ Where:
 
 - C = claim height (height when the claim was accepted)
 - H = current height
-- T = takeover height (the most recent height at which the claimtrie state for the name changed)
+- T = takeover height (the most recent height at which the relevant claimtrie state for the name changed)
 
-In plain English, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
+In written form, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
 
 The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
 
-##### Controlling
+The sum of all active amounts staked against a particular claim is called the _effective amount_. This is in contract to the _total amount_, which includes non-activated claims and supports. 
 
-<!-- done -->
+#### Updating Claimtrie Leafs
+
+<!-- fix me a lot -->
 
 A _controlling_ claim is the active claim that has the highest total effective amount, which is the sum of its own amount and the amounts of all of its [supports](#supports). 
 
