@@ -238,7 +238,7 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 A _support_ is an additional transaction type that lends its _amount_ to an existing claim.
 
-A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated..
+A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated.
 
 #### Claimtrie
 
@@ -254,25 +254,29 @@ Multiple claims can exist for the same name. They are all stored in the leaf nod
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
-#### Claim Statuses
+#### Claim and Support Statuses
 
-<!-- done -->
+<!-- fix me? is using claims to mean claims and supports okay? -->
 
-A claim can have one or more the following statuses at a given block.
+All claims and supports can have one or more the following statuses at a given block.
+
+Throughout this section, whenever we write claim, we refer to both claims and supports.
 
 ##### Accepted
 
 <!-- done -->
 
-An _accepted_ claim is one that has been entered into the blockchain. This happens when the transaction containing the claim is included in a block.
+An _accepted_ claim is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.
 
 Accepted claims do not appear in or affect the claimtrie state until they are [Active](#active).
+
+The sum of the amount of a claim and all accepted supports is called the _total amount_.
 
 ##### Abandoned
 
 <!-- done -->
 
-An _abandoned_ claim is one that was withdrawn by its creator. Spending a transaction that contains a claim will cause that claim to become abandoned.
+An _abandoned_ claim is one that was withdrawn by its creator or current owner. Spending a transaction that contains a claim will cause that claim to become abandoned.
 
 Abandoned claims are no longer stored in the claimtrie.
 
@@ -284,11 +288,39 @@ While data related to abandoned claims technically still resides in the blockcha
 
 An _active_ claim is an accepted and non-abandoned claim that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the _activation delay_.
 
-The activation delay depends on the claim operation, the height of the current block, and the height at which the relevant claimtrie state for the name being considered last changed.
+If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted). 
 
-If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the claim becomes active as soon as it is accepted. 
+Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's variable inputs are the height of the current block, the height at which the claim was accepted, and the height at which the relevant claimtrie state for the name being considered last changed.
 
-Otherwise, it becomes active at the block heigh determined by the following formula:
+The sum of the amount of an active claim and all active supports is called it's _effective amount_. Only the effective amount affects the sort order of a claimtrie leaf.
+
+##### Controlling
+
+<!-- done -->
+
+A _controlling_ claim is the active claim that is first in the sort order at a leaf. That is, it has the highest total effective amount of all claims with the same name. 
+
+Only one claim can be controlling for a given name at a given block. 
+
+#### Claimtrie Transitions
+
+<!-- fix me -->
+
+To determine the sort order of a claimtrie leaf, the following algorithm is used:
+
+1. For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim. 
+
+1. If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.
+
+1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.
+
+1. At this point, the claim with the greatest total is the controlling claim at this block.
+
+The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.
+
+##### Determining Active Claims
+
+If a claim does not become active immediately, it becomes active at the block heigh determined by the following formula:
 
 ```
 C + min(4032, floor((H-T) / 32))
@@ -304,27 +336,7 @@ In written form, the delay before a claim becomes active is equal to the claimâ€
 
 The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
 
-The sum of all active amounts staked against a particular claim is called the _effective amount_. This is in contract to the _total amount_, which includes non-activated claims and supports. 
-
-#### Updating Claimtrie Leafs
-
-<!-- fix me a lot -->
-
-A _controlling_ claim is the active claim that has the highest total effective amount, which is the sum of its own amount and the amounts of all of its [supports](#supports). 
-
-Only one claim can be controlling for a given name at a given block. To determine which claim is controlling for a given name at a given block, the following algorithm is used:
-
-1. For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim. 
-
-1. If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.
-
-1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.
-
-1. At this point, the claim with the greatest total is the controlling claim at this block.
-
-The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.
-
-###### Claim Controlling Example
+###### Claim Transition Example
 
 <!-- done -->
 
@@ -359,12 +371,19 @@ Names in the claimtrie are normalized to avoid confusion due to Unicode equivale
 
 ### URLs
 
-URLs are human-readable references to claims. All URLs contain a name, and can be resolved to a specific claim for that name. The ultimate purpose of much of the claim design, including controlling claims and the claimtrie structure, is to provide human-readable URLs that can be trustfully resolved by clients that have don't have a full copy of the blockchain.
+<!-- fix me - @grin does SPV need a mention inside of the document? ->
+
+URLs are human-readable references to claims. All URLs:
+
+1. must contain a name (see [Claim Properties](#claim-properties))
+2. and resolve to a single, specific claim for that name
+
+The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be trustfully resolved by clients that have don't have a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
 
 
 #### Components
 
-A URL is a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height, for reasons covered in [Design Notes](#design-notes). Common URL structures are:
+A URL is a name with one or more modifiers. A bare name on its own will resolve to the controlling claim at the latest block height. Common URL structures are:
 
 **Stream Claim Name:** a basic claim for a name
 
