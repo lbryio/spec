@@ -44,12 +44,12 @@
 <li><a href="#claims">Claims</a>
 
 <ul>
-<li><a href="#claim-properties">Claim Properties</a></li>
-<li><a href="#claim-example">Claim Example</a></li>
-<li><a href="#claim-operations">Claim Operations</a></li>
+<li><a href="#properties"><a name="user-content-claim-properties"></a>Properties</a></li>
+<li><a href="#example-claim"><a name="user-content-example-claim"></a>Example Claim</a></li>
+<li><a href="#operations"><a name="user-content-claim-operations"></a>Operations</a></li>
 <li><a href="#supports">Supports</a></li>
 <li><a href="#claimtrie">Claimtrie</a></li>
-<li><a href="#claim-and-support-statuses">Claim and Support Statuses</a>
+<li><a href="#statuses"><a name="user-content-claim-statuses"></a>Statuses</a>
 
 <ul>
 <li><a href="#accepted">Accepted</a></li>
@@ -68,15 +68,25 @@
 <li><a href="#urls">URLs</a>
 
 <ul>
-<li><a href="#components">Components</a></li>
+<li><a href="#components">Components</a>
+
+<ul>
+<li><a href="#stream-claim-name">Stream Claim Name</a></li>
+<li><a href="#channel-claim-name">Channel Claim Name</a></li>
+<li><a href="#channel-claim-name-and-stream-claim-name">Channel Claim Name and Stream Claim Name</a></li>
+<li><a href="#claim-id">Claim ID</a></li>
+<li><a href="#claim-sequence">Claim Sequence</a></li>
+<li><a href="#bid-position">Bid Position</a></li>
+<li><a href="#query-params">Query Params</a></li>
+</ul></li>
 <li><a href="#grammar">Grammar</a></li>
 <li><a href="#resolution">Resolution</a>
 
 <ul>
 <li><a href="#no-modifier">No Modifier</a></li>
-<li><a href="#claimid">ClaimID</a></li>
-<li><a href="#claimsequence">ClaimSequence</a></li>
-<li><a href="#bidposition">BidPosition</a></li>
+<li><a href="#claim-id-1">Claim ID</a></li>
+<li><a href="#claim-sequence-1">Claim Sequence</a></li>
+<li><a href="#bid-position-1">Bid Position</a></li>
 <li><a href="#channelname-and-claimname">ChannelName and ClaimName</a></li>
 <li><a href="#examples">Examples</a></li>
 </ul></li>
@@ -101,20 +111,32 @@
 <li><a href="#metadata">Metadata</a>
 
 <ul>
-<li><a href="#metadata-specification">Metadata Specification</a></li>
-<li><a href="#key-metadata-fields">Key Metadata Fields</a>
+<li><a href="#specification">Specification</a>
 
 <ul>
-<li><a href="#streams-and-stream-hashes">Streams and Stream Hashes</a></li>
-<li><a href="#fees-and-fee-structure">Fees and Fee Structure</a></li>
+<li><a href="#example"><a name="user-content-metadata-example"></a>Example</a></li>
 </ul></li>
-<li><a href="#identities">Identities</a></li>
-<li><a href="#metadata-validation">Metadata Validation</a></li>
+<li><a href="#key-fields">Key Fields</a>
+
+<ul>
+<li><a href="#source-and-stream-hashes">Source and Stream Hashes</a></li>
+<li><a href="#fees-and-fee-structure">Fees and Fee Structure</a></li>
+<li><a href="#title">Title</a></li>
+<li><a href="#thumbnail">Thumbnail</a></li>
+<li><a href="#content-type">Content Type</a></li>
+<li><a href="#certificate">Certificate</a></li>
+</ul></li>
+<li><a href="#-channels-identities"><a name="user-content-#channels"></a> Channels (Identities)</a>
+
+<ul>
+<li><a href="#example-channel-metadata">Example Channel Metadata</a></li>
+</ul></li>
+<li><a href="#validation"><a name="user-content-metadata-validation"></a>Validation</a></li>
 </ul></li>
 <li><a href="#data">Data</a>
 
 <ul>
-<li><a href="#encoding-and-decoding">Encoding and Decoding</a>
+<li><a href="#encoding">Encoding</a>
 
 <ul>
 <li><a href="#blobs">Blobs</a></li>
@@ -213,18 +235,18 @@
 
 <!-- done -->
 
-<p>A <em>claim</em> is a single metadata entry in the blockchain. There are two types of claims:</p>
+<p>A <em>claim</em> is a single entry in the blockchain that stores metadata. There are two types of claims:</p>
 
 <dl>
   <dt>stream</dt>
   <dd>Declares the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
   <dt>channel</dt>
-  <dd>Creates a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
+  <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
 </dl>
 
-<h4 id="claim-properties">Claim Properties</h4>
+<h4 id="a-name-claim-properties-a-properties"><a name="claim-properties"></a>Properties</h4>
 
-<p>Claims have 4 properties:</p>
+<p>Claims have four properties:</p>
 
 <dl>
   <dt>claimId</dt>
@@ -238,7 +260,7 @@
 </dl>
   
 
-<h4 id="claim-example">Claim Example</h4>
+<h4 id="a-name-example-claim-a-example-claim"><a name="example-claim"></a>Example Claim</h4>
 
 <!-- done -->
 
@@ -248,19 +270,25 @@
   &quot;claimId&quot;: &quot;fa3d002b67c4ff439463fcc0d4c80758e38a0aed&quot;,
   &quot;name&quot;: &quot;lbry&quot;,
   &quot;amount&quot;: 100000000,
-  &quot;value&quot;: &quot;{\&quot;ver\&quot;: \&quot;0.0.3\&quot;, \&quot;description\&quot;: \&quot;What is LBRY? An introduction with Alex Tabarrok\&quot;,
-            \&quot;license\&quot;: \&quot;LBRY inc\&quot;, \&quot;title\&quot;: \&quot;What is LBRY?\&quot;, \&quot;author\&quot;: \&quot;Samuel Bryan\&quot;,
-            \&quot;language\&quot;: \&quot;en\&quot;, \&quot;sources\&quot;: {\&quot;lbry_sd_hash\&quot;:
-            \&quot;e1e324bce7437540fac6707fa142cca44d76fc4e8e65060139a88ff7cdb218b4540cb9cff8bb3d5e06157ae6b08e5cb5\&quot;},
-            \&quot;content_type\&quot;: \&quot;video/mp4\&quot;, \&quot;nsfw\&quot;: false, \&quot;thumbnail\&quot;:
-            \&quot;https://s3.amazonaws.com/files.lbry.io/logo.png\&quot;}&quot;,
+  &quot;value&quot;: {
+    &quot;title&quot;: &quot;What is LBRY?&quot;, 
+    &quot;description&quot;: &quot;What is LBRY? An introduction with Alex Tabarrok&quot;,
+    &quot;license&quot;: &quot;LBRY inc&quot;, 
+    &quot;author&quot;: &quot;Samuel Bryan&quot;,
+    &quot;language&quot;: &quot;en&quot;, 
+    &quot;content_type&quot;: &quot;video/mp4&quot;, 
+    &quot;thumbnail&quot;: &quot;https://s3.amazonaws.com/files.lbry.io/logo.png&quot;,
+    &quot;sources&quot;: {
+      &quot;lbry_sd_hash&quot;: &quot;e1e324bce7437540fac6707fa142cca44d76fc4e8e65060139a88ff7cdb218b4540cb9cff8bb3d5e06157ae6b08e5cb5&quot;
+    }
+  },
   &quot;txid&quot;: &quot;53ed05d9dfd728a94bedf952d67783bbe9da5d2ab436a84338bb53f0b85301b5&quot;,
   &quot;n&quot;: 0,
   &quot;height&quot;: 146117
 }
 </code></pre>
 
-<h4 id="claim-operations">Claim Operations</h4>
+<h4 id="a-name-claim-operations-a-operations"><a name="claim-operations"></a>Operations</h4>
 
 <!-- done -->
 
@@ -279,7 +307,7 @@
 
 <p>A <em>support</em> is an additional transaction type that lends its <em>amount</em> to an existing claim.</p>
 
-<p>A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of <a href="#claim-operations">Claim Operations</a> and <a href="#claim-statuses">Claim Statuses</a>, with the exception that they cannot be updated.</p>
+<p>A support contains only a <code>claimID</code> and an <code>amount</code>, no other properties. Supports function analogously to claims in terms of <a href="#claim-operations">Claim Operations</a> and <a href="#claim-statuses">Claim Statuses</a>, with the exception that they cannot be updated.</p>
 
 <h4 id="claimtrie">Claimtrie</h4>
 
@@ -291,17 +319,19 @@
 
 <p>The <em>root hash</em> is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.</p>
 
-<p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the total amount of credits backing each claim.</p>
+<p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the amount of credits backing each claim.</p>
+
+<!-- fix me above? "amount of credits backing each claim" is the effective amount, but that's not defined till later -->
 
 <p>For more details on the specific claimtrie implementation, see <a href="https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp">the source code</a>.</p>
 
-<h4 id="claim-and-support-statuses">Claim and Support Statuses</h4>
+<h4 id="a-name-claim-statuses-a-statuses"><a name="claim-statuses"></a>Statuses</h4>
 
 <!-- fix me? is using claims to mean claims and supports okay? -->
 
-<p>All claims and supports can have one or more the following statuses at a given block.</p>
+<p>Throughout this section we use the word &ldquo;claim&rdquo; to refer to both claims and supports, unless otherwise specified.</p>
 
-<p>Throughout this section, whenever we write claim, we refer to both claims and supports.</p>
+<p>Claims and supports can have one or more of the following statuses at a given block.</p>
 
 <h5 id="accepted">Accepted</h5>
 
@@ -309,7 +339,7 @@
 
 <p>An <em>accepted</em> claim is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.</p>
 
-<p>Accepted claims do not appear in or affect the claimtrie state until they are <a href="#active">Active</a>.</p>
+<p>Accepted claims do not affect the claimtrie leaf order until they are <a href="#active">active</a>.</p>
 
 <p>The sum of the amount of a claim and all accepted supports is called the <em>total amount</em>.</p>
 
@@ -317,9 +347,7 @@
 
 <!-- done -->
 
-<p>An <em>abandoned</em> claim is one that was withdrawn by its creator or current owner. Spending a transaction that contains a claim will cause that claim to become abandoned.</p>
-
-<p>Abandoned claims are no longer stored in the claimtrie.</p>
+<p>An <em>abandoned</em> claim is one that was withdrawn by its creator or current owner. Spending a transaction that contains a claim will cause that claim to become abandoned. Abandoned claims are removed from the claimtrie.</p>
 
 <p>While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content, and active claims signed by abandoned identities will no longer be reported as valid.</p>
 
@@ -331,32 +359,32 @@
 
 <p>If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted).</p>
 
-<p>Otherwise, the activation delay is determined by a formula covered in <a href="#claimtrie-transitions">Claimtrie Transitions</a>. The formula&rsquo;s variable inputs are the height of the current block, the height at which the claim was accepted, and the height at which the relevant claimtrie state for the name being considered last changed.</p>
+<p>Otherwise, the activation delay is determined by a formula covered in <a href="#claimtrie-transitions">Claimtrie Transitions</a>. The formula&rsquo;s inputs are the height of the current block, the height at which the claim was accepted, and the height at which the relevant claimtrie state for the name being considered last changed.</p>
 
-<p>The sum of the amount of an active claim and all active supports is called it&rsquo;s <em>effective amount</em>. Only the effective amount affects the sort order of a claimtrie leaf.</p>
+<p>The sum of the amount of an active claim and all active supports is called it&rsquo;s <em>effective amount</em>. Only the effective amount affects the sort order of claims in a claimtrie leaf.</p>
 
 <h5 id="controlling">Controlling</h5>
 
 <!-- done -->
 
-<p>A <em>controlling</em> claim is the active claim that is first in the sort order at a leaf. That is, it has the highest total effective amount of all claims with the same name.</p>
+<p>A <em>controlling</em> claim is the active claim that is first in the sort order at a leaf. That is, it has the highest effective amount of all claims with the same name.</p>
 
 <p>Only one claim can be controlling for a given name at a given block.</p>
 
 <h4 id="claimtrie-transitions">Claimtrie Transitions</h4>
 
-<!-- fix me -->
+<!-- fix me. it doesnt make sense for non-first claim takeovers to depend on top claim. also be clear that amount is effective amount -->
 
-<p>To determine the sort order of a claimtrie leaf, the following algorithm is used:</p>
+<p>To determine the sort order of claims in a claimtrie leaf, the following algorithm is used:</p>
 
 <ol>
-<li><p>For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim.</p></li>
+<li><p>For each active claim, add up the amount of the claim and the amount of all the active supports for that claim.</p></li>
 
-<li><p>If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.</p></li>
+<li><p>If all of the claims are in the same order (appending new claims allowed), then nothing is changing.</p></li>
 
 <li><p>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.</p></li>
 
-<li><p>At this point, the claim with the greatest total is the controlling claim at this block.</p></li>
+<li><p>At this point, the claim with the greatest effective amount is the controlling claim at this block.</p></li>
 </ol>
 
 <p>The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.</p>
@@ -376,6 +404,8 @@
 <li>T = takeover height (the most recent height at which the relevant claimtrie state for the name changed)</li>
 </ul>
 
+<!-- fixme: relevant claimtrie state??? -->
+
 <p>In written form, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover.</p>
 
 <p>The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.</p>
@@ -392,7 +422,7 @@
 <p><strong>Block 1001:</strong> Claim B for 20LBC is accepted. It’s activation height is <code>1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031</code>.
 <br>State: A(10) is controlling, B(20) is accepted.</p>
 
-<p><strong>Block 1010:</strong> Support X for 14LBC for claim A is accepted. Since it is a support for the controlling  claim, it activates immediately.
+<p><strong>Block 1010:</strong> Support X for 14LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.
 <br>State: A(10+14) is controlling, B(20) is accepted.</p>
 
 <p><strong>Block 1020:</strong> Claim C for 50LBC is accepted. The activation height is <code>1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051</code>.
@@ -415,7 +445,10 @@
 
 <h3 id="urls">URLs</h3>
 
-<!-- fix me - @grin does SPV need a mention inside of the document? -->
+<!-- fix me:
+  jeremy: @grin does SPV need a mention inside of the document? 
+  grin: no, but we should probably include an example for how to do the validation using the root hash. its not strictly necessary because its similar to how bitcoin does it. so maybe link to https://lbry.tech/resources/claimtrie (which needs an update) and add a validation example there?
+  -->
 
 <p>URLs are human-readable references to claims. All URLs:</p>
 
@@ -424,7 +457,9 @@
 <li>and resolve to a single, specific claim for that name</li>
 </ol>
 
-<p>The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be trustfully resolved by clients that have don&rsquo;t have a full copy of the blockchain (i.e. <a href="https://lbry.tech/glossary#spv">Simplified Payment Verification</a> wallets).</p>
+<p>The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be provably resolved by clients without a full copy of the blockchain (i.e. <a href="https://lbry.tech/glossary#spv">Simplified Payment Verification</a> wallets).</p>
+
+<p>It is possible to write extremely short, human-readable and memorabl</p>
 
 <h4 id="components">Components</h4>
 
@@ -432,42 +467,56 @@
 
 <p>A URL is a name with one or more modifiers. A bare name on its own will resolve to the <a href="#controlling">controlling claim</a> at the latest block height. Common URL structures are:</p>
 
-<p><strong>Stream Claim Name:</strong> a basic claim for a name</p>
+<h5 id="stream-claim-name">Stream Claim Name</h5>
+
+<p>A basic claim for a name.</p>
 
 <pre><code>lbry://meet-lbry
 </code></pre>
 
-<p><strong>Channel Claim Name:</strong> a claim for a channel</p>
+<h5 id="channel-claim-name">Channel Claim Name</h5>
+
+<p>A basic claim for a channel.</p>
 
 <pre><code>lbry://@lbry
 </code></pre>
 
-<p><strong>Channel Claim Name and Stream Claim Name:</strong> URLS with a channel and a stream claim name are resolved in two steps. First the channel is resolved to get the appropriate claim for that channel. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.</p>
+<h5 id="channel-claim-name-and-stream-claim-name">Channel Claim Name and Stream Claim Name</h5>
+
+<p>A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to it&rsquo;s associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.</p>
 
 <pre><code>lbry://@lbry/meet-lbry
 </code></pre>
 
-<p><strong>Claim ID:</strong> a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed (see <a href="#resolution">Resolution</a>).</p>
+<h5 id="claim-id">Claim ID</h5>
+
+<p>A claim for this name with this claim ID. Partial prefix matches are allowed (see <a href="#resolution">Resolution</a>).</p>
 
 <pre><code>lbry://meet-lbry#7a0aa95c5023c21c098
 lbry://meet-lbry#7a
 lbry://@lbry#3f/meet-lbry
 </code></pre>
 
-<p><strong>Claim Sequence:</strong> the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.</p>
+<h5 id="claim-sequence">Claim Sequence</h5>
+
+<p>The <em>n</em>th claim for this name, in the order the claims entered the blockchain. <em>n</em> must be a positive number. This can be used to resolve claims in the order in which they were recorded, rather than by which claim has the most support.</p>
 
 <pre><code>lbry://meet-lbry:1
 lbry://@lbry:1/meet-lbry
 </code></pre>
 
-<p><strong>Bid Position:</strong> the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.</p>
+<h5 id="bid-position">Bid Position</h5>
+
+<p>The <em>n</em>th claim for this name, in order of most support to least total support. <em>n</em> must be a positive number. This is useful for resolving non-winning bids in bid order.</p>
 
 <pre><code>lbry://meet-lbry$2
 lbry://meet-lbry$3
 lbry://@lbry$2/meet-lbry
 </code></pre>
 
-<p><strong>Query Params:</strong> extra parameters, reserved for future use</p>
+<h5 id="query-params">Query Params</h5>
+
+<p>These parameters are reserved for future use.</p>
 
 <pre><code>lbry://meet-lbry?arg=value+arg2=value2
 </code></pre>
@@ -476,7 +525,7 @@ lbry://@lbry$2/meet-lbry
 
 <p>The full URL grammar is defined using <a href="https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation">Xquery EBNF notation</a>:</p>
 
-<!-- see http://bottlecaps.de/rr/ui for visuals-->
+<!-- use http://bottlecaps.de/rr/ui for visuals -->
 
 <pre><code>URL ::= Scheme Path Query?
 
@@ -520,15 +569,15 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 <p>Return the controlling claim for the name. Stream claims and channel claims are resolved the same way.</p>
 
-<h5 id="claimid">ClaimID</h5>
+<h5 id="claim-id-1">Claim ID</h5>
 
 <p>Get all claims for the claim name whose IDs start with the given <code>ClaimID</code>. Sort the claims in ascending order by block height and position within the block. Return the first claim.</p>
 
-<h5 id="claimsequence">ClaimSequence</h5>
+<h5 id="claim-sequence-1">Claim Sequence</h5>
 
 <p>Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the Nth claim, where N is the given <code>ClaimSequence</code> value.</p>
 
-<h5 id="bidposition">BidPosition</h5>
+<h5 id="bid-position-1">Bid Position</h5>
 
 <p>Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the Nth claim, where N is the given <code>BidSequence</code> value.</p>
 
@@ -726,16 +775,16 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 <p>First, it is important to note the problems in existing domain allocation design. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:</p>
 
 <ol>
-<li><p>Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don&rsquo;t intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities, in this case it is pure value extraction. It also harms the user experience of users, who will see the vast majority of URLs sitting unused (c.f. Namecoin).</p></li>
+<li><p>Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don&rsquo;t intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities (stable prices and price signals),  in this case it is pure value extraction. Speculation also harms the user experience, who will see the vast majority of URLs sitting unused (c.f. Namecoin).</p></li>
 
 <li><p>Bureaucracy and transaction costs. While a centralized system can allow for an authority to use a process to reassign names based on trademark or other common use reasons, this system is also imperfect. Most importantly, it is a censorship point and an avenue for complete exclusion. Additionally, such processes are often arbitrary, change over time, involve significant transaction costs, and <em>still</em> lead to names being used in ways that are contrary to user expectation (e.g. <a href="http://nissan.com">nissan.com</a>).</p></li>
 
-<li><p>Inefficencies from price controls. Any system that does not allow a price to float completely freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase.</p></li>
+<li><p>Inefficiencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase.</p></li>
 </ol>
 
-<p>Thus, we need an algorithmic design built into consensus that allows URLs to flow to their highest valued use. Following <a href="https://en.wikipedia.org/wiki/Coase_theorem">Coase</a>, this design allows for clearly defined rules, low transaction costs, and no information asymmetry, ensuring minimal inefficiency in URL allocation.</p>
+<p>We sought an algorithmic design built into consensus that would allow URLs to flow to their highest valued use. Following <a href="https://en.wikipedia.org/wiki/Coase_theorem">Coase</a>, this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.</p>
 
-<p>It&rsquo;s also important to note that <em>only</em> vanity URLs have this property. Extremely short, memorable URLs like <code>lbry://myclaimname#a</code> exist and are available for the minimal cost of issuing a transaction.</p>
+<p>Finally, it&rsquo;s important to note that <em>only</em> vanity URLs have this property. Extremely short, memorable URLs like <code>lbry://myclaimname#a</code> exist and are available for the minimal cost of issuing a transaction.</p>
 
 <h3 id="transactions">Transactions</h3>
 
@@ -810,55 +859,55 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h2 id="metadata">Metadata</h2>
 
-<p>Claim metadata is stored in a serialized format using <a href="https://developers.google.com/protocol-buffers/">Protocol Buffers</a>. This was chosen for several reasons:</p>
+<!-- done -->
+
+<p>Metadata is structured information about the stream or channel separate from the content itself (e.g. the title, language, media type, etc.). It is stored in the <a href="#claim-properties">value property</a> of a claim.</p>
+
+<p>Metadata is stored in a serialized format via <a href="https://developers.google.com/protocol-buffers/">Protocol Buffers</a>. This allows for metadata to be:</p>
 
 <ul>
-<li><strong>Extensibility</strong>. The metadata structure could grow to encompass thousands of fields for dozens of types of content. It should be easy to modify the structure while maintaining backward compatibility. Blockchain data is permanent and cannot be migrated.</li>
-<li><strong>Compactness</strong>. Blockchain space is expensive. Data should be stored as compactly as possible.</li>
-<li><strong>Interoperability</strong>. These definitions will be used by many projects written in different languages. Protocol buffers are language-independent and have great support for most popular languages.</li>
+<li><strong>Extensibile</strong>. Metadata can encompass thousands of fields for dozens of types of content. It must be efficient to both modify the structure and maintain backward compatibility.</li>
+<li><strong>Compact</strong>. Blockchain space is expensive. Data must be stored as compactly as possible.</li>
+<li><strong>Interoperabile</strong>. Metadata will be used by many projects written in different languages.</li>
 </ul>
 
-<p>No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.</p>
+<h3 id="specification">Specification</h3>
 
-<h3 id="metadata-specification">Metadata Specification</h3>
+<p>As the metadata specification is designed to grow and change frequently, the full specification will not be examined here. The <a href="https://github.com/lbryio/types/issues">types</a> repository is considered the precise specification.</p>
 
-<p>A useful index of available content must be succinct yet meaningful. It should be machine-readable, comprehensive, and should ideally point you toward the content you’re looking for. LBRY achieves this by defining a set of common properties for streams.</p>
+<p>Instead, let&rsquo;s look at an example and some key fields.</p>
 
-<p>The metadata contains structured information describing the content, such as the title, author, language, and so on.</p>
+<h4 id="a-name-metadata-example-a-example"><a name="metadata-example"></a>Example</h4>
 
-<p>Here’s an example:</p>
+<p>Here’s some example metadata:</p>
+
+<!-- fix me better example data -->
 
 <pre><code>&quot;metadata&quot;: {
-  &quot;author&quot;: &quot;&quot;,
-  &quot;description&quot;: &quot;All proceeds go to holly for buying toys, i will post the video with those toys on Xmas day&quot;,
+  &quot;description&quot;: &quot;All proceeds go to Holly for buying toys.&quot;,
   &quot;language&quot;: &quot;en&quot;,
-  &quot;license&quot;: &quot;All rights reserved.&quot;,
-  &quot;licenseUrl&quot;: &quot;&quot;,
   &quot;nsfw&quot;: false,
-  &quot;preview&quot;: &quot;&quot;,
   &quot;thumbnail&quot;: &quot;http://www.thetoydiscounter.com/happy.jpg&quot;,
   &quot;title&quot;: &quot;Holly singing The Happy Working Song&quot;,
   &quot;source&quot;: {
     &quot;contentType&quot;: &quot;video/mp4&quot;,
     &quot;source&quot;: &quot;92b8aae7a901c56901fd5602c1f1acc0e63fb5492ef2a3cd5b9c631d92cab2e060e2a908baa922c24dee6c5229a98136&quot;,
     &quot;sourceType&quot;: &quot;lbry_sd_hash&quot;,
-    &quot;version&quot;: &quot;_0_0_1&quot;
-  },
-  &quot;version&quot;: &quot;_0_1_0&quot;
+  }
 }
 </code></pre>
 
-<p>Because the metadata structure can and does change frequently, a complete specification is omitted from this document. Instead, <a href="https://github.com/lbryio/types">github.com/lbryio/types</a> should be consulted for the precise definition of current metadata structure.</p>
+<h3 id="key-fields">Key Fields</h3>
 
-<h3 id="key-metadata-fields">Key Metadata Fields</h3>
+<p>Some important metadata fields are highlighted below.</p>
 
-<p>Despite not covering the full metadata structure, a few important metadata fields are highlighted below.</p>
+<h4 id="source-and-stream-hashes">Source and Stream Hashes</h4>
 
-<h4 id="streams-and-stream-hashes">Streams and Stream Hashes</h4>
-
-<p>(The metadata property <code>lbry_sd_hash</code> contains a unique identifier to locate and find the content in the data network. Reference [[Data]].)</p>
+<p>The <code>source</code> property contains information about how to fetch the data from the network. Within the <code>source</code> is a unique identifier to locate and find the content in the data network. More in  [[Data]].</p>
 
 <h4 id="fees-and-fee-structure">Fees and Fee Structure</h4>
+
+<!-- fix me extensively -->
 
 <ul>
 <li>LBC</li>
@@ -866,13 +915,38 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 <li>channel signatures and private keys</li>
 </ul>
 
-<h3 id="identities">Identities</h3>
+<h4 id="title">Title</h4>
 
-<p>Channels are the unit of identity in the LBRY system. A channel is a claim that start with <code>@</code> and contains a metadata structure for identities rather than content. The most important part of channel&rsquo;s metadata is the public key. Claims belonging to a channel are signed with the corresponding private key. A valid signature proves channel membership.</p>
+<p>Used to label the content.</p>
+
+<h4 id="thumbnail">Thumbnail</h4>
+
+<p>An http or lbry URL to be used to display an image associated with the content.</p>
+
+<h4 id="content-type">Content Type</h4>
+
+<p>The media type of the item as <a href="https://www.iana.org/assignments/media-types/media-types.xhtml">defined</a> by the IANA.</p>
+
+<h4 id="certificate">Certificate</h4>
+
+<p>Information related to signing the claim as belonging to a specific channel. Covered more in <a href="#channels">Channels</a>.</p>
+
+<h3 id="a-name-channels-a-channels-identities"><a name="#channels"></a> Channels (Identities)</h3>
+
+<p>Channels are the unit of identity in the LBRY system. A channel is a claim that:</p>
+
+<ul>
+<li>Has name beginning with <code>@</code></li>
+<li>Contains a metadata structure for identity rather than content</li>
+</ul>
+
+<p>Included in the metadata is the channel&rsquo;s public key. Claims belonging to a channel are signed with the corresponding private key. A valid signature proves channel origin and ownership.</p>
 
 <p>The purpose of channels is to allow content to be clustered under a single pseudonym or identity. This allows publishers to easily list all their content, maintain attribution, and build their brand.</p>
 
-<p>Here’s the value of an example channel claim:</p>
+<h4 id="example-channel-metadata">Example Channel Metadata</h4>
+
+<p>Included in a channel&rsquo;s metadata is the following structure:</p>
 
 <pre><code>&quot;certificate&quot;: {
     &quot;keyType&quot;: &quot;SECP256k1&quot;,
@@ -880,38 +954,31 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
                   0004180488ffcb3d1825af538b0b952f0eba6933faa6
                   d8229609ac0aeadfdbcf49C59363aa5d77ff2b7ff06c
                   ddc07116b335a4a0849b1b524a4a69d908d69f1bcebb&quot;,
-    &quot;version&quot;: &quot;_0_0_1&quot;
 }
 </code></pre>
 
-<p>When a claim published into a channel, the claim data is signed and the following is added to the claim:</p>
+<p>When a claim published into a channel, the claim data is signed and the following is added to the claim metadata:</p>
 
 <pre><code>&quot;publisherSignature&quot;: {
     &quot;channelClaimID&quot;: &quot;2996b9a087c18456402b57cba6085b2a8fcc136d&quot;, 
     &quot;signature&quot;: &quot;bf82d53143155bb0cac1fd3d917c000322244b5aD17
                   e7865124db2ed33812ea66c9b0c3f390a65a9E2d452
                   e315e91ae695642847d88e90348ef3c1fa283a36a8&quot;, 
-    &quot;signatureType&quot;: &quot;SECP256k1&quot;, 
-    &quot;version&quot;: &quot;_0_0_1&quot;
+    &quot;signatureType&quot;: &quot;SECP256k1&quot;,
 }
 </code></pre>
 
-<h3 id="metadata-validation">Metadata Validation</h3>
+<h3 id="a-name-metadata-validation-a-validation"><a name="metadata-validation"></a>Validation</h3>
 
-<p>Clients are responsible for validating metadata, including data structure and signatures.</p>
+<p>No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.</p>
 
-<p>(expand)</p>
-
-<ul>
-<li>Validation 101</li>
-<li>ChannelName / identity validation</li>
-</ul>
+<p>Clients are responsible for validating metadata, including data structure and signatures. This typically happens when the raw binary data stored in the blockchain is decoded client side via Protocol Buffers.</p>
 
 <h2 id="data">Data</h2>
 
 <p>(This portion covers how content is actually encoded and decoded, fetched, and announced. Expand/fix.)</p>
 
-<h3 id="encoding-and-decoding">Encoding and Decoding</h3>
+<h3 id="encoding">Encoding</h3>
 
 <!-- done -->
 

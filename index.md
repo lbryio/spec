@@ -47,12 +47,12 @@ TODO:
 * [Conventions and Terminology](#conventions-and-terminology)
 * [Blockchain](#blockchain)
    * [Claims](#claims)
-      * [Claim Properties](#claim-properties)
-      * [Claim Example](#claim-example)
-      * [Claim Operations](#claim-operations)
+      * [<a name="user-content-claim-properties"></a>Properties](#properties)
+      * [<a name="user-content-example-claim"></a>Example Claim](#example-claim)
+      * [<a name="user-content-claim-operations"></a>Operations](#operations)
       * [Supports](#supports)
       * [Claimtrie](#claimtrie)
-      * [Claim and Support Statuses](#claim-and-support-statuses)
+      * [<a name="user-content-claim-statuses"></a>Statuses](#statuses)
          * [Accepted](#accepted)
          * [Abandoned](#abandoned)
          * [Active](#active)
@@ -63,12 +63,19 @@ TODO:
       * [Normalization](#normalization)
    * [URLs](#urls)
       * [Components](#components)
+         * [Stream Claim Name](#stream-claim-name)
+         * [Channel Claim Name](#channel-claim-name)
+         * [Channel Claim Name and Stream Claim Name](#channel-claim-name-and-stream-claim-name)
+         * [Claim ID](#claim-id)
+         * [Claim Sequence](#claim-sequence)
+         * [Bid Position](#bid-position)
+         * [Query Params](#query-params)
       * [Grammar](#grammar)
       * [Resolution](#resolution)
          * [No Modifier](#no-modifier)
-         * [ClaimID](#claimid)
-         * [ClaimSequence](#claimsequence)
-         * [BidPosition](#bidposition)
+         * [Claim ID](#claim-id-1)
+         * [Claim Sequence](#claim-sequence-1)
+         * [Bid Position](#bid-position-1)
          * [ChannelName and ClaimName](#channelname-and-claimname)
          * [Examples](#examples)
       * [Design Notes](#design-notes)
@@ -82,14 +89,20 @@ TODO:
       * [Block Hash Algorithm](#block-hash-algorithm)
       * [Block Rewards](#block-rewards)
 * [Metadata](#metadata)
-   * [Metadata Specification](#metadata-specification)
-   * [Key Metadata Fields](#key-metadata-fields)
-      * [Streams and Stream Hashes](#streams-and-stream-hashes)
+   * [Specification](#specification)
+      * [<a name="user-content-metadata-example"></a>Example](#example)
+   * [Key Fields](#key-fields)
+      * [Source and Stream Hashes](#source-and-stream-hashes)
       * [Fees and Fee Structure](#fees-and-fee-structure)
-   * [Identities](#identities)
-   * [Metadata Validation](#metadata-validation)
+      * [Title](#title)
+      * [Thumbnail](#thumbnail)
+      * [Content Type](#content-type)
+      * [Certificate](#certificate)
+   * [<a name="user-content-#channels"></a> Channels (Identities)](#-channels-identities)
+      * [Example Channel Metadata](#example-channel-metadata)
+   * [<a name="user-content-metadata-validation"></a>Validation](#validation)
 * [Data](#data)
-   * [Encoding and Decoding](#encoding-and-decoding)
+   * [Encoding](#encoding)
       * [Blobs](#blobs)
       * [Streams](#streams)
       * [Manifest Contents](#manifest-contents)
@@ -180,12 +193,12 @@ A _claim_ is a single entry in the blockchain that stores metadata. There are tw
   <dt>stream</dt>
   <dd>Declares the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
   <dt>channel</dt>
-  <dd>Creates a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
+  <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
 </dl>
 
 #### <a name="claim-properties"></a>Properties
 
-Claims have 4 properties:
+Claims have four properties:
 
 <dl>
   <dt>claimId</dt>
@@ -209,12 +222,18 @@ Here is an example stream claim:
   "claimId": "fa3d002b67c4ff439463fcc0d4c80758e38a0aed",
   "name": "lbry",
   "amount": 100000000,
-  "value": "{\"ver\": \"0.0.3\", \"description\": \"What is LBRY? An introduction with Alex Tabarrok\",
-            \"license\": \"LBRY inc\", \"title\": \"What is LBRY?\", \"author\": \"Samuel Bryan\",
-            \"language\": \"en\", \"sources\": {\"lbry_sd_hash\":
-            \"e1e324bce7437540fac6707fa142cca44d76fc4e8e65060139a88ff7cdb218b4540cb9cff8bb3d5e06157ae6b08e5cb5\"},
-            \"content_type\": \"video/mp4\", \"nsfw\": false, \"thumbnail\":
-            \"https://s3.amazonaws.com/files.lbry.io/logo.png\"}",
+  "value": {
+    "title": "What is LBRY?", 
+    "description": "What is LBRY? An introduction with Alex Tabarrok",
+    "license": "LBRY inc", 
+    "author": "Samuel Bryan",
+    "language": "en", 
+    "content_type": "video/mp4", 
+    "thumbnail": "https://s3.amazonaws.com/files.lbry.io/logo.png",
+    "sources": {
+      "lbry_sd_hash": "e1e324bce7437540fac6707fa142cca44d76fc4e8e65060139a88ff7cdb218b4540cb9cff8bb3d5e06157ae6b08e5cb5"
+    }
+  },
   "txid": "53ed05d9dfd728a94bedf952d67783bbe9da5d2ab436a84338bb53f0b85301b5",
   "n": 0,
   "height": 146117
@@ -240,19 +259,21 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 A _support_ is an additional transaction type that lends its _amount_ to an existing claim.
 
-A support contains a claim ID, and amount, and nothing else. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated.
+A support contains only a `claimID` and an `amount`, no other properties. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated.
 
 #### Claimtrie
 
 <!-- done -->
 
-The _claimtrie_ is the data structure used to store the set of all claims and prove the correctness of claim resolution. 
+The _claimtrie_ is the data structure used to store the set of all claims and prove the correctness of claim resolution.
 
 The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.
 
 The _root hash_ is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.
 
-Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the total amount of credits backing each claim.
+Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the amount of credits backing each claim.
+
+<!-- fix me above? "amount of credits backing each claim" is the effective amount, but that's not defined till later -->
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
@@ -260,9 +281,9 @@ For more details on the specific claimtrie implementation, see [the source code]
 
 <!-- fix me? is using claims to mean claims and supports okay? -->
 
-All claims and supports can have one or more the following statuses at a given block.
+Throughout this section we use the word "claim" to refer to both claims and supports, unless otherwise specified.
 
-Throughout this section, whenever we write claim, we refer to both claims and supports.
+Claims and supports can have one or more of the following statuses at a given block.
 
 ##### Accepted
 
@@ -270,7 +291,7 @@ Throughout this section, whenever we write claim, we refer to both claims and su
 
 An _accepted_ claim is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.
 
-Accepted claims do not appear in or affect the claimtrie state until they are [Active](#active).
+Accepted claims do not affect the claimtrie leaf order until they are [active](#active).
 
 The sum of the amount of a claim and all accepted supports is called the _total amount_.
 
@@ -278,9 +299,7 @@ The sum of the amount of a claim and all accepted supports is called the _total 
 
 <!-- done -->
 
-An _abandoned_ claim is one that was withdrawn by its creator or current owner. Spending a transaction that contains a claim will cause that claim to become abandoned.
-
-Abandoned claims are no longer stored in the claimtrie.
+An _abandoned_ claim is one that was withdrawn by its creator or current owner. Spending a transaction that contains a claim will cause that claim to become abandoned. Abandoned claims are removed from the claimtrie.
 
 While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content, and active claims signed by abandoned identities will no longer be reported as valid.
 
@@ -292,31 +311,31 @@ An _active_ claim is an accepted and non-abandoned claim that has been in the bl
 
 If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted). 
 
-Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's variable inputs are the height of the current block, the height at which the claim was accepted, and the height at which the relevant claimtrie state for the name being considered last changed.
+Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's inputs are the height of the current block, the height at which the claim was accepted, and the height at which the relevant claimtrie state for the name being considered last changed.
 
-The sum of the amount of an active claim and all active supports is called it's _effective amount_. Only the effective amount affects the sort order of a claimtrie leaf.
+The sum of the amount of an active claim and all active supports is called it's _effective amount_. Only the effective amount affects the sort order of claims in a claimtrie leaf.
 
 ##### Controlling
 
 <!-- done -->
 
-A _controlling_ claim is the active claim that is first in the sort order at a leaf. That is, it has the highest total effective amount of all claims with the same name. 
+A _controlling_ claim is the active claim that is first in the sort order at a leaf. That is, it has the highest effective amount of all claims with the same name. 
 
 Only one claim can be controlling for a given name at a given block. 
 
 #### Claimtrie Transitions
 
-<!-- fix me -->
+<!-- fix me. it doesnt make sense for non-first claim takeovers to depend on top claim. also be clear that amount is effective amount -->
 
-To determine the sort order of a claimtrie leaf, the following algorithm is used:
+To determine the sort order of claims in a claimtrie leaf, the following algorithm is used:
 
-1. For each active claim for the name, add up the amount of the claim and the amount of all the active supports for that claim. 
+1. For each active claim, add up the amount of the claim and the amount of all the active supports for that claim. 
 
-1. If all of the claims for a name are in the same order (appending new claims allowed), then nothing is changing.
+1. If all of the claims are in the same order (appending new claims allowed), then nothing is changing.
 
 1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.
 
-1. At this point, the claim with the greatest total is the controlling claim at this block.
+1. At this point, the claim with the greatest effective amount is the controlling claim at this block.
 
 The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.
 
@@ -334,6 +353,8 @@ Where:
 - H = current height
 - T = takeover height (the most recent height at which the relevant claimtrie state for the name changed)
 
+<!-- fixme: relevant claimtrie state??? -->
+
 In written form, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
 
 The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
@@ -350,7 +371,7 @@ Here is a step-by-step example to illustrate the different scenarios. All claims
 **Block 1001:** Claim B for 20LBC is accepted. It’s activation height is `1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031`.
 <br>State: A(10) is controlling, B(20) is accepted.
 
-**Block 1010:** Support X for 14LBC for claim A is accepted. Since it is a support for the controlling  claim, it activates immediately.
+**Block 1010:** Support X for 14LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.
 <br>State: A(10+14) is controlling, B(20) is accepted.
 
 **Block 1020:** Claim C for 50LBC is accepted. The activation height is `1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051`.
@@ -373,74 +394,17 @@ Names in the claimtrie are normalized to avoid confusion due to Unicode equivale
 
 ### URLs
 
-<!-- fix me - @grin does SPV need a mention inside of the document? ->
+<!-- fix me:
+  jeremy: @grin does SPV need a mention inside of the document? 
+  grin: no, but we should probably include an example for how to do the validation using the root hash. its not strictly necessary because its similar to how bitcoin does it. so maybe link to https://lbry.tech/resources/claimtrie (which needs an update) and add a validation example there?
+  -->
 
 URLs are human-readable references to claims. All URLs:
 
 1. must contain a name (see [Claim Properties](#claim-properties))
 2. and resolve to a single, specific claim for that name
 
-The ultimate purpose of much of the claim and blockchain design is to provide short, human-readable URLs to all active claims that can be trustfully resolved by clients that have don't have a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
-
-#### Components
-
-<!-- done -->
-
-A URL is a name with one or more modifiers. A bare name on its own will resolve to the [controlling claim](#controlling) at the latest block height. Common URL structures are:
-
-##### Stream Claim Name
-
-A basic claim for a name.
-
-```
-lbry://meet-lbry
-```
-
-##### Channel Claim Name
-
-A basic claim for a channel.
-
-```
-lbry://@lbry
-```
-
-##### Channel Claim Name and Stream Claim Name
-
-A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to it's associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
-
-```
-lbry://@lbry/meet-lbry
-```
-
-##### Claim ID
-
-A claim for this name with this claim ID. Partial prefix matches are allowed (see [Resolution](#resolution)).
-
-```
-lbry://meet-lbry#7a0aa95c5023c21c098
-lbry://meet-lbry#7a
-lbry://@lbry#3f/meet-lbry
-```
-
-##### Claim Sequence
-
-The Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.
-
-```
-lbry://meet-lbry:1
-lbry://@lbry:1/meet-lbry
-```
-
-### URLs
-
-<!-- fix me - @grin does SPV need a mention inside of the document? ->
-
-URLs are human-readable references to claims. All URLs:
-
-1. must contain a name (see [Claim Properties](#claim-properties))
-2. and resolve to a single, specific claim for that name
-
-The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be trustfully resolved by clients that have don't have a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
+The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be provably resolved by clients without a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
 
 It is possible to write extremely short, human-readable and memorabl 
 
@@ -516,7 +480,7 @@ lbry://meet-lbry?arg=value+arg2=value2
 
 The full URL grammar is defined using [Xquery EBNF notation](https://www.w3.org/TR/2017/REC-xquery-31-20170321/#EBNFNotation):
 
-<!-- see http://bottlecaps.de/rr/ui for visuals-->
+<!-- use http://bottlecaps.de/rr/ui for visuals -->
 
 ```
 URL ::= Scheme Path Query?
@@ -629,7 +593,7 @@ First, it is important to note the problems in existing domain allocation design
 
 1. Bureaucracy and transaction costs. While a centralized system can allow for an authority to use a process to reassign names based on trademark or other common use reasons, this system is also imperfect. Most importantly, it is a censorship point and an avenue for complete exclusion. Additionally, such processes are often arbitrary, change over time, involve significant transaction costs, and _still_ lead to names being used in ways that are contrary to user expectation (e.g. [nissan.com](http://nissan.com)).
 
-1. Inefficencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase. 
+1. Inefficiencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase.
 
 We sought an algorithmic design built into consensus that would allow URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.
 
@@ -837,7 +801,7 @@ Clients are responsible for validating metadata, including data structure and si
 
 
 
-### Encoding and Decoding
+### Encoding
 
 <!-- done -->
 
