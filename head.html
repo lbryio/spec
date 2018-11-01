@@ -1,2 +1,26 @@
   <link rel="stylesheet" type="text/css" href="normalize.css">
+  <link rel="stylesheet" type="text/css" href="tocbot.css">
   <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="tocbot.min.js"></script>
+  <script>
+    function ready(fn) {
+      if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
+        fn();
+      } else {
+        document.addEventListener('DOMContentLoaded', fn);
+      }
+    }
+
+    ready(function() {
+      tocbot.init({
+        // Where to render the table of contents.
+        tocSelector: '#toc',
+        // Where to grab the headings to build the table of contents.
+        contentSelector: '#content',
+        // Which headings to grab inside of the contentSelector element.
+        headingSelector: 'h2, h3, h4, h5, h6',
+        collapseDepth: 3,
+        positionFixedSelector: "#toc",
+      });
+    })
+  </script>

@@ -17,7 +17,6 @@ fullname="Alex Grintsvayg"
 %%%
 
 
-
 # LBRY: A Decentralized Digital Content Marketplace
 
 
@@ -25,6 +24,8 @@ A> Please excuse the unfinished state of this paper. It is being actively worked
 
 A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tech).
 
+<nav id="toc"></nav>
+<div id="content">
 
 ## Introduction
 
@@ -35,98 +36,6 @@ TODO:
 - why is it significant
 - whom does it help
 - why is it different/better than what existed before
-
-
-
-## Table of Contents
- 
- <div id="toc">
-
-<!--ts-->
-* [Overview](#overview)
-* [Conventions and Terminology](#conventions-and-terminology)
-* [Blockchain](#blockchain)
-   * [Claims](#claims)
-      * [<a name="user-content-claim-properties"></a>Properties](#properties)
-      * [<a name="user-content-example-claim"></a>Example Claim](#example-claim)
-      * [<a name="user-content-claim-operations"></a>Operations](#operations)
-      * [Supports](#supports)
-      * [Claimtrie](#claimtrie)
-      * [<a name="user-content-claim-statuses"></a>Statuses](#statuses)
-         * [Accepted](#accepted)
-         * [Abandoned](#abandoned)
-         * [Active](#active)
-         * [Controlling](#controlling)
-      * [Claimtrie Transitions](#claimtrie-transitions)
-         * [Determining Active Claims](#determining-active-claims)
-            * [Claim Transition Example](#claim-transition-example)
-      * [Normalization](#normalization)
-   * [URLs](#urls)
-      * [Components](#components)
-         * [Stream Claim Name](#stream-claim-name)
-         * [Channel Claim Name](#channel-claim-name)
-         * [Channel Claim Name and Stream Claim Name](#channel-claim-name-and-stream-claim-name)
-         * [Claim ID](#claim-id)
-         * [Claim Sequence](#claim-sequence)
-         * [Bid Position](#bid-position)
-         * [Query Params](#query-params)
-      * [Grammar](#grammar)
-      * [Resolution](#resolution)
-         * [No Modifier](#no-modifier)
-         * [Claim ID](#claim-id-1)
-         * [Claim Sequence](#claim-sequence-1)
-         * [Bid Position](#bid-position-1)
-         * [ChannelName and ClaimName](#channelname-and-claimname)
-         * [Examples](#examples)
-      * [Design Notes](#design-notes)
-   * [Transactions](#transactions)
-      * [Operations and Opcodes](#operations-and-opcodes)
-      * [Addresses](#addresses)
-      * [Proof of Payment](#proof-of-payment)
-   * [Consensus](#consensus)
-      * [Block Timing](#block-timing)
-      * [Difficulty Adjustment](#difficulty-adjustment)
-      * [Block Hash Algorithm](#block-hash-algorithm)
-      * [Block Rewards](#block-rewards)
-* [Metadata](#metadata)
-   * [Specification](#specification)
-      * [<a name="user-content-metadata-example"></a>Example](#example)
-   * [Key Fields](#key-fields)
-      * [Source and Stream Hashes](#source-and-stream-hashes)
-      * [Fees and Fee Structure](#fees-and-fee-structure)
-      * [Title](#title)
-      * [Thumbnail](#thumbnail)
-      * [Content Type](#content-type)
-      * [Certificate](#certificate)
-   * [<a name="user-content-#channels"></a> Channels (Identities)](#-channels-identities)
-      * [Example Channel Metadata](#example-channel-metadata)
-   * [<a name="user-content-metadata-validation"></a>Validation](#validation)
-* [Data](#data)
-   * [Encoding](#encoding)
-      * [Blobs](#blobs)
-      * [Streams](#streams)
-      * [Manifest Contents](#manifest-contents)
-      * [Stream Encoding](#stream-encoding)
-         * [Setup](#setup)
-         * [Content Blobs](#content-blobs)
-         * [Manifest Blob](#manifest-blob)
-      * [Stream Decoding](#stream-decoding)
-   * [Announce](#announce)
-      * [Distributed Hash Table](#distributed-hash-table)
-      * [Announcing to the DHT](#announcing-to-the-dht)
-   * [Download](#download)
-      * [Querying the DHT](#querying-the-dht)
-      * [Blob Exchange Protocol](#blob-exchange-protocol)
-         * [PriceCheck](#pricecheck)
-         * [DownloadCheck](#downloadcheck)
-         * [Download](#download-1)
-         * [UploadCheck](#uploadcheck)
-         * [Upload](#upload)
-   * [Reflectors and Data Markets](#reflectors-and-data-markets)
-<!--te-->
-
-</div>
-
 
 
 ## Overview
@@ -196,7 +105,7 @@ A _claim_ is a single entry in the blockchain that stores metadata. There are tw
   <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
 </dl>
 
-#### <a name="claim-properties"></a>Properties
+#### Properties {#claim-properties}
 
 Claims have four properties:
 
@@ -211,7 +120,7 @@ Claims have four properties:
   <dd>Metadata about a stream or a channel. See [Metadata](#metadata).</dd>
 </dl>
   
-#### <a name="example-claim"></a>Example Claim
+#### Example Claim
 
 <!-- done -->
 
@@ -240,7 +149,7 @@ Here is an example stream claim:
 }
 ```
 
-#### <a name="claim-operations"></a>Operations
+#### Operations {#claim-operations}
 
 <!-- done -->
 
@@ -277,7 +186,7 @@ Multiple claims can exist for the same name. They are all stored in the leaf nod
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
-#### <a name="claim-statuses"></a>Statuses
+#### Statuses {#claim-statuses}
 
 <!-- fix me? is using claims to mean claims and supports okay? -->
 
@@ -699,7 +608,7 @@ As the metadata specification is designed to grow and change frequently, the ful
 
 Instead, let's look at an example and some key fields.
 
-#### <a name="metadata-example"></a>Example
+#### Example {#metadata-example}
 
 Here’s some example metadata:
 
@@ -752,7 +661,7 @@ The media type of the item as [defined](https://www.iana.org/assignments/media-t
 Information related to signing the claim as belonging to a specific channel. Covered more in [Channels](#channels).
 
 
-### <a name="#channels"></a> Channels (Identities)
+### Channels (Identities) {#channels}
 
 Channels are the unit of identity in the LBRY system. A channel is a claim that:
 
@@ -789,7 +698,7 @@ When a claim published into a channel, the claim data is signed and the followin
 }
 ```
 
-### <a name="metadata-validation"></a>Validation
+### Validation {#metadata-validation}
 
 No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.
 
@@ -1000,6 +909,13 @@ The current version of the protocol does not support sophisticated price negotia
 
 
 _Edit this on Github: https://github.com/lbryio/spec_
+
+
+
+</div> <!-- DONT DELETE THIS, its for the TOC -->
+
+
+
 
 <!---
 

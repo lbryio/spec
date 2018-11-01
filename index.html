@@ -5,8 +5,31 @@
   <meta name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.nl">
   <meta charset="utf-8">
   <link rel="stylesheet" type="text/css" href="normalize.css">
+  <link rel="stylesheet" type="text/css" href="tocbot.css">
   <link rel="stylesheet" type="text/css" href="style.css">
-</head>
+  <script src="tocbot.min.js"></script>
+  <script>
+    function ready(fn) {
+      if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
+        fn();
+      } else {
+        document.addEventListener('DOMContentLoaded', fn);
+      }
+    }
+
+    ready(function() {
+      tocbot.init({
+        // Where to render the table of contents.
+        tocSelector: '#toc',
+        // Where to grab the headings to build the table of contents.
+        contentSelector: '#content',
+        // Which headings to grab inside of the contentSelector element.
+        headingSelector: 'h2, h3, h4, h5, h6',
+        collapseDepth: 3,
+        positionFixedSelector: "#toc",
+      });
+    })
+  </script></head>
 <body>
 
 <h1 id="lbry-a-decentralized-digital-content-marketplace">LBRY: A Decentralized Digital Content Marketplace</h1>
@@ -16,6 +39,9 @@
 
 <p>For more technical information about LBRY, visit <a href="https://lbry.tech">lbry.tech</a>.</p>
 </aside>
+
+<p><nav id="toc"></nav>
+<div id="content"></p>
 
 <h2 id="introduction">Introduction</h2>
 
@@ -28,155 +54,6 @@
 <li>whom does it help</li>
 <li>why is it different/better than what existed before</li>
 </ul>
-
-<h2 id="table-of-contents">Table of Contents</h2>
-
-<p><div id="toc"></p>
-
-<!--ts-->
-
-<ul>
-<li><a href="#overview">Overview</a></li>
-<li><a href="#conventions-and-terminology">Conventions and Terminology</a></li>
-<li><a href="#blockchain">Blockchain</a>
-
-<ul>
-<li><a href="#claims">Claims</a>
-
-<ul>
-<li><a href="#properties"><a name="user-content-claim-properties"></a>Properties</a></li>
-<li><a href="#example-claim"><a name="user-content-example-claim"></a>Example Claim</a></li>
-<li><a href="#operations"><a name="user-content-claim-operations"></a>Operations</a></li>
-<li><a href="#supports">Supports</a></li>
-<li><a href="#claimtrie">Claimtrie</a></li>
-<li><a href="#statuses"><a name="user-content-claim-statuses"></a>Statuses</a>
-
-<ul>
-<li><a href="#accepted">Accepted</a></li>
-<li><a href="#abandoned">Abandoned</a></li>
-<li><a href="#active">Active</a></li>
-<li><a href="#controlling">Controlling</a></li>
-</ul></li>
-<li><a href="#claimtrie-transitions">Claimtrie Transitions</a>
-
-<ul>
-<li><a href="#determining-active-claims">Determining Active Claims</a></li>
-<li><a href="#claim-transition-example">Claim Transition Example</a></li>
-</ul></li>
-<li><a href="#normalization">Normalization</a></li>
-</ul></li>
-<li><a href="#urls">URLs</a>
-
-<ul>
-<li><a href="#components">Components</a>
-
-<ul>
-<li><a href="#stream-claim-name">Stream Claim Name</a></li>
-<li><a href="#channel-claim-name">Channel Claim Name</a></li>
-<li><a href="#channel-claim-name-and-stream-claim-name">Channel Claim Name and Stream Claim Name</a></li>
-<li><a href="#claim-id">Claim ID</a></li>
-<li><a href="#claim-sequence">Claim Sequence</a></li>
-<li><a href="#bid-position">Bid Position</a></li>
-<li><a href="#query-params">Query Params</a></li>
-</ul></li>
-<li><a href="#grammar">Grammar</a></li>
-<li><a href="#resolution">Resolution</a>
-
-<ul>
-<li><a href="#no-modifier">No Modifier</a></li>
-<li><a href="#claim-id-1">Claim ID</a></li>
-<li><a href="#claim-sequence-1">Claim Sequence</a></li>
-<li><a href="#bid-position-1">Bid Position</a></li>
-<li><a href="#channelname-and-claimname">ChannelName and ClaimName</a></li>
-<li><a href="#examples">Examples</a></li>
-</ul></li>
-<li><a href="#design-notes">Design Notes</a></li>
-</ul></li>
-<li><a href="#transactions">Transactions</a>
-
-<ul>
-<li><a href="#operations-and-opcodes">Operations and Opcodes</a></li>
-<li><a href="#addresses">Addresses</a></li>
-<li><a href="#proof-of-payment">Proof of Payment</a></li>
-</ul></li>
-<li><a href="#consensus">Consensus</a>
-
-<ul>
-<li><a href="#block-timing">Block Timing</a></li>
-<li><a href="#difficulty-adjustment">Difficulty Adjustment</a></li>
-<li><a href="#block-hash-algorithm">Block Hash Algorithm</a></li>
-<li><a href="#block-rewards">Block Rewards</a></li>
-</ul></li>
-</ul></li>
-<li><a href="#metadata">Metadata</a>
-
-<ul>
-<li><a href="#specification">Specification</a>
-
-<ul>
-<li><a href="#example"><a name="user-content-metadata-example"></a>Example</a></li>
-</ul></li>
-<li><a href="#key-fields">Key Fields</a>
-
-<ul>
-<li><a href="#source-and-stream-hashes">Source and Stream Hashes</a></li>
-<li><a href="#fees-and-fee-structure">Fees and Fee Structure</a></li>
-<li><a href="#title">Title</a></li>
-<li><a href="#thumbnail">Thumbnail</a></li>
-<li><a href="#content-type">Content Type</a></li>
-<li><a href="#certificate">Certificate</a></li>
-</ul></li>
-<li><a href="#-channels-identities"><a name="user-content-#channels"></a> Channels (Identities)</a>
-
-<ul>
-<li><a href="#example-channel-metadata">Example Channel Metadata</a></li>
-</ul></li>
-<li><a href="#validation"><a name="user-content-metadata-validation"></a>Validation</a></li>
-</ul></li>
-<li><a href="#data">Data</a>
-
-<ul>
-<li><a href="#encoding">Encoding</a>
-
-<ul>
-<li><a href="#blobs">Blobs</a></li>
-<li><a href="#streams">Streams</a></li>
-<li><a href="#manifest-contents">Manifest Contents</a></li>
-<li><a href="#stream-encoding">Stream Encoding</a>
-
-<ul>
-<li><a href="#setup">Setup</a></li>
-<li><a href="#content-blobs">Content Blobs</a></li>
-<li><a href="#manifest-blob">Manifest Blob</a></li>
-</ul></li>
-<li><a href="#stream-decoding">Stream Decoding</a></li>
-</ul></li>
-<li><a href="#announce">Announce</a>
-
-<ul>
-<li><a href="#distributed-hash-table">Distributed Hash Table</a></li>
-<li><a href="#announcing-to-the-dht">Announcing to the DHT</a></li>
-</ul></li>
-<li><a href="#download">Download</a>
-
-<ul>
-<li><a href="#querying-the-dht">Querying the DHT</a></li>
-<li><a href="#blob-exchange-protocol">Blob Exchange Protocol</a>
-
-<ul>
-<li><a href="#pricecheck">PriceCheck</a></li>
-<li><a href="#downloadcheck">DownloadCheck</a></li>
-<li><a href="#download-1">Download</a></li>
-<li><a href="#uploadcheck">UploadCheck</a></li>
-<li><a href="#upload">Upload</a></li>
-</ul></li>
-</ul></li>
-<li><a href="#reflectors-and-data-markets">Reflectors and Data Markets</a>
-<!--te--></li>
-</ul></li>
-</ul>
-
-<p></div></p>
 
 <h2 id="overview">Overview</h2>
 
@@ -244,7 +121,7 @@
   <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
 </dl>
 
-<h4 id="a-name-claim-properties-a-properties"><a name="claim-properties"></a>Properties</h4>
+<h4 id="claim-properties">Properties</h4>
 
 <p>Claims have four properties:</p>
 
@@ -260,7 +137,7 @@
 </dl>
   
 
-<h4 id="a-name-example-claim-a-example-claim"><a name="example-claim"></a>Example Claim</h4>
+<h4 id="example-claim">Example Claim</h4>
 
 <!-- done -->
 
@@ -288,7 +165,7 @@
 }
 </code></pre>
 
-<h4 id="a-name-claim-operations-a-operations"><a name="claim-operations"></a>Operations</h4>
+<h4 id="claim-operations">Operations</h4>
 
 <!-- done -->
 
@@ -325,7 +202,7 @@
 
 <p>For more details on the specific claimtrie implementation, see <a href="https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp">the source code</a>.</p>
 
-<h4 id="a-name-claim-statuses-a-statuses"><a name="claim-statuses"></a>Statuses</h4>
+<h4 id="claim-statuses">Statuses</h4>
 
 <!-- fix me? is using claims to mean claims and supports okay? -->
 
@@ -877,7 +754,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <p>Instead, let&rsquo;s look at an example and some key fields.</p>
 
-<h4 id="a-name-metadata-example-a-example"><a name="metadata-example"></a>Example</h4>
+<h4 id="metadata-example">Example</h4>
 
 <p>Here’s some example metadata:</p>
 
@@ -931,7 +808,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <p>Information related to signing the claim as belonging to a specific channel. Covered more in <a href="#channels">Channels</a>.</p>
 
-<h3 id="a-name-channels-a-channels-identities"><a name="#channels"></a> Channels (Identities)</h3>
+<h3 id="channels">Channels (Identities)</h3>
 
 <p>Channels are the unit of identity in the LBRY system. A channel is a claim that:</p>
 
@@ -968,7 +845,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 }
 </code></pre>
 
-<h3 id="a-name-metadata-validation-a-validation"><a name="metadata-validation"></a>Validation</h3>
+<h3 id="metadata-validation">Validation</h3>
 
 <p>No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.</p>
 
@@ -1171,6 +1048,8 @@ specification fairly closely, with some modifications.</p>
 <hr>
 
 <p><em>Edit this on Github: <a href="https://github.com/lbryio/spec">https://github.com/lbryio/spec</a></em></p>
+
+<p></div> <!-- DONT DELETE THIS, its for the TOC --></p>
 
 <!---
 
