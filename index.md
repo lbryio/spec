@@ -52,12 +52,14 @@ TODO:
       * [Claim Operations](#claim-operations)
       * [Supports](#supports)
       * [Claimtrie](#claimtrie)
-      * [Claim Statuses](#claim-statuses)
+      * [Claim and Support Statuses](#claim-and-support-statuses)
          * [Accepted](#accepted)
          * [Abandoned](#abandoned)
          * [Active](#active)
          * [Controlling](#controlling)
-            * [Claim Controlling Example](#claim-controlling-example)
+      * [Claimtrie Transitions](#claimtrie-transitions)
+         * [Determining Active Claims](#determining-active-claims)
+            * [Claim Transition Example](#claim-transition-example)
       * [Normalization](#normalization)
    * [URLs](#urls)
       * [Components](#components)
@@ -68,7 +70,7 @@ TODO:
          * [ClaimSequence](#claimsequence)
          * [BidPosition](#bidposition)
          * [ChannelName and ClaimName](#channelname-and-claimname)
-         * [Example](#example)
+         * [Examples](#examples)
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
@@ -371,7 +373,7 @@ Names in the claimtrie are normalized to avoid confusion due to Unicode equivale
 
 ### URLs
 
-<!-- fix me - @grin does SPV need a mention inside of the document? ->
+<!-- fix me - @grin does SPV need a mention inside of the document? -->
 
 URLs are human-readable references to claims. All URLs:
 
@@ -497,7 +499,7 @@ Get all claims for the claim name. Sort the claims in descending order by total 
 
 ##### ChannelName and ClaimName
 
-<!-- fix me: explain how claim signing works, and what it means to be **in** a channel ->
+<!-- fix me: explain how claim signing works, and what it means to be **in** a channel -->
 
 If both a channel name and a claim name is present, resolution happens in two steps. First, remove the `/` and `StreamClaimNameAndModifier` from the path, and resolve the URL as if it only had a `ChannelClaimNameAndModifier`. Then get the list of all claims in that channel. Finally, resolve the `StreamClaimNameAndModifier` as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.
 
