@@ -373,7 +373,67 @@ Names in the claimtrie are normalized to avoid confusion due to Unicode equivale
 
 ### URLs
 
-<!-- fix me - @grin does SPV need a mention inside of the document? -->
+<!-- fix me - @grin does SPV need a mention inside of the document? ->
+
+URLs are human-readable references to claims. All URLs:
+
+1. must contain a name (see [Claim Properties](#claim-properties))
+2. and resolve to a single, specific claim for that name
+
+The ultimate purpose of much of the claim and blockchain design is to provide short, human-readable URLs to all active claims that can be trustfully resolved by clients that have don't have a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
+
+#### Components
+
+<!-- done -->
+
+A URL is a name with one or more modifiers. A bare name on its own will resolve to the [controlling claim](#controlling) at the latest block height. Common URL structures are:
+
+##### Stream Claim Name
+
+A basic claim for a name.
+
+```
+lbry://meet-lbry
+```
+
+##### Channel Claim Name
+
+A basic claim for a channel.
+
+```
+lbry://@lbry
+```
+
+##### Channel Claim Name and Stream Claim Name
+
+A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to it's associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
+
+```
+lbry://@lbry/meet-lbry
+```
+
+##### Claim ID
+
+A claim for this name with this claim ID. Partial prefix matches are allowed (see [Resolution](#resolution)).
+
+```
+lbry://meet-lbry#7a0aa95c5023c21c098
+lbry://meet-lbry#7a
+lbry://@lbry#3f/meet-lbry
+```
+
+##### Claim Sequence
+
+The Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.
+
+```
+lbry://meet-lbry:1
+lbry://@lbry:1/meet-lbry
+```
+
+**Bid Position:**### URLs
+
+<!-- fix me - @grin does SPV need a mention inside of the document? ->
 
 URLs are human-readable references to claims. All URLs:
 
@@ -382,6 +442,8 @@ URLs are human-readable references to claims. All URLs:
 
 The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be trustfully resolved by clients that have don't have a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
 
+It is possible to write extremely short, human-readable and memorabl 
+
 
 #### Components
 
@@ -389,25 +451,33 @@ The ultimate purpose of much of the claim and blockchain design is to provide hu
 
 A URL is a name with one or more modifiers. A bare name on its own will resolve to the [controlling claim](#controlling) at the latest block height. Common URL structures are:
 
-**Stream Claim Name:** a basic claim for a name
+##### Stream Claim Name
+
+A basic claim for a name.
 
 ```
 lbry://meet-lbry
 ```
 
-**Channel Claim Name:** a claim for a channel
+##### Channel Claim Name
+
+A basic claim for a channel.
 
 ```
 lbry://@lbry
 ```
 
-**Channel Claim Name and Stream Claim Name:** URLS with a channel and a stream claim name are resolved in two steps. First the channel is resolved to get the appropriate claim for that channel. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
+##### Channel Claim Name and Stream Claim Name
+
+A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to it's associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
 
 ```
 lbry://@lbry/meet-lbry
 ```
 
-**Claim ID:** a claim for this name with this claim ID (does not have to be the controlling claim). Partial prefix matches are allowed (see [Resolution](#resolution)).
+##### Claim ID
+
+A claim for this name with this claim ID. Partial prefix matches are allowed (see [Resolution](#resolution)).
 
 ```
 lbry://meet-lbry#7a0aa95c5023c21c098
@@ -415,14 +485,18 @@ lbry://meet-lbry#7a
 lbry://@lbry#3f/meet-lbry
 ```
 
-**Claim Sequence:** the Nth claim for this name, in the order the claims entered the blockchain. N must be a positive number. This can be used to determine which claim came first, rather than which claim has the most support.
+##### Claim Sequence
+
+The _n_th claim for this name, in the order the claims entered the blockchain. _n_ must be a positive number. This can be used to resolve claims in the order in which they were recorded, rather than by which claim has the most support.
 
 ```
 lbry://meet-lbry:1
 lbry://@lbry:1/meet-lbry
 ```
 
-**Bid Position:** the Nth claim for this name, in order of most support to least support. N must be a positive number. This is useful for resolving non-winning bids in bid order, e.g. if you want to list the top three winning claims in a voting contest or want to ignore the activation delay.
+##### Bid Position
+
+The _n_th claim for this name, in order of most support to least total support. _n_ must be a positive number. This is useful for resolving non-winning bids in bid order.
 
 ```
 lbry://meet-lbry$2
@@ -430,7 +504,9 @@ lbry://meet-lbry$3
 lbry://@lbry$2/meet-lbry
 ```
 
-**Query Params:** extra parameters, reserved for future use
+##### Query Params
+
+These parameters are reserved for future use.
 
 ```
 lbry://meet-lbry?arg=value+arg2=value2
@@ -485,15 +561,15 @@ URL _resolution_ is the process of translating a URL into it's associated claim 
 
 Return the controlling claim for the name. Stream claims and channel claims are resolved the same way.
 
-##### ClaimID
+##### Claim ID
 
 Get all claims for the claim name whose IDs start with the given `ClaimID`. Sort the claims in ascending order by block height and position within the block. Return the first claim.
 
-##### ClaimSequence
+##### Claim Sequence
 
 Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the Nth claim, where N is the given `ClaimSequence` value.
 
-##### BidPosition
+##### Bid Position
 
 Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the Nth claim, where N is the given `BidSequence` value.
 
