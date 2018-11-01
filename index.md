@@ -717,12 +717,11 @@ LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algo
 The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here](https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594).
 
 
-
 ## Metadata
 
 <!-- done -->
 
-Metadata is information about the content or channel separate from the content itself (e.g. the title of stream, the content type, etc.). It is stored in the [value property](#claim-properties) of a claim.
+Metadata is structured information about the stream or channel separate from the content itself (e.g. the title, language, media type, etc.). It is stored in the [value property](#claim-properties) of a claim.
 
 Metadata is stored in a serialized format via [Protocol Buffers](https://developers.google.com/protocol-buffers/). This allows for metadata to be:
 
@@ -730,62 +729,79 @@ Metadata is stored in a serialized format via [Protocol Buffers](https://develop
 - **Compact**. Blockchain space is expensive. Data must be stored as compactly as possible.
 - **Interoperabile**. Metadata will be used by many projects written in different languages.
 
-#### Metadata Specification
+### Specification
 
-A useful index of available content must be succinct yet meaningful. It should be machine-readable, comprehensive, and should ideally point you toward the content you’re looking for. LBRY achieves this by defining a set of common properties for streams.
+As the metadata specification is designed to grow and change frequently, the full specification will not be examined here. The [types](https://github.com/lbryio/types/issues) repository is considered the precise specification.
 
-The metadata contains structured information describing the content, such as the title, author, language, and so on.
+Instead, let's look at an example and some key fields.
 
-Here’s an example:
+#### <a name="metadata-example"></a>Example
+
+Here’s some example metadata:
+
+<!-- fix me better example data -->
 
 ```
 "metadata": {
-  "author": "",
-  "description": "All proceeds go to holly for buying toys, i will post the video with those toys on Xmas day",
+  "description": "All proceeds go to Holly for buying toys.",
   "language": "en",
-  "license": "All rights reserved.",
-  "licenseUrl": "",
   "nsfw": false,
-  "preview": "",
   "thumbnail": "http://www.thetoydiscounter.com/happy.jpg",
   "title": "Holly singing The Happy Working Song",
   "source": {
     "contentType": "video/mp4",
     "source": "92b8aae7a901c56901fd5602c1f1acc0e63fb5492ef2a3cd5b9c631d92cab2e060e2a908baa922c24dee6c5229a98136",
     "sourceType": "lbry_sd_hash",
-    "version": "_0_0_1"
-  },
-  "version": "_0_1_0"
+  }
 }
 ```
 
-Because the metadata structure can and does change frequently, a complete specification is omitted from this document. Instead, [github.com/lbryio/types](https://github.com/lbryio/types) should be consulted for the precise definition of current metadata structure.
+### Key Fields
 
+Some important metadata fields are highlighted below.
 
-### Key Metadata Fields
+#### Source and Stream Hashes
 
-Despite not covering the full metadata structure, a few important metadata fields are highlighted below.
-
-#### Streams and Stream Hashes
-
-(The metadata property `lbry_sd_hash` contains a unique identifier to locate and find the content in the data network. Reference [[Data]].)
+The `source` property contains information about how to fetch the data from the network. Within the `source` is a unique identifier to locate and find the content in the data network. More in  [[Data]].
 
 #### Fees and Fee Structure
 
+<!-- fix me extensively -->
 - LBC
 - Currencies?
 - channel signatures and private keys
 
+#### Title
+
+Used to label the content.
+
+#### Thumbnail
+
+An http or lbry URL to be used to display an image associated with the content.
+
+#### Content Type
+
+The media type of the item as [defined](https://www.iana.org/assignments/media-types/media-types.xhtml) by the IANA.
+
+#### Certificate
+
+Information related to signing the claim as belonging to a specific channel. Covered more in [Channels](#channels).
 
 
+### <a name="#channels"></a> Channels (Identities)
 
-### Identities
+Channels are the unit of identity in the LBRY system. A channel is a claim that:
 
-Channels are the unit of identity in the LBRY system. A channel is a claim that start with `@` and contains a metadata structure for identities rather than content. The most important part of channel's metadata is the public key. Claims belonging to a channel are signed with the corresponding private key. A valid signature proves channel membership.
+- Has name beginning with `@`
+- Contains a metadata structure for identity rather than content
+
+Included in the metadata is the channel's public key. Claims belonging to a channel are signed with the corresponding private key. A valid signature proves channel origin and ownership.
 
 The purpose of channels is to allow content to be clustered under a single pseudonym or identity. This allows publishers to easily list all their content, maintain attribution, and build their brand.
 
-Here’s the value of an example channel claim:
+#### Example Channel Metadata
+
+Included in a channel's metadata is the following structure:
 
 ```
 "certificate": {
@@ -794,11 +810,10 @@ Here’s the value of an example channel claim:
                   0004180488ffcb3d1825af538b0b952f0eba6933faa6
                   d8229609ac0aeadfdbcf49C59363aa5d77ff2b7ff06c
                   ddc07116b335a4a0849b1b524a4a69d908d69f1bcebb",
-    "version": "_0_0_1"
 }
 ```
 
-When a claim published into a channel, the claim data is signed and the following is added to the claim:
+When a claim published into a channel, the claim data is signed and the following is added to the claim metadata:
 
 ```
 "publisherSignature": {
@@ -806,25 +821,15 @@ When a claim published into a channel, the claim data is signed and the followin
     "signature": "bf82d53143155bb0cac1fd3d917c000322244b5aD17
                   e7865124db2ed33812ea66c9b0c3f390a65a9E2d452
                   e315e91ae695642847d88e90348ef3c1fa283a36a8", 
-    "signatureType": "SECP256k1", 
-    "version": "_0_0_1"
+    "signatureType": "SECP256k1",
 }
 ```
 
-
-
-### Metadata Validation
+### <a name="metadata-validation"></a>Validation
 
 No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.
 
-Clients are responsible for validating metadata, including data structure and signatures. 
-
-(expand)
-
-- Validation 101
-- ChannelName / identity validation
-
-
+Clients are responsible for validating metadata, including data structure and signatures. This typically happens when the raw binary data stored in the blockchain is decoded client side via Protocol Buffers. 
 
 ## Data
 
