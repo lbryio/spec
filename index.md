@@ -431,7 +431,7 @@ lbry://meet-lbry:1
 lbry://@lbry:1/meet-lbry
 ```
 
-**Bid Position:**### URLs
+### URLs
 
 <!-- fix me - @grin does SPV need a mention inside of the document? ->
 
@@ -720,14 +720,15 @@ The block reward schedule was adjusted to provide an initial testing period, a q
 
 ## Metadata
 
-Claim metadata is stored in a serialized format using [Protocol Buffers](https://developers.google.com/protocol-buffers/). This was chosen for several reasons:
+<!-- done -->
 
-- **Extensibility**. The metadata structure could grow to encompass thousands of fields for dozens of types of content. It should be easy to modify the structure while maintaining backward compatibility. Blockchain data is permanent and cannot be migrated.
-- **Compactness**. Blockchain space is expensive. Data should be stored as compactly as possible.
-- **Interoperability**. These definitions will be used by many projects written in different languages. Protocol buffers are language-independent and have great support for most popular languages.
+Metadata is information about the content or channel separate from the content itself (e.g. the title of stream, the content type, etc.). It is stored in the [value property](#claim-properties) of a claim.
 
-No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.
+Metadata is stored in a serialized format via [Protocol Buffers](https://developers.google.com/protocol-buffers/). This allows for metadata to be:
 
+- **Extensibile**. Metadata can encompass thousands of fields for dozens of types of content. It must be efficient to both modify the structure and maintain backward compatibility. 
+- **Compact**. Blockchain space is expensive. Data must be stored as compactly as possible.
+- **Interoperabile**. Metadata will be used by many projects written in different languages.
 
 ### Metadata Specification
 
@@ -813,6 +814,8 @@ When a claim published into a channel, the claim data is signed and the followin
 
 
 ### Metadata Validation
+
+No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.
 
 Clients are responsible for validating metadata, including data structure and signatures. 
 
