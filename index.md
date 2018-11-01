@@ -174,7 +174,7 @@ The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) 
 
 <!-- done -->
 
-A _claim_ is a single metadata entry in the blockchain. There are two types of claims:
+A _claim_ is a single entry in the blockchain that stores metadata. There are two types of claims:
 
 <dl>
   <dt>stream</dt>
@@ -183,7 +183,7 @@ A _claim_ is a single metadata entry in the blockchain. There are two types of c
   <dd>Creates a trustful pseudonym that can be used to identify the origin of stream claims.</dd>
 </dl>
 
-#### Claim Properties
+#### <a name="claim-properties"></a>Properties
 
 Claims have 4 properties:
 
@@ -198,7 +198,7 @@ Claims have 4 properties:
   <dd>Metadata about a stream or a channel. See [Metadata](#metadata).</dd>
 </dl>
   
-#### Claim Example
+#### <a name="example-claim"></a>Example Claim
 
 <!-- done -->
 
@@ -221,7 +221,7 @@ Here is an example stream claim:
 }
 ```
 
-#### Claim Operations
+#### <a name="claim-operations"></a>Operations
 
 <!-- done -->
 
@@ -256,7 +256,7 @@ Multiple claims can exist for the same name. They are all stored in the leaf nod
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
-#### Claim and Support Statuses
+#### <a name="claim-statuses"></a>Statuses
 
 <!-- fix me? is using claims to mean claims and supports okay? -->
 
@@ -625,15 +625,15 @@ The most contentious aspect of this design has been the choice to resolve naked 
 
 First, it is important to note the problems in existing domain allocation design. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:
 
-1. Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don't intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities, in this case it is pure value extraction. It also harms the user experience of users, who will see the vast majority of URLs sitting unused (c.f. Namecoin).
+1. Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don't intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities (stable prices and price signals),  in this case it is pure value extraction. Speculation also harms the user experience, who will see the vast majority of URLs sitting unused (c.f. Namecoin).
 
 1. Bureaucracy and transaction costs. While a centralized system can allow for an authority to use a process to reassign names based on trademark or other common use reasons, this system is also imperfect. Most importantly, it is a censorship point and an avenue for complete exclusion. Additionally, such processes are often arbitrary, change over time, involve significant transaction costs, and _still_ lead to names being used in ways that are contrary to user expectation (e.g. [nissan.com](http://nissan.com)).
 
-1. Inefficencies from price controls. Any system that does not allow a price to float completely freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase. 
+1. Inefficencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase. 
 
-Thus, we need an algorithmic design built into consensus that allows URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this design allows for clearly defined rules, low transaction costs, and no information asymmetry, ensuring minimal inefficiency in URL allocation.
+We sought an algorithmic design built into consensus that would allow URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.
 
-It's also important to note that _only_ vanity URLs have this property. Extremely short, memorable URLs like `lbry://myclaimname#a` exist and are available for the minimal cost of issuing a transaction.
+Finally, it's important to note that _only_ vanity URLs have this property. Extremely short, memorable URLs like `lbry://myclaimname#a` exist and are available for the minimal cost of issuing a transaction.
 
 
 ### Transactions
@@ -730,7 +730,7 @@ Metadata is stored in a serialized format via [Protocol Buffers](https://develop
 - **Compact**. Blockchain space is expensive. Data must be stored as compactly as possible.
 - **Interoperabile**. Metadata will be used by many projects written in different languages.
 
-### Metadata Specification
+#### Metadata Specification
 
 A useful index of available content must be succinct yet meaningful. It should be machine-readable, comprehensive, and should ideally point you toward the content you’re looking for. LBRY achieves this by defining a set of common properties for streams.
 
