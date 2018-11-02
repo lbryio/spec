@@ -1076,7 +1076,7 @@ The current version of the protocol does not support sophisticated price negotia
 ---
 
 
-_Edit this on Github: https://github.com/lbryio/spec_
+_Edit this on Github at https://github.com/lbryio/spec_
 
 
 </div></main> <!-- DONT DELETE THIS, its for the TOC -->
