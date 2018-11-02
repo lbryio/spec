@@ -280,7 +280,7 @@ The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Me
 
 The _root hash_ is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.
 
-Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the amount of credits backing each claim.
+Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted by the amount of credits backing the claim (descending), then by block height (ascending), then by transaction order in the block (ascending).
 
 <!-- fix me above? "amount of credits backing each claim" is the effective amount, but that's not defined till later -->
 
@@ -300,7 +300,7 @@ Claims and supports can have one or more of the following statuses at a given bl
 
 An _accepted_ claim is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.
 
-Accepted claims do not affect the claimtrie leaf order until they are [active](#active).
+Accepted claims do not affect the intra-leaf claim order until they are [active](#active).
 
 The sum of the amount of a claim and all accepted supports is called the _total amount_.
 
@@ -318,35 +318,35 @@ While data related to abandoned claims technically still resides in the blockcha
 
 An _active_ claim is an accepted and non-abandoned claim that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the _activation delay_.
 
-If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted). 
+If the claim is an update to an already active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted).
 
-Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's inputs are the height of the current block, the height at which the claim was accepted, and the height at which the relevant claimtrie state for the name being considered last changed.
+Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's inputs are the height of the current block, the height at which the claim was accepted, and the height at which the controlling claim last changed.
 
-The sum of the amount of an active claim and all active supports is called it's _effective amount_. Only the effective amount affects the sort order of claims in a claimtrie leaf.
+The sum of the amount of an active claim and all active supports is called it's _effective amount_. Only the effective amount affects the sort order of claims in a leaf node. Claims that are not active have an effective amount of 0.
 
 ##### Controlling
 
 <!-- done -->
 
-A _controlling_ claim is the active claim that is first in the sort order at a leaf. That is, it has the highest effective amount of all claims with the same name. 
+A _controlling_ claim is the active claim that is first in the sort order of a leaf node. That is, it has the highest effective amount of all claims with the same name. 
 
 Only one claim can be controlling for a given name at a given block. 
 
 #### Claimtrie Transitions
 
-<!-- fix me. it doesnt make sense for non-first claim takeovers to depend on top claim. also be clear that amount is effective amount -->
+To determine the sort order of claims in a leaf node, the following algorithm is used:
 
-To determine the sort order of claims in a claimtrie leaf, the following algorithm is used:
+1. For each claim, recalculate the effective amount.
 
-1. For each active claim, add up the amount of the claim and the amount of all the active supports for that claim. 
+1. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (ascending), then by transaction order within the block (ascending).
 
-1. If all of the claims are in the same order (appending new claims allowed), then nothing is changing.
+1. If the controlling claim from the previous block is still first in the order, then the sort is finished.
 
 1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.
 
 1. At this point, the claim with the greatest effective amount is the controlling claim at this block.
 
-The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.
+The purpose of 4 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 4 will cause the greater claim to also activate and become the controlling claim.
 
 ##### Determining Active Claims
 
@@ -360,9 +360,7 @@ Where:
 
 - C = claim height (height when the claim was accepted)
 - H = current height
-- T = takeover height (the most recent height at which the relevant claimtrie state for the name changed)
-
-<!-- fixme: relevant claimtrie state??? -->
+- T = takeover height (the most recent height at which the controlling claim for the name changed)
 
 In written form, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
 

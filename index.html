@@ -333,7 +333,7 @@
 
 <p>The <em>root hash</em> is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.</p>
 
-<p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted in decreasing order by the amount of credits backing each claim.</p>
+<p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted by the amount of credits backing the claim (descending), then by block height (ascending), then by transaction order in the block (ascending).</p>
 
 <!-- fix me above? "amount of credits backing each claim" is the effective amount, but that's not defined till later -->
 
@@ -353,7 +353,7 @@
 
 <p>An <em>accepted</em> claim is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.</p>
 
-<p>Accepted claims do not affect the claimtrie leaf order until they are <a href="#active">active</a>.</p>
+<p>Accepted claims do not affect the intra-leaf claim order until they are <a href="#active">active</a>.</p>
 
 <p>The sum of the amount of a claim and all accepted supports is called the <em>total amount</em>.</p>
 
@@ -371,37 +371,37 @@
 
 <p>An <em>active</em> claim is an accepted and non-abandoned claim that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the <em>activation delay</em>.</p>
 
-<p>If the claim is an update to an already active claim, is the first claim for a name, or does not affect the sort order at the leaf for a name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted).</p>
+<p>If the claim is an update to an already active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted).</p>
 
-<p>Otherwise, the activation delay is determined by a formula covered in <a href="#claimtrie-transitions">Claimtrie Transitions</a>. The formula&rsquo;s inputs are the height of the current block, the height at which the claim was accepted, and the height at which the relevant claimtrie state for the name being considered last changed.</p>
+<p>Otherwise, the activation delay is determined by a formula covered in <a href="#claimtrie-transitions">Claimtrie Transitions</a>. The formula&rsquo;s inputs are the height of the current block, the height at which the claim was accepted, and the height at which the controlling claim last changed.</p>
 
-<p>The sum of the amount of an active claim and all active supports is called it&rsquo;s <em>effective amount</em>. Only the effective amount affects the sort order of claims in a claimtrie leaf.</p>
+<p>The sum of the amount of an active claim and all active supports is called it&rsquo;s <em>effective amount</em>. Only the effective amount affects the sort order of claims in a leaf node. Claims that are not active have an effective amount of 0.</p>
 
 <h5 id="controlling">Controlling</h5>
 
 <!-- done -->
 
-<p>A <em>controlling</em> claim is the active claim that is first in the sort order at a leaf. That is, it has the highest effective amount of all claims with the same name.</p>
+<p>A <em>controlling</em> claim is the active claim that is first in the sort order of a leaf node. That is, it has the highest effective amount of all claims with the same name.</p>
 
 <p>Only one claim can be controlling for a given name at a given block.</p>
 
 <h4 id="claimtrie-transitions">Claimtrie Transitions</h4>
 
-<!-- fix me. it doesnt make sense for non-first claim takeovers to depend on top claim. also be clear that amount is effective amount -->
-
-<p>To determine the sort order of claims in a claimtrie leaf, the following algorithm is used:</p>
+<p>To determine the sort order of claims in a leaf node, the following algorithm is used:</p>
 
 <ol>
-<li><p>For each active claim, add up the amount of the claim and the amount of all the active supports for that claim.</p></li>
+<li><p>For each claim, recalculate the effective amount.</p></li>
 
-<li><p>If all of the claims are in the same order (appending new claims allowed), then nothing is changing.</p></li>
+<li><p>Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (ascending), then by transaction order within the block (ascending).</p></li>
+
+<li><p>If the controlling claim from the previous block is still first in the order, then the sort is finished.</p></li>
 
 <li><p>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.</p></li>
 
 <li><p>At this point, the claim with the greatest effective amount is the controlling claim at this block.</p></li>
 </ol>
 
-<p>The purpose of 3 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 3 will cause the greater claim to also activate and become the controlling claim.</p>
+<p>The purpose of 4 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 4 will cause the greater claim to also activate and become the controlling claim.</p>
 
 <h5 id="determining-active-claims">Determining Active Claims</h5>
 
@@ -415,10 +415,8 @@
 <ul>
 <li>C = claim height (height when the claim was accepted)</li>
 <li>H = current height</li>
-<li>T = takeover height (the most recent height at which the relevant claimtrie state for the name changed)</li>
+<li>T = takeover height (the most recent height at which the controlling claim for the name changed)</li>
 </ul>
-
-<!-- fixme: relevant claimtrie state??? -->
 
 <p>In written form, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover.</p>
 
