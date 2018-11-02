@@ -199,7 +199,7 @@ A _claim_ is a single entry in the blockchain that stores metadata. There are tw
 
 <dl>
   <dt>stream</dt>
-  <dd>Declares the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
+  <dd>Declares the availability, access method, and publisher of a stream of bytes (an encoded file).</dd>
   <dt>channel</dt>
   <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
 </dl>
@@ -808,7 +808,7 @@ Clients are responsible for validating metadata, including data structure and si
 
 ## Data
 
-Data refers to that which is ultimate distributed by blah blah blah.
+Data refers to the full binary data tht which is ultimate distributed by blah blah blah.
 
 The purpose of blah blah blah is to blah blah.
 
