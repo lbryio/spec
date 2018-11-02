@@ -33,6 +33,8 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
 
 ## Table of Contents
  
+<!-- this TOC is only here for github or js-challenged browsers -->
+
 <!--ts-->
 * [Introduction](#introduction)
 * [Overview](#overview)
@@ -69,7 +71,7 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
          * [Claim Sequence](#claim-sequence-1)
          * [Bid Position](#bid-position-1)
          * [ChannelName and ClaimName](#channelname-and-claimname)
-         * [Examples](#examples)
+         * [Examples {#url-resolution-examples}](#examples-url-resolution-examples)
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
@@ -546,7 +548,7 @@ If both a channel name and a claim name is present, resolution happens in two st
 
 Technically, if multiple claims for the same name exist inside the same channel, they are resolved via the same resolution rules applied entirely within the sub-scope of the channel. Pragmatically, it rarely makes sense for channels to use the same name twice and support for this functionality may be unreliable in current tooling.
 
-##### Examples
+##### Examples {#url-resolution-examples}
 
 Suppose the following names were claimed in the following order:
 

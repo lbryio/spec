@@ -83,6 +83,8 @@
 
 ## Table of Contents
  
+<!-- this TOC is only here for github or js-challenged browsers -->
+
 <!--ts-->
 * [Introduction](#introduction)
 * [Overview](#overview)
@@ -119,7 +121,7 @@
          * [Claim Sequence](#claim-sequence-1)
          * [Bid Position](#bid-position-1)
          * [ChannelName and ClaimName](#channelname-and-claimname)
-         * [Examples](#examples)
+         * [Examples {#url-resolution-examples}](#examples-url-resolution-examples)
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
@@ -592,7 +594,7 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 <p>Technically, if multiple claims for the same name exist inside the same channel, they are resolved via the same resolution rules applied entirely within the sub-scope of the channel. Pragmatically, it rarely makes sense for channels to use the same name twice and support for this functionality may be unreliable in current tooling.</p>
 
-<h5 id="examples">Examples</h5>
+<h5 id="url-resolution-examples">Examples</h5>
 
 <p>Suppose the following names were claimed in the following order:</p>
 
