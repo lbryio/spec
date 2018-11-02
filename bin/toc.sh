@@ -44,16 +44,19 @@ fi
 ts="<\!--ts-->"
 te="<\!--te-->"
 
+existingTOC="$(cat "$MARKDOWN" | sed -n "/${ts}/,/${te}/p" | sed '1,1d; $d')"
 
-tmp="$(mktemp)"
-function finish {
-  rm "$tmp"
-}
-trap finish EXIT
+if [ "$toc" != "$existingTOC" ]; then
+  tmp="$(mktemp)"
+  function finish {
+    rm "$tmp"
+  }
+  trap finish EXIT
 
-echo "${toc}" > "${tmp}"
+  echo "${toc}" > "${tmp}"
 
-# clear old toc
-$sed "/${ts}/,/${te}/{//!d;}" "$MARKDOWN"
-# insert toc
-$sed "/${ts}/r ${tmp}" "$MARKDOWN"
+  # clear old toc
+  $sed "/${ts}/,/${te}/{//!d;}" "$MARKDOWN"
+  # insert toc
+  $sed "/${ts}/r ${tmp}" "$MARKDOWN"
+fi
