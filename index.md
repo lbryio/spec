@@ -37,8 +37,9 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
 
 <!--ts-->
 * [Introduction](#introduction)
-* [Overview](#overview)
-* [Conventions and Terminology](#conventions-and-terminology)
+   * [Overview](#overview)
+   * [Assumptions](#assumptions)
+   * [Conventions and Terminology](#conventions-and-terminology)
 * [Blockchain](#blockchain)
    * [Claims](#claims)
       * [Properties](#claim-properties)
@@ -1007,12 +1008,77 @@ In order for a client to download content, there must be hosts online that have 
 The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it will charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.
 
 
+<pre style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
+                                                                                           
+                                             ++                                            
+                                           :+++++                                          
+                                          +++++++++                                        
+                                        '++++++++++++`                                     
+                                      .++++++',++++++++`                                   
+                                     +++++++    .++++++++.                                 
+                                   ;++++++:       `++++++++,                               
+                                  +++++++            ++++++++,                             
+                                +++++++`               ++++++++:                           
+                              ,++++++'                   ++++++++;                         
+                             +++++++                       ++++++++'                       
+                           '++++++,                          ++++++++'                     
+                         `+++++++                              '++++++++                   
+                        +++++++                                  '++++++++                 
+                      :++++++;                                     ;++++++++               
+                     +++++++                                         :++++++++             
+                   '++++++.                                            ,++++++++           
+                 .++++++'                                                ,++++++++`        
+                +++++++                                                    .++++++++`      
+              ;++++++,                                                       `+++++++      
+            `+++++++                                                           `+++++      
+           +++++++`                                                              ++++      
+         :++++++;                                                               +++++      
+        +++++++                                                               ,++++++      
+      '++++++.                                                               +++++++       
+    .++++++'                                                               '++++++,        
+   +++++++                                                               `+++++++          
+   +++++:                                                               +++++++            
+   ++++                                                               ;++++++:             
+   ++++                                                              +++++++               
+   ++++      ++                                                    +++++++`                
+   ++++      ++++                                                ,++++++'             .:   
+   ++++      ++++++                                             +++++++     :'++++++++++   
+   ++++      ++++++++                                         '++++++.       ++++++++++    
+   ++++       :++++++++                                     .++++++'         .+++++++++    
+   ++++         :++++++++                                  +++++++            ++++++++.    
+   ++++           ,++++++++                              ;++++++:            :++++++++     
+   ++++             ,++++++++                          `+++++++             +++++++++,     
+   ++++               ,++++++++                       +++++++`            +++++++++++      
+   +++++.               .++++++++`                  :++++++;            ,+++++++ +++;      
+   +++++++.               .++++++++`               +++++++             +++++++    ++       
+    ++++++++,               `++++++++`           '++++++.            '++++++:     ,'       
+      ++++++++,               `++++++++`       .++++++'            .+++++++                
+        ++++++++,               `++++++++.    +++++++             +++++++`                 
+          ++++++++,                ++++++++.'++++++,            ;++++++;                   
+            ++++++++:                +++++++++++++            `+++++++                     
+              ++++++++:                +++++++++`            +++++++.                      
+                ++++++++:                +++++;            ,++++++'                        
+                  ++++++++:                ++             +++++++                          
+                    ++++++++;                           '++++++,                           
+                      '+++++++;                       .+++++++                             
+                        '+++++++;                    +++++++                               
+                          '+++++++;                ;++++++:                                
+                            '+++++++'            `+++++++                                  
+                              '+++++++'         +++++++`                                   
+                                '+++++++'     :++++++;                                     
+                                  ;+++++++'  +++++++                                       
+                                    ;+++++++++++++.                                        
+                                      ;+++++++++'                                          
+                                        ;++++++                                            
+                                          :++,                                             
+
+</pre>
+
 
 ---
 
 
 _Edit this on Github: https://github.com/lbryio/spec_
-
 
 
 </div></main> <!-- DONT DELETE THIS, its for the TOC -->

@@ -87,16 +87,17 @@
 
 <!--ts-->
 * [Introduction](#introduction)
-* [Overview](#overview)
-* [Conventions and Terminology](#conventions-and-terminology)
+   * [Overview](#overview)
+   * [Assumptions](#assumptions)
+   * [Conventions and Terminology](#conventions-and-terminology)
 * [Blockchain](#blockchain)
    * [Claims](#claims)
-      * [Properties {#claim-properties}](#properties-claim-properties)
+      * [Properties](#claim-properties)
       * [Example Claim](#example-claim)
-      * [Operations {#claim-operations}](#operations-claim-operations)
+      * [Operations](#claim-operations)
       * [Supports](#supports)
       * [Claimtrie](#claimtrie)
-      * [Statuses {#claim-statuses}](#statuses-claim-statuses)
+      * [Statuses](#claim-statuses)
          * [Accepted](#accepted)
          * [Abandoned](#abandoned)
          * [Active](#active)
@@ -121,7 +122,7 @@
          * [Claim Sequence](#claim-sequence-1)
          * [Bid Position](#bid-position-1)
          * [ChannelName and ClaimName](#channelname-and-claimname)
-         * [Examples {#url-resolution-examples}](#examples-url-resolution-examples)
+         * [Examples](#url-resolution-examples)
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
@@ -134,7 +135,7 @@
       * [Block Rewards](#block-rewards)
 * [Metadata](#metadata)
    * [Specification](#specification)
-      * [Example {#metadata-example}](#example-metadata-example)
+      * [Example](#metadata-example)
    * [Key Fields](#key-fields)
       * [Source and Stream Hashes](#source-and-stream-hashes)
       * [Fees and Fee Structure](#fees-and-fee-structure)
@@ -142,9 +143,9 @@
       * [Thumbnail](#thumbnail)
       * [Content Type](#content-type)
       * [Certificate](#certificate)
-   * [Channels (Identities) {#channels}](#channels-identities-channels)
+   * [Channels (Identities)](#channels)
       * [Example Channel Metadata](#example-channel-metadata)
-   * [Validation {#metadata-validation}](#validation-metadata-validation)
+   * [Validation](#metadata-validation)
 * [Data](#data)
    * [Encoding](#encoding)
       * [Blobs](#blobs)
@@ -173,7 +174,9 @@
 
 <h2 id="introduction">Introduction</h2>
 
-<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
+<!-- fix me -->
+
+<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
 
 <p>TODO:</p>
 
@@ -183,15 +186,21 @@
 <li>why is it different/better than what existed before</li>
 </ul>
 
-<h2 id="overview">Overview</h2>
+<h3 id="overview">Overview</h3>
 
-<p>This document defines the LBRY protocol, its components, and how they fit together. At its core, LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, transformation, and retrieval.</p>
+<!-- fix me -->
+
+<p>This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, transformation, and retrieval.</p>
+
+<h3 id="assumptions">Assumptions</h3>
+
+<!-- fix me -->
 
 <p>This document assumes that the reader is familiar with Bitcoin and blockchain technology. It does not attempt to document the Bitcoin protocol or explain how it works. The <a href="https://bitcoin.org/en/developer-reference">Bitcoin developer reference</a> is recommended for anyone wishing to understand the technical details.</p>
 
-<h2 id="conventions-and-terminology">Conventions and Terminology</h2>
+<h3 id="conventions-and-terminology">Conventions and Terminology</h3>
 
-<p>(Rather than this section, maybe we can use a syntax like brackets around keywords to inline key definitions?)</p>
+<!-- fix me - rather than inline this here, I think we should use lbry.tech glossary definitions and the [[keyword]] syntax -->
 
 <dl>
   <dt>file</dt>
@@ -244,7 +253,7 @@
 
 <dl>
   <dt>stream</dt>
-  <dd>Declares the availability, access method, and publisher of a stream of bytes (typically a file).</dd>
+  <dd>Declares the availability, access method, and publisher of a stream of bytes (an encoded file).</dd>
   <dt>channel</dt>
   <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
 </dl>
@@ -985,7 +994,9 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h2 id="data">Data</h2>
 
-<p>(This portion covers how content is actually encoded and decoded, fetched, and announced. Expand/fix.)</p>
+<p>Data refers to the full binary data tht which is ultimate distributed by blah blah blah.</p>
+
+<p>The purpose of blah blah blah is to blah blah.</p>
 
 <h3 id="encoding">Encoding</h3>
 
@@ -1176,6 +1187,72 @@ specification fairly closely, with some modifications.</p>
 <p>In order for a client to download content, there must be hosts online that have the content the client wants, when the client wants it. To incentivize the continued hosting of data, the blob exchange protocol supports data upload and payment for data. <em>Reflectors</em> are hosts that accept data uploads. They rehost (reflect) the uploaded data and charge for downloads. Using a reflector is optional, but most publishers will probably choose to use them. Doing so obviates the need for the publisher&rsquo;s server to be online and connectable, which can be especially useful for mobile clients or those behind a firewall.</p>
 
 <p>The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it will charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.</p>
+
+<pre style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
+                                                                                           
+                                             ++                                            
+                                           :+++++                                          
+                                          +++++++++                                        
+                                        '++++++++++++`                                     
+                                      .++++++',++++++++`                                   
+                                     +++++++    .++++++++.                                 
+                                   ;++++++:       `++++++++,                               
+                                  +++++++            ++++++++,                             
+                                +++++++`               ++++++++:                           
+                              ,++++++'                   ++++++++;                         
+                             +++++++                       ++++++++'                       
+                           '++++++,                          ++++++++'                     
+                         `+++++++                              '++++++++                   
+                        +++++++                                  '++++++++                 
+                      :++++++;                                     ;++++++++               
+                     +++++++                                         :++++++++             
+                   '++++++.                                            ,++++++++           
+                 .++++++'                                                ,++++++++`        
+                +++++++                                                    .++++++++`      
+              ;++++++,                                                       `+++++++      
+            `+++++++                                                           `+++++      
+           +++++++`                                                              ++++      
+         :++++++;                                                               +++++      
+        +++++++                                                               ,++++++      
+      '++++++.                                                               +++++++       
+    .++++++'                                                               '++++++,        
+   +++++++                                                               `+++++++          
+   +++++:                                                               +++++++            
+   ++++                                                               ;++++++:             
+   ++++                                                              +++++++               
+   ++++      ++                                                    +++++++`                
+   ++++      ++++                                                ,++++++'             .:   
+   ++++      ++++++                                             +++++++     :'++++++++++   
+   ++++      ++++++++                                         '++++++.       ++++++++++    
+   ++++       :++++++++                                     .++++++'         .+++++++++    
+   ++++         :++++++++                                  +++++++            ++++++++.    
+   ++++           ,++++++++                              ;++++++:            :++++++++     
+   ++++             ,++++++++                          `+++++++             +++++++++,     
+   ++++               ,++++++++                       +++++++`            +++++++++++      
+   +++++.               .++++++++`                  :++++++;            ,+++++++ +++;      
+   +++++++.               .++++++++`               +++++++             +++++++    ++       
+    ++++++++,               `++++++++`           '++++++.            '++++++:     ,'       
+      ++++++++,               `++++++++`       .++++++'            .+++++++                
+        ++++++++,               `++++++++.    +++++++             +++++++`                 
+          ++++++++,                ++++++++.'++++++,            ;++++++;                   
+            ++++++++:                +++++++++++++            `+++++++                     
+              ++++++++:                +++++++++`            +++++++.                      
+                ++++++++:                +++++;            ,++++++'                        
+                  ++++++++:                ++             +++++++                          
+                    ++++++++;                           '++++++,                           
+                      '+++++++;                       .+++++++                             
+                        '+++++++;                    +++++++                               
+                          '+++++++;                ;++++++:                                
+                            '+++++++'            `+++++++                                  
+                              '+++++++'         +++++++`                                   
+                                '+++++++'     :++++++;                                     
+                                  ;+++++++'  +++++++                                       
+                                    ;+++++++++++++.                                        
+                                      ;+++++++++'                                          
+                                        ;++++++                                            
+                                          :++,                                             
+
+</pre>
 
 <hr>
 
