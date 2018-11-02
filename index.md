@@ -123,7 +123,9 @@ A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tec
 
 ## Introduction
 
-LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
+<!-- fix me -->
+
+LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
 
 TODO:
 
@@ -131,18 +133,21 @@ TODO:
 - whom does it help
 - why is it different/better than what existed before
 
+### Overview
 
-## Overview
+<!-- fix me -->
 
-This document defines the LBRY protocol, its components, and how they fit together. At its core, LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, transformation, and retrieval. 
+This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, transformation, and retrieval. 
+
+### Assumptions
+
+<!-- fix me -->
 
 This document assumes that the reader is familiar with Bitcoin and blockchain technology. It does not attempt to document the Bitcoin protocol or explain how it works. The [Bitcoin developer reference](https://bitcoin.org/en/developer-reference) is recommended for anyone wishing to understand the technical details.
 
+### Conventions and Terminology
 
-
-## Conventions and Terminology
-
-(Rather than this section, maybe we can use a syntax like brackets around keywords to inline key definitions?)
+<!-- fix me - rather than inline this here, I think we should use lbry.tech glossary definitions and the [[keyword]] syntax -->
 
 <dl>
   <dt>file</dt>
@@ -803,8 +808,9 @@ Clients are responsible for validating metadata, including data structure and si
 
 ## Data
 
-(This portion covers how content is actually encoded and decoded, fetched, and announced. Expand/fix.)
+Data refers to that which is ultimate distributed by blah blah blah.
 
+The purpose of blah blah blah is to blah blah.
 
 
 ### Encoding
