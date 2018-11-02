@@ -16,6 +16,7 @@ surname="Grintsvayg"
 fullname="Alex Grintsvayg"
 %%%
 
+<main>
 
 # LBRY: A Decentralized Digital Content Marketplace
 
@@ -24,8 +25,99 @@ A> Please excuse the unfinished state of this paper. It is being actively worked
 
 A> For more technical information about LBRY, visit [lbry.tech](https://lbry.tech).
 
-<nav id="toc"></nav>
+<div class="toc-menu">Menu</div>
+<nav class="toc"></nav>
 <div id="content">
+
+<noscript>
+
+## Table of Contents
+ 
+<!--ts-->
+* [Introduction](#introduction)
+* [Overview](#overview)
+* [Conventions and Terminology](#conventions-and-terminology)
+* [Blockchain](#blockchain)
+   * [Claims](#claims)
+      * [Properties {#claim-properties}](#properties-claim-properties)
+      * [Example Claim](#example-claim)
+      * [Operations {#claim-operations}](#operations-claim-operations)
+      * [Supports](#supports)
+      * [Claimtrie](#claimtrie)
+      * [Statuses {#claim-statuses}](#statuses-claim-statuses)
+         * [Accepted](#accepted)
+         * [Abandoned](#abandoned)
+         * [Active](#active)
+         * [Controlling](#controlling)
+      * [Claimtrie Transitions](#claimtrie-transitions)
+         * [Determining Active Claims](#determining-active-claims)
+            * [Claim Transition Example](#claim-transition-example)
+      * [Normalization](#normalization)
+   * [URLs](#urls)
+      * [Components](#components)
+         * [Stream Claim Name](#stream-claim-name)
+         * [Channel Claim Name](#channel-claim-name)
+         * [Channel Claim Name and Stream Claim Name](#channel-claim-name-and-stream-claim-name)
+         * [Claim ID](#claim-id)
+         * [Claim Sequence](#claim-sequence)
+         * [Bid Position](#bid-position)
+         * [Query Params](#query-params)
+      * [Grammar](#grammar)
+      * [Resolution](#resolution)
+         * [No Modifier](#no-modifier)
+         * [Claim ID](#claim-id-1)
+         * [Claim Sequence](#claim-sequence-1)
+         * [Bid Position](#bid-position-1)
+         * [ChannelName and ClaimName](#channelname-and-claimname)
+         * [Examples](#examples)
+      * [Design Notes](#design-notes)
+   * [Transactions](#transactions)
+      * [Operations and Opcodes](#operations-and-opcodes)
+      * [Addresses](#addresses)
+      * [Proof of Payment](#proof-of-payment)
+   * [Consensus](#consensus)
+      * [Block Timing](#block-timing)
+      * [Difficulty Adjustment](#difficulty-adjustment)
+      * [Block Hash Algorithm](#block-hash-algorithm)
+      * [Block Rewards](#block-rewards)
+* [Metadata](#metadata)
+   * [Specification](#specification)
+      * [Example {#metadata-example}](#example-metadata-example)
+   * [Key Fields](#key-fields)
+      * [Source and Stream Hashes](#source-and-stream-hashes)
+      * [Fees and Fee Structure](#fees-and-fee-structure)
+      * [Title](#title)
+      * [Thumbnail](#thumbnail)
+      * [Content Type](#content-type)
+      * [Certificate](#certificate)
+   * [Channels (Identities) {#channels}](#channels-identities-channels)
+      * [Example Channel Metadata](#example-channel-metadata)
+   * [Validation {#metadata-validation}](#validation-metadata-validation)
+* [Data](#data)
+   * [Encoding](#encoding)
+      * [Blobs](#blobs)
+      * [Streams](#streams)
+      * [Manifest Contents](#manifest-contents)
+      * [Stream Encoding](#stream-encoding)
+         * [Setup](#setup)
+         * [Content Blobs](#content-blobs)
+         * [Manifest Blob](#manifest-blob)
+      * [Stream Decoding](#stream-decoding)
+   * [Announce](#announce)
+      * [Distributed Hash Table](#distributed-hash-table)
+      * [Announcing to the DHT](#announcing-to-the-dht)
+   * [Download](#download)
+      * [Querying the DHT](#querying-the-dht)
+      * [Blob Exchange Protocol](#blob-exchange-protocol)
+         * [PriceCheck](#pricecheck)
+         * [DownloadCheck](#downloadcheck)
+         * [Download](#download-1)
+         * [UploadCheck](#uploadcheck)
+         * [Upload](#upload)
+   * [Reflectors and Data Markets](#reflectors-and-data-markets)
+<!--te-->
+
+</noscript>
 
 ## Introduction
 
@@ -516,6 +608,8 @@ To support claims, the LBRY blockchain makes the following changes on top of Bit
 
 #### Operations and Opcodes
 
+<!-- fixme: grin: i need to go over this section -->
+
 To enable [claim operations](#claim-operations), three new opcodes were added to the blockchain scripting language: `OP_CLAIM_NAME`, `OP_SUPPORT_CLAIM`, and `OP_UPDATE_CLAIM` (in Bitcoin they are respectively `OP_NOP6`, `OP_NOP7`, and `OP_NOP8`). Each op code will push a zero on to the execution stack, and will trigger the claimtrie to perform calculations necessary for each operation. Below are the three supported transactions scripts using these opcodes.
 
 ```
@@ -556,6 +650,7 @@ The payout script for the update transaction is:
 OP_UPDATE_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 Banana OP_2DROP OP_2DROP OP_DUP OP_HASH160 <addressThree> OP_EQUALVERIFY OP_CHECKSIG
 ```
 
+An update transaction must spend the [[outpoint]] of the original claim that it is updating.
 
 #### Addresses
 
@@ -912,7 +1007,7 @@ _Edit this on Github: https://github.com/lbryio/spec_
 
 
 
-</div> <!-- DONT DELETE THIS, its for the TOC -->
+</div></main> <!-- DONT DELETE THIS, its for the TOC -->
 
 
 

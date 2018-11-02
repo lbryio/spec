@@ -11,16 +11,49 @@
       }
     }
 
+    function toggleClass(el, className) {
+      if (el.classList) {
+        el.classList.toggle(className);
+      } else {
+        var classes = el.className.split(' ');
+        var existingIndex = classes.indexOf(className);
+
+        if (existingIndex >= 0)
+          classes.splice(existingIndex, 1);
+        else
+          classes.push(className);
+
+        el.className = classes.join(' ');
+      }
+    }
+
     ready(function() {
-      tocbot.init({
-        // Where to render the table of contents.
-        tocSelector: '#toc',
-        // Where to grab the headings to build the table of contents.
+      var options = {
+        tocSelector: '.toc',
         contentSelector: '#content',
-        // Which headings to grab inside of the contentSelector element.
         headingSelector: 'h2, h3, h4, h5, h6',
         collapseDepth: 3,
-        positionFixedSelector: "#toc",
+        positionFixedSelector: ".toc",
+      };
+
+      tocbot.init(options);
+
+      document.querySelector('.toc-menu').addEventListener("click", function() {
+        toggleClass(document.querySelector('.toc'), "open");
       });
+      
+      
+      // need this part to fix toc offset height if content above toc changes height
+      var resizeTimer;
+      window.addEventListener('resize', function(e) {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          o = options;
+          o.fixedSidebarOffset = "auto"; 
+          tocbot.refresh(o);
+        }, 250);
+      });
+
+
     })
   </script>
