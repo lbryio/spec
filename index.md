@@ -60,6 +60,7 @@
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
+         * [Claim Identifier Generation](#claim-identifier-generation)
          * [OP_CLAIM_NAME](#op-claim-name)
          * [OP_UPDATE_CLAIM](#op-update-claim)
          * [OP_SUPPORT_CLAIM](#op-support-claim)
@@ -199,7 +200,7 @@ Claims have four properties:
 
 <dl>
   <dt>claim_id</dt>
-  <dd>A 20-byte hash unique among all claims. See <a href="#fixme">Claim Identifier Generation</a>.</dd>
+  <dd>A 20-byte hash unique among all claims. See <a href="#claim-identifier-generation">Claim Identifier Generation</a>.</dd>
   <dt>name</dt>
   <dd>A normalized UTF-8 string of up to 255 bytes used to address the claim. See <a href="#urls">URLs</a> and <a href="#normalization">Normalization</a>.</dd>
   <dt>amount</dt>
@@ -218,24 +219,15 @@ Here is an example stream claim:
   "name": "lbry",
   "amount": 1.0,
   "value": {
-    "claimType": "streamType",
     "stream": {
-      "metadata": {
-        "author": "Samuel Bryan",
-        "description": "What is LBRY? An introduction with Alex Tabarrok",
-        "language": "en",
-        "license": "LBRY inc",
-        "licenseUrl": "",
-        "nsfw": false,
-        "preview": "",
-        "thumbnail": "https://s3.amazonaws.com/files.lbry.io/logo.png",
-        "title": "What is LBRY?",
-      },
-      "source": {
-        "contentType": "video/mp4",
-        "source": "232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752",
-        "sourceType": "lbry_sd_hash",
-      },
+      "title": "What is LBRY?",
+      "author": "Samuel Bryan",
+      "description": "What is LBRY? An introduction with Alex Tabarrok",
+      "language": "en",
+      "license": "LBRY inc",
+      "thumbnail": "https://s3.amazonaws.com/files.lbry.io/logo.png",
+      "mediaType": "video/mp4",
+      "stream_hash": "232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752",
     },
   }
 }
@@ -601,9 +593,14 @@ OP_UPDATE_CLAIM <name> <claimId> <value> OP_2DROP OP_2DROP <outputScript>
 OP_SUPPORT_CLAIM <name> <claimId> OP_2DROP OP_DROP <outputScript>
 ```
 
-The `<name>` parameter is the [[name]] that the claim will be associated with. `<value>` is the protobuf-encoded claim metadata and optional channel signature (see [Metadata](#metadata) for info about this value). `<claimId>` is the claim ID of a previous claim that is being updated or supported.
+The `<name>` parameter is the [[name]] that the claim will be associated with. `<value>` is the protobuf-encoded claim metadata and optional channel signature (see [Metadata](#metadata) for info about this value). The `<claimId>` is the claim ID of a previous claim that is being updated or supported.
 
-Each opcode will push a zero on to the execution stack. Those zeros, as well as any additional parameters after the opcodes, are all dropped by `OP_2DROP` and `OP_DROP`. `<outputScript>` can be any valid script, so a script using these opcodes is also a pay-to-pubkey script. This means that claimtrie scripts can be spent just like regular Bitcoin output scripts.
+Each opcode will push a zero on to the execution stack. Those zeros, as well as any additional parameters after the opcodes, are all dropped by `OP_2DROP` and `OP_DROP`. `<outputScript>` can be any valid script, so a script using these opcodes is also a pay-to-pubkey script. This means that claim scripts can be spent just like regular Bitcoin output scripts.
+
+##### Claim Identifier Generation
+
+Like any standard Bitcoin output script, a claim script will be associated with a transaction hash and output index. This combination of transaction hash and index is called an _outpoint_. Each claim script has a unique outpoint. The outpoint is hashed using SHA-256 and RIPEMD-160 to generate the claim ID for a claim. For the example above, let's say claim script is included in transaction `7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43` at the output index `1`. Then the claim ID would be `529357c3422c6046d3fec76be2358004ba22e323`. An implementation of this is available [here](https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go).
+
 
 ##### OP\_CLAIM\_NAME
 
@@ -612,8 +609,6 @@ New claims are created using `OP_CLAIM_NAME`. For example, a claim transaction s
 ```
 OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 <address> OP_EQUALVERIFY OP_CHECKSIG
 ```
-
-Like any standard Bitcoin output script, it will be associated with a transaction hash and output index. The transaction hash and output index are concatenated and hashed using Hash160 to create the claim ID for this claim. For the example above, let's say the above transaction hash is `7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43` and the output index is `1`. Then the claimID would be `529357c3422c6046d3fec76be2358004ba22e323`. An implementation of this is available [here](https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go)
 
 
 ##### OP\_UPDATE\_CLAIM
@@ -677,7 +672,7 @@ The proof-of-work target is adjusted every block to better adapt to sudden chang
 
 #### Block Hash Algorithm
 
-LBRY uses a combination of SHA256, SHA512, and RIPEMD160. The exact hashing algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/master/src/hash.cpp#L18).
+LBRY uses a combination of SHA-256, SHA-512, and RIPEMD-160. The exact hashing algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/master/src/hash.cpp#L18).
 
 #### Block Rewards
 
@@ -708,20 +703,15 @@ Here’s some example metadata:
 
 ```
 {
-  "claim_id": "6e56325c5351ceda2dd0795a30e864492910ccbf",
-  "name": "lbry",
-  "amount": 1.0,
-  "value": {
-    "stream": {
-      "title": "What is LBRY?",
-      "author": "Samuel Bryan",
-      "description": "What is LBRY? An introduction with Alex Tabarrok",
-      "language": "en",
-      "license": "LBRY inc",
-      "thumbnail": "https://s3.amazonaws.com/files.lbry.io/logo.png",
-      "mediaType": "video/mp4",
-      "streamHash": "232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752",
-    }
+  "stream": {
+    "title": "What is LBRY?",
+    "author": "Samuel Bryan",
+    "description": "What is LBRY? An introduction with Alex Tabarrok",
+    "language": "en",
+    "license": "LBRY inc",
+    "thumbnail": "https://s3.amazonaws.com/files.lbry.io/logo.png",
+    "mediaType": "video/mp4",
+    "streamHash": "232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752"
   }
 }
 ```
@@ -799,12 +789,12 @@ The following formats are supported:
 format     | description
 :---       | :--- 
 `00000000` | No signature.
-`00000001` | Signature using ECDSA SECP256k1 key and SHA256 hash.
+`00000001` | Signature using ECDSA SECP256k1 key and SHA-256 hash.
 
 ##### Signing Process
 
 1. Encode the metadata using protobuf.
-1. Hash the encoded claim using SHA256.
+1. Hash the encoded claim using SHA-256.
 1. Sign the hash using the private key associated with the channel.
 1. Append all the values (the version, the claim ID of the corresponding channel claim, the signature, and the protobuf-encoded metadata).
 
