@@ -232,6 +232,7 @@ Here is an example stream claim:
   }
 }
 ```
+Figure: Note: the blockchain treats the `value` as an opaque byte string and does not impose any structure on it. Structure is applied and validated [higher in the stack](#metadata-validation). In this example, the value is shown for demonstration purposes. 
 
 #### Operations {#claim-operations}
 

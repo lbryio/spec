@@ -280,7 +280,7 @@
 <h4 id="example-claim">Example Claim</h4>
 
 <p>Here is an example stream claim:</p>
-
+<figure>
 <pre><code>{
   &quot;claim_id&quot;: &quot;6e56325c5351ceda2dd0795a30e864492910ccbf&quot;,
   &quot;name&quot;: &quot;lbry&quot;,
@@ -299,6 +299,9 @@
   }
 }
 </code></pre>
+<figcaption>Note: the blockchain treats the <code>value</code> as an opaque byte string and does not impose any structure on it. Structure is applied and validated <a href="#metadata-validation">higher in the stack</a>. In this example, the value is shown for demonstration purposes.
+</figcaption>
+</figure>
 
 <h4 id="claim-operations">Operations</h4>
 

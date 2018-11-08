@@ -185,3 +185,14 @@ table thead tr {
 table tbody tr:nth-child(odd) {
     background-color: rgba(0,0,0,.05);
 }
+
+figure {
+    margin-left: 0;
+    margin-right: 0;
+}
+figcaption {
+    color: #888;
+    font-size: 90%;
+    padding-left: 10px;
+    padding-right: 10px;
+}
