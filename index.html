@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LBRY: A Decentralized Digital Content Marketplace</title>
+  <title></title>
   <meta name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.nl">
   <meta charset="utf-8">
   <link rel="stylesheet" type="text/css" href="normalize.css">
@@ -69,11 +69,10 @@
 
 <h1 id="lbry-a-decentralized-digital-content-marketplace">LBRY: A Decentralized Digital Content Marketplace</h1>
 
-<aside>
-<p>Please excuse the unfinished state of this paper. It is being actively worked on. The content here is made available early because it contains useful information for developers.</p>
-
-<p>For more technical information about LBRY, visit <a href="https://lbry.tech">lbry.tech</a>.</p>
-</aside>
+<div class="notice">
+  <p>Please excuse the unfinished state of this paper. It is being actively worked on. The content here is made available early because it contains useful information for developers.</p>
+  <p>For more technical information about LBRY, visit <a href="https://lbry.tech">lbry.tech</a>.</p>
+</div>
 
 <p><div class="toc-menu">Menu</div>
 <nav class="toc"></nav>
@@ -126,6 +125,10 @@
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
+         * [OP_CLAIM_NAME](#op-claim-name)
+         * [OP_UPDATE_CLAIM](#op-update-claim)
+         * [OP_SUPPORT_CLAIM](#op-support-claim)
+      * [Tips](#tips)
       * [Addresses](#addresses)
       * [Proof of Payment](#proof-of-payment)
    * [Consensus](#consensus)
@@ -139,12 +142,15 @@
    * [Key Fields](#key-fields)
       * [Source and Stream Hashes](#source-and-stream-hashes)
       * [Fees and Fee Structure](#fees-and-fee-structure)
-      * [Title](#title)
+      * [Title, Author, Description](#title-author-description)
+      * [Language](#language)
       * [Thumbnail](#thumbnail)
-      * [Content Type](#content-type)
-      * [Certificate](#certificate)
+      * [Media Type](#media-type)
    * [Channels (Identities)](#channels)
-      * [Example Channel Metadata](#example-channel-metadata)
+      * [Signing](#signing)
+         * [Format Versions](#format-versions)
+         * [Signing Process](#signing-process)
+         * [Signature Validation](#signature-validation)
    * [Validation](#metadata-validation)
 * [Data](#data)
    * [Encoding](#encoding)
@@ -233,8 +239,6 @@
 
 <h2 id="blockchain">Blockchain</h2>
 
-<!-- done -->
-
 <p>The LBRY blockchain is a public, proof-of-work blockchain. It serves three key purposes:</p>
 
 <ol>
@@ -246,8 +250,6 @@
 <p>The LBRY blockchain is a fork of the <a href="https://bitcoin.org/bitcoin.pdf">Bitcoin</a> blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.</p>
 
 <h3 id="claims">Claims</h3>
-
-<!-- done -->
 
 <p>A <em>claim</em> is a single entry in the blockchain that stores metadata. There are two types of claims:</p>
 
@@ -263,7 +265,7 @@
 <p>Claims have four properties:</p>
 
 <dl>
-  <dt>claimId</dt>
+  <dt>claim_id</dt>
   <dd>A 20-byte hash unique among all claims. See <a href="#fixme">Claim Identifier Generation</a>.</dd>
   <dt>name</dt>
   <dd>A normalized UTF-8 string of up to 255 bytes used to address the claim. See <a href="#urls">URLs</a> and <a href="#normalization">Normalization</a>.</dd>
@@ -276,35 +278,37 @@
 
 <h4 id="example-claim">Example Claim</h4>
 
-<!-- done -->
-
 <p>Here is an example stream claim:</p>
 
 <pre><code>{
-  &quot;claimId&quot;: &quot;fa3d002b67c4ff439463fcc0d4c80758e38a0aed&quot;,
+  &quot;claim_id&quot;: &quot;6e56325c5351ceda2dd0795a30e864492910ccbf&quot;,
   &quot;name&quot;: &quot;lbry&quot;,
-  &quot;amount&quot;: 100000000,
+  &quot;amount&quot;: 1.0,
   &quot;value&quot;: {
-    &quot;title&quot;: &quot;What is LBRY?&quot;, 
-    &quot;description&quot;: &quot;What is LBRY? An introduction with Alex Tabarrok&quot;,
-    &quot;license&quot;: &quot;LBRY inc&quot;, 
-    &quot;author&quot;: &quot;Samuel Bryan&quot;,
-    &quot;language&quot;: &quot;en&quot;, 
-    &quot;content_type&quot;: &quot;video/mp4&quot;, 
-    &quot;thumbnail&quot;: &quot;https://s3.amazonaws.com/files.lbry.io/logo.png&quot;,
-    &quot;sources&quot;: {
-      &quot;lbry_sd_hash&quot;: &quot;e1e324bce7437540fac6707fa142cca44d76fc4e8e65060139a88ff7cdb218b4540cb9cff8bb3d5e06157ae6b08e5cb5&quot;
-    }
-  },
-  &quot;txid&quot;: &quot;53ed05d9dfd728a94bedf952d67783bbe9da5d2ab436a84338bb53f0b85301b5&quot;,
-  &quot;n&quot;: 0,
-  &quot;height&quot;: 146117
+    &quot;claimType&quot;: &quot;streamType&quot;,
+    &quot;stream&quot;: {
+      &quot;metadata&quot;: {
+        &quot;author&quot;: &quot;Samuel Bryan&quot;,
+        &quot;description&quot;: &quot;What is LBRY? An introduction with Alex Tabarrok&quot;,
+        &quot;language&quot;: &quot;en&quot;,
+        &quot;license&quot;: &quot;LBRY inc&quot;,
+        &quot;licenseUrl&quot;: &quot;&quot;,
+        &quot;nsfw&quot;: false,
+        &quot;preview&quot;: &quot;&quot;,
+        &quot;thumbnail&quot;: &quot;https://s3.amazonaws.com/files.lbry.io/logo.png&quot;,
+        &quot;title&quot;: &quot;What is LBRY?&quot;,
+      },
+      &quot;source&quot;: {
+        &quot;contentType&quot;: &quot;video/mp4&quot;,
+        &quot;source&quot;: &quot;232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752&quot;,
+        &quot;sourceType&quot;: &quot;lbry_sd_hash&quot;,
+      },
+    },
+  }
 }
 </code></pre>
 
 <h4 id="claim-operations">Operations</h4>
-
-<!-- done -->
 
 <p>There are three claim operations: <em>create</em>, <em>update</em>, and <em>abandon</em>.</p>
 
@@ -324,8 +328,6 @@
 <p>A support contains only a <code>claimID</code> and an <code>amount</code>, no other properties. Supports function analogously to claims in terms of <a href="#claim-operations">Claim Operations</a> and <a href="#claim-statuses">Claim Statuses</a>, with the exception that they cannot be updated.</p>
 
 <h4 id="claimtrie">Claimtrie</h4>
-
-<!-- done -->
 
 <p>The <em>claimtrie</em> is the data structure used to store the set of all claims and prove the correctness of claim resolution.</p>
 
@@ -349,8 +351,6 @@
 
 <h5 id="accepted">Accepted</h5>
 
-<!-- done -->
-
 <p>An <em>accepted</em> claim is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.</p>
 
 <p>Accepted claims do not affect the intra-leaf claim order until they are <a href="#active">active</a>.</p>
@@ -358,8 +358,6 @@
 <p>The sum of the amount of a claim and all accepted supports is called the <em>total amount</em>.</p>
 
 <h5 id="abandoned">Abandoned</h5>
-
-<!-- done -->
 
 <p>An <em>abandoned</em> claim is one that was withdrawn by its creator or current owner. Spending a transaction that contains a claim will cause that claim to become abandoned. Abandoned claims are removed from the claimtrie.</p>
 
@@ -378,8 +376,6 @@
 <p>The sum of the amount of an active claim and all active supports is called it&rsquo;s <em>effective amount</em>. Only the effective amount affects the sort order of claims in a leaf node. Claims that are not active have an effective amount of 0.</p>
 
 <h5 id="controlling">Controlling</h5>
-
-<!-- done -->
 
 <p>A <em>controlling</em> claim is the active claim that is first in the sort order of a leaf node. That is, it has the highest effective amount of all claims with the same name.</p>
 
@@ -424,8 +420,6 @@
 
 <h6 id="claim-transition-example">Claim Transition Example</h6>
 
-<!-- done -->
-
 <p>Here is a step-by-step example to illustrate the different scenarios. All claims are for the same name.</p>
 
 <p><strong>Block 13:</strong> Claim A for 10LBC  is accepted. It is the first claim, so it immediately becomes active and controlling.
@@ -451,8 +445,6 @@
 
 <h4 id="normalization">Normalization</h4>
 
-<!-- done -->
-
 <p>Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are converted using <a href="http://unicode.org/reports/tr15/#Norm_Forms">Unicode Normalization Form D</a> (NFD), then lowercased using the en_US locale when possible.</p>
 
 <h3 id="urls">URLs</h3>
@@ -474,8 +466,6 @@
 <p>It is possible to write extremely short, human-readable and memorabl</p>
 
 <h4 id="components">Components</h4>
-
-<!-- done -->
 
 <p>A URL is a name with one or more modifiers. A bare name on its own will resolve to the <a href="#controlling">controlling claim</a> at the latest block height. Common URL structures are:</p>
 
@@ -804,44 +794,56 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 <h4 id="operations-and-opcodes">Operations and Opcodes</h4>
 
-<!-- fixme: grin: i need to go over this section -->
+<p>To enable <a href="#claim-operations">claim operations</a>, we added three new opcodes to the blockchain scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_UPDATE_CLAIM</code>, and <code>OP_SUPPORT_CLAIM</code>. In Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here&rsquo;s how these opcodes are used:</p>
 
-<p>To enable <a href="#claim-operations">claim operations</a>, three new opcodes were added to the blockchain scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_SUPPORT_CLAIM</code>, and <code>OP_UPDATE_CLAIM</code> (in Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>). Each op code will push a zero on to the execution stack, and will trigger the claimtrie to perform calculations necessary for each operation. Below are the three supported transactions scripts using these opcodes.</p>
+<pre><code>OP_CLAIM_NAME &lt;name&gt; &lt;value&gt; OP_2DROP OP_DROP &lt;outputScript&gt;
 
-<pre><code>OP_CLAIM_NAME &lt;name&gt; &lt;value&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
+OP_UPDATE_CLAIM &lt;name&gt; &lt;claimId&gt; &lt;value&gt; OP_2DROP OP_2DROP &lt;outputScript&gt;
 
-OP_UPDATE_CLAIM &lt;name&gt; &lt;claimId&gt; &lt;value&gt; OP_2DROP OP_2DROP &lt;pubKey&gt;
-
-OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
+OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;outputScript&gt;
 </code></pre>
 
-<p><code>&lt;pubKey&gt;</code> can be any valid Bitcoin payout script, so a claimtrie script is also a pay-to-pubkey script to a user-controlled address. Note that the zeros pushed onto the stack by the claimtrie opcodes and vectors are all dropped by <code>OP_2DROP</code> and <code>OP_DROP</code>. This means that claimtrie transactions exist as prefixes to Bitcoin payout scripts and can be spent just like standard transactions.</p>
+<p>The <code>&lt;name&gt;</code> parameter is the [[name]] that the claim will be associated with. <code>&lt;value&gt;</code> is the protobuf-encoded claim metadata and optional channel signature (see <a href="#metadata">Metadata</a> for info about this value). <code>&lt;claimId&gt;</code> is the claim ID of a previous claim that is being updated or supported.</p>
 
-<p>For example, a claim transaction setting the name “Fruit” to “Apple” and using a pay-to-pubkey script will have the following payout script:</p>
+<p>Each opcode will push a zero on to the execution stack. Those zeros, as well as any additional parameters after the opcodes, are all dropped by <code>OP_2DROP</code> and <code>OP_DROP</code>. <code>&lt;outputScript&gt;</code> can be any valid script, so a script using these opcodes is also a pay-to-pubkey script. This means that claimtrie scripts can be spent just like regular Bitcoin output scripts.</p>
 
-<pre><code>OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 &lt;addressOne&gt; OP_EQUALVERIFY OP_CHECKSIG
+<h5 id="op-claim-name">OP_CLAIM_NAME</h5>
+
+<p>New claims are created using <code>OP_CLAIM_NAME</code>. For example, a claim transaction setting the name <code>Fruit</code> to the value <code>Apple</code> will look like this:</p>
+
+<pre><code>OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 &lt;address&gt; OP_EQUALVERIFY OP_CHECKSIG
 </code></pre>
 
-<p>Like any standard Bitcoin transaction output script, it will be associated with a transaction hash and output index. The transaction hash and output index are concatenated and hashed to create the claimID for this claim. For the example above, let&rsquo;s say the above transaction hash is <code>7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43</code> and the output index is <code>1</code>. Then the claimID would be <code>529357c3422c6046d3fec76be2358004ba22e323</code>.</p>
+<p>Like any standard Bitcoin output script, it will be associated with a transaction hash and output index. The transaction hash and output index are concatenated and hashed using Hash160 to create the claim ID for this claim. For the example above, let&rsquo;s say the above transaction hash is <code>7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43</code> and the output index is <code>1</code>. Then the claimID would be <code>529357c3422c6046d3fec76be2358004ba22e323</code>. An implementation of this is available <a href="https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go">here</a></p>
 
-<p>A support for this bid will have the following payout script:</p>
+<h5 id="op-update-claim">OP_UPDATE_CLAIM</h5>
 
-<pre><code>OP_SUPPORT_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 OP_2DROP OP_DROP OP_DUP OP_HASH160 &lt;addressTwo&gt; OP_EQUALVERIFY OP_CHECKSIG
+<p><code>OP_UPDATE_CLAIM</code> updates a claim by replacing its metadata. An update transaction has an added requirement that it must spend the output for the existing claim that it wishes to update. Otherwise, it will be considered invalid and will not make it into the claimtrie. Thus it must have the following redeem script:</p>
+
+<pre><code>&lt;signature&gt; &lt;pubKeyForPreviousAddress&gt;
 </code></pre>
 
-<p>And now let&rsquo;s say we want to update the original claim to change the value to “Banana”. An update transaction has a special requirement that it must spend the existing claim that it wishes to update in its redeem script. Otherwise, it will be considered invalid and will not make it into the claimtrie. Thus it will have the following redeem script:</p>
+<p>The syntax is identical to the standard way of redeeming a pay-to-pubkey script in Bitcoin, with the caveat that <code>&lt;pubKeyForPreviousAddress&gt;</code> must be the public key for the address of the output that contains the claim that will be updated.</p>
 
-<pre><code>&lt;signature&gt; &lt;pubKeyForAddressOne&gt;
+<p>To change the value of the previous example claim to “Banana”, the payout script would be</p>
+
+<pre><code>OP_UPDATE_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 Banana OP_2DROP OP_2DROP OP_DUP OP_HASH160 &lt;address&gt; OP_EQUALVERIFY OP_CHECKSIG
 </code></pre>
 
-<p>This is identical to the standard way of redeeming a pay-to-pubkey script in Bitcoin.</p>
+<p>The <code>&lt;address&gt;</code> in this script may be the same as the address in the original transaction, or it may be a new address.</p>
 
-<p>The payout script for the update transaction is:</p>
+<h5 id="op-support-claim">OP_SUPPORT_CLAIM</h5>
 
-<pre><code>OP_UPDATE_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 Banana OP_2DROP OP_2DROP OP_DUP OP_HASH160 &lt;addressThree&gt; OP_EQUALVERIFY OP_CHECKSIG
+<p>A support for the original example claim will have the following payout script:</p>
+
+<pre><code>OP_SUPPORT_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 OP_2DROP OP_DROP OP_DUP OP_HASH160 &lt;address&gt; OP_EQUALVERIFY OP_CHECKSIG
 </code></pre>
 
-<p>An update transaction must spend the [[outpoint]] of the original claim that it is updating.</p>
+<p>The <code>&lt;address&gt;</code> in this script may be the same as the address in the original transaction, or it may be a new address.</p>
+
+<h4 id="tips">Tips</h4>
+
+<!-- fixme: describe how tips are different from supports -->
 
 <h4 id="addresses">Addresses</h4>
 
@@ -850,6 +852,8 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 <p>All the chain parameters are defined <a href="https://github.com/lbryio/lbrycrd/blob/master/src/chainparams.cpp">here</a>.</p>
 
 <h4 id="proof-of-payment">Proof of Payment</h4>
+
+<!-- fixme -->
 
 <p>TODO: Explain how transactions serve as proof that a client has made a valid payment for a piece of content.</p>
 
@@ -875,11 +879,9 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h2 id="metadata">Metadata</h2>
 
-<!-- done -->
-
 <p>Metadata is structured information about the stream or channel separate from the content itself (e.g. the title, language, media type, etc.). It is stored in the <a href="#claim-properties">value property</a> of a claim.</p>
 
-<p>Metadata is stored in a serialized format via <a href="https://developers.google.com/protocol-buffers/">Protocol Buffers</a>. This allows for metadata to be:</p>
+<p>Metadata is stored in a serialized binary format via <a href="https://developers.google.com/protocol-buffers/">Protocol Buffers</a>. This allows for metadata to be:</p>
 
 <ul>
 <li><strong>Extensibile</strong>. Metadata can encompass thousands of fields for dozens of types of content. It must be efficient to both modify the structure and maintain backward compatibility.</li>
@@ -887,9 +889,11 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 <li><strong>Interoperabile</strong>. Metadata will be used by many projects written in different languages.</li>
 </ul>
 
+<p>The serialized metadata may be signed to indicate membership in a channel. See <a href="#channels">Channels</a> for more info.</p>
+
 <h3 id="specification">Specification</h3>
 
-<p>As the metadata specification is designed to grow and change frequently, the full specification will not be examined here. The <a href="https://github.com/lbryio/types/issues">types</a> repository is considered the precise specification.</p>
+<p>As the metadata specification is designed to grow and change frequently, the full specification will not be examined here. The <a href="https://github.com/lbryio/types">types</a> repository is considered the precise specification.</p>
 
 <p>Instead, let&rsquo;s look at an example and some key fields.</p>
 
@@ -897,18 +901,21 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <p>Here’s some example metadata:</p>
 
-<!-- fix me better example data -->
-
-<pre><code>&quot;metadata&quot;: {
-  &quot;description&quot;: &quot;All proceeds go to Holly for buying toys.&quot;,
-  &quot;language&quot;: &quot;en&quot;,
-  &quot;nsfw&quot;: false,
-  &quot;thumbnail&quot;: &quot;http://www.thetoydiscounter.com/happy.jpg&quot;,
-  &quot;title&quot;: &quot;Holly singing The Happy Working Song&quot;,
-  &quot;source&quot;: {
-    &quot;contentType&quot;: &quot;video/mp4&quot;,
-    &quot;source&quot;: &quot;92b8aae7a901c56901fd5602c1f1acc0e63fb5492ef2a3cd5b9c631d92cab2e060e2a908baa922c24dee6c5229a98136&quot;,
-    &quot;sourceType&quot;: &quot;lbry_sd_hash&quot;,
+<pre><code>{
+  &quot;claim_id&quot;: &quot;6e56325c5351ceda2dd0795a30e864492910ccbf&quot;,
+  &quot;name&quot;: &quot;lbry&quot;,
+  &quot;amount&quot;: 1.0,
+  &quot;value&quot;: {
+    &quot;stream&quot;: {
+      &quot;title&quot;: &quot;What is LBRY?&quot;,
+      &quot;author&quot;: &quot;Samuel Bryan&quot;,
+      &quot;description&quot;: &quot;What is LBRY? An introduction with Alex Tabarrok&quot;,
+      &quot;language&quot;: &quot;en&quot;,
+      &quot;license&quot;: &quot;LBRY inc&quot;,
+      &quot;thumbnail&quot;: &quot;https://s3.amazonaws.com/files.lbry.io/logo.png&quot;,
+      &quot;mediaType&quot;: &quot;video/mp4&quot;,
+      &quot;streamHash&quot;: &quot;232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752&quot;,
+    }
   }
 }
 </code></pre>
@@ -931,58 +938,124 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 <li>channel signatures and private keys</li>
 </ul>
 
-<h4 id="title">Title</h4>
+<h4 id="title-author-description">Title, Author, Description</h4>
 
-<p>Used to label the content.</p>
+<p>Basic information about the stream.</p>
+
+<h4 id="language">Language</h4>
+
+<p>The <a href="https://www.iso.org/iso-639-language-codes.html">ISO 639-1</a> two-letter code for the language of the stream.</p>
 
 <h4 id="thumbnail">Thumbnail</h4>
 
 <p>An http or lbry URL to be used to display an image associated with the content.</p>
 
-<h4 id="content-type">Content Type</h4>
+<h4 id="media-type">Media Type</h4>
 
 <p>The media type of the item as <a href="https://www.iana.org/assignments/media-types/media-types.xhtml">defined</a> by the IANA.</p>
 
-<h4 id="certificate">Certificate</h4>
-
-<p>Information related to signing the claim as belonging to a specific channel. Covered more in <a href="#channels">Channels</a>.</p>
-
 <h3 id="channels">Channels (Identities)</h3>
 
-<p>Channels are the unit of identity in the LBRY system. A channel is a claim that:</p>
+<p>Channels are the unit of identity in the LBRY system. A channel is a claim for a name beginning with <code>@</code> that contains a metadata structure for identity rather than content. Included in the metadata is the channel&rsquo;s public key. Here&rsquo;s an example:</p>
 
-<ul>
-<li>Has name beginning with <code>@</code></li>
-<li>Contains a metadata structure for identity rather than content</li>
-</ul>
+<pre><code>&quot;claim_id&quot;: &quot;6e56325c5351ceda2dd0795a30e864492910ccbf&quot;,
+&quot;name&quot;: &quot;@lbry&quot;,
+&quot;amount&quot;: 6.26,
+&quot;value&quot;: {
+  &quot;channel&quot;: {
+    &quot;keyType&quot;: &quot;SECP256k1&quot;,
+    &quot;publicKey&quot;: &quot;3056301006072a8648ce3d020106052b8104000a03420004180488ffcb3d1825af538b0b952f0eba6933faa6d8229609ac0aeadfdbcf49C59363aa5d77ff2b7ff06cddc07116b335a4a0849b1b524a4a69d908d69f1bcebb&quot;
+  }
+}
+</code></pre>
 
-<p>Included in the metadata is the channel&rsquo;s public key. Claims belonging to a channel are signed with the corresponding private key. A valid signature proves channel origin and ownership.</p>
+<p>Claims published to a channel contain a signature made with the corresponding private key. A valid signature proves channel membership.</p>
 
 <p>The purpose of channels is to allow content to be clustered under a single pseudonym or identity. This allows publishers to easily list all their content, maintain attribution, and build their brand.</p>
 
-<h4 id="example-channel-metadata">Example Channel Metadata</h4>
+<h4 id="signing">Signing</h4>
 
-<p>Included in a channel&rsquo;s metadata is the following structure:</p>
+<p>A claim is considered part of a channel when its metadata is signed by the channel&rsquo;s private key. Here&rsquo;s the structure of a signed metadata value:</p>
 
-<pre><code>&quot;certificate&quot;: {
-    &quot;keyType&quot;: &quot;SECP256k1&quot;,
-    &quot;publicKey&quot;: &quot;3056301006072a8648ce3d020106052b8104000a0342
-                  0004180488ffcb3d1825af538b0b952f0eba6933faa6
-                  d8229609ac0aeadfdbcf49C59363aa5d77ff2b7ff06c
-                  ddc07116b335a4a0849b1b524a4a69d908d69f1bcebb&quot;,
-}
-</code></pre>
+<table>
+<thead>
+<tr>
+<th align="left">field</th>
+<th align="left">size</th>
+<th align="left">description</th>
+</tr>
+</thead>
 
-<p>When a claim published into a channel, the claim data is signed and the following is added to the claim metadata:</p>
+<tbody>
+<tr>
+<td align="left">Version</td>
+<td align="left">1 byte</td>
+<td align="left">Format version. See <a href="#format-versions">Format Versions</a>.</td>
+</tr>
 
-<pre><code>&quot;publisherSignature&quot;: {
-    &quot;channelClaimID&quot;: &quot;2996b9a087c18456402b57cba6085b2a8fcc136d&quot;, 
-    &quot;signature&quot;: &quot;bf82d53143155bb0cac1fd3d917c000322244b5aD17
-                  e7865124db2ed33812ea66c9b0c3f390a65a9E2d452
-                  e315e91ae695642847d88e90348ef3c1fa283a36a8&quot;, 
-    &quot;signatureType&quot;: &quot;SECP256k1&quot;,
-}
-</code></pre>
+<tr>
+<td align="left">Channel ID</td>
+<td align="left">20 bytes</td>
+<td align="left">Claim ID of the channel claim that contains the matching public key. <em>Skip this field if there is no signature.</em></td>
+</tr>
+
+<tr>
+<td align="left">Signature</td>
+<td align="left">64 bytes</td>
+<td align="left">The signature. <em>Skip this field if there is no signature.</em></td>
+</tr>
+
+<tr>
+<td align="left">Payload</td>
+<td align="left">variable</td>
+<td align="left">The protobuf-encoded metadata.</td>
+</tr>
+</tbody>
+</table>
+
+<h5 id="format-versions">Format Versions</h5>
+
+<p>The following formats are supported:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left">format</th>
+<th align="left">description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><code>00000000</code></td>
+<td align="left">No signature.</td>
+</tr>
+
+<tr>
+<td align="left"><code>00000001</code></td>
+<td align="left">Signature using ECDSA SECP256k1 key and SHA256 hash.</td>
+</tr>
+</tbody>
+</table>
+
+<h5 id="signing-process">Signing Process</h5>
+
+<ol>
+<li>Encode the metadata using protobuf.</li>
+<li>Hash the encoded claim using SHA256.</li>
+<li>Sign the hash using the private key associated with the channel.</li>
+<li>Append all the values (the version, the claim ID of the corresponding channel claim, the signature, and the protobuf-encoded metadata).</li>
+</ol>
+
+<h5 id="signature-validation">Signature Validation</h5>
+
+<ol>
+<li>Split out the version from the rest of the data.</li>
+<li>Check the version field. If it indicates that there is no signature, then no validation is necessary.</li>
+<li>Split out the channel ID and signature from the rest of the data.</li>
+<li>Look up the channel claim to ensure it exists and contains a public key.</li>
+<li>Use the public key to verify the signature.</li>
+</ol>
 
 <h3 id="metadata-validation">Validation</h3>
 
@@ -992,19 +1065,17 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h2 id="data">Data</h2>
 
+<!-- fixme this section -->
+
 <p>Data refers to the full binary data tht which is ultimate distributed by blah blah blah.</p>
 
 <p>The purpose of blah blah blah is to blah blah.</p>
 
 <h3 id="encoding">Encoding</h3>
 
-<!-- done -->
-
 <p>Content on the LBRY network is encoded to facilitate distribution.</p>
 
 <h4 id="blobs">Blobs</h4>
-
-<!-- done -->
 
 <p>The unit of data in the LBRY network is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA384 hash of the blob contents. Addressing blobs by their hash protects against naming collisions and ensures that the content you get is what you expect.</p>
 
@@ -1012,15 +1083,11 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h4 id="streams">Streams</h4>
 
-<!-- done -->
-
 <p>Multiple blobs are combined into a <em>stream</em>. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the <em>manifest blob</em>, followed by one or more <em>content blobs</em>. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and decode them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.</p>
 
 <p>The blob hash of the manifest blob is called the <em>stream hash</em>. It uniquely identifies each stream.</p>
 
 <h4 id="manifest-contents">Manifest Contents</h4>
-
-<!-- done -->
 
 <p>A manifest blob&rsquo;s contents are encoded using a canonical JSON encoding. The JSON encoding must be canonical to support consistent hashing and validation. The encoding is the same as standard JSON, but adds the following rules:</p>
 
@@ -1072,21 +1139,15 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h4 id="stream-encoding">Stream Encoding</h4>
 
-<!-- done -->
-
 <p>A file must be encoded into a stream before it can be published. Encoding involves breaking the file into chunks, encrypting the chunks into content blobs, and creating the manifest blob. Here are the steps:</p>
 
 <h5 id="setup">Setup</h5>
-
-<!-- done -->
 
 <ol>
 <li>Generate a random 32-byte key for the stream.</li>
 </ol>
 
 <h5 id="content-blobs">Content Blobs</h5>
-
-<!-- done -->
 
 <ol>
 <li>Break the file into chunks of at most 2097151 bytes.</li>
@@ -1098,8 +1159,6 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 
 <h5 id="manifest-blob">Manifest Blob</h5>
 
-<!-- done -->
-
 <ol>
 <li>Fill in the manifest data.</li>
 <li>Encode the data using the canonical JSON encoding described above.</li>
@@ -1110,8 +1169,6 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimId&gt; OP_2DROP OP_DROP &lt;pubKey&gt;
 fixme: this link is for v0, not v1. need to implement v1 or drop the link.</p>
 
 <h4 id="stream-decoding">Stream Decoding</h4>
-
-<!-- done -->
 
 <p>Decoding a stream is like encoding in reverse, and with the added step of verifying that the expected blob hashes match the actual data.</p>
 
@@ -1257,47 +1314,6 @@ specification fairly closely, with some modifications.</p>
 <p><em>Edit this on Github at <a href="https://github.com/lbryio/spec">https://github.com/lbryio/spec</a></em></p>
 
 <p></div></main> <!-- DONT DELETE THIS, its for the TOC --></p>
-
-<!---
-
-### Supports, Tips
-
-Supports add weight to name claims. They are kind of like voting. You retain control of the credits.
-Tips are supports where person you tip gains control of the credits.
-
-### Discovery
-
-### Search
-
-Search will be handled primarily by external indexing services. There are many existing search solutions
-that would ingest the blockchain data and build an index of the content. The novel aspect of our system is
-that the credits committed to a claim are a strong signal of relevance.
-
-### Tagging
-
-Tags provide extra information for content discovery. A tag has a claim ID and a name. Tags can be created,
-supported, updated, and abandoned, just like claims. One key difference is that tag supports may be
-labeled “negative” supports. A negative support reduces the effective amount of credits attached to a
-tag. This is a signal that the tag is not a good fit for the content of the claim.
-
-## Trust and Security
-
-We believe that the
-
-## Combatting the Ugly
-
-Use this section to rebut some of the most common concerns regarding the nature of LBRY.
-
-One of our core beliefs is that people want to pay the legitimate content owners and creators, as
-long as the content reasonably-priced and the payment process is convenient.
-
-
-Conclusion
-
-Summary
-
-
--->
 
 </body>
 </html>

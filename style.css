@@ -68,6 +68,13 @@ main {
     border-style: solid;
     border-width: 1px;
 }
+h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
+    display: block;
+    content: " ";
+    height: 40px;
+    margin-top: -40px;
+    visibility: hidden;
+}
 
 p {
     margin-bottom: 1.4rem;
@@ -134,7 +141,7 @@ pre {
     margin-bottom: 1rem;
 }
 
-aside {
+.notice {
     position: relative;
     padding: .75rem 1.25rem;
     margin-bottom: 1rem;
@@ -145,11 +152,11 @@ aside {
     border-color: #bee5eb;
 }
 
-aside p:first-child {
+.notice p:first-child {
     margin-top: 0;
 }
 
-aside p:last-child {
+.notice p:last-child {
     margin-bottom: 0;
 }
 
