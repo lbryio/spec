@@ -179,9 +179,20 @@
 
 </noscript>
 
+<!-- 
+fixme final polish checklist:
+
+- go over the paper to make sure we use active voice in most places (though passive is better sometimes)
+- standardize when we say "we do X" vs "LBRY does X"
+- check that all anchors work
+- check css across browsers/mobile
+- 
+
+-->
+
 <h2 id="introduction">Introduction</h2>
 
-<!-- fix me -->
+<!-- fixme -->
 
 <p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
 
@@ -320,7 +331,7 @@
 
 <p>A <em>support</em> is an additional transaction type that lends its <em>amount</em> to an existing claim.</p>
 
-<p>A support contains only a <code>claimID</code> and an <code>amount</code>, no other properties. Supports function analogously to claims in terms of <a href="#claim-operations">Claim Operations</a> and <a href="#claim-statuses">Claim Statuses</a>, with the exception that they cannot be updated.</p>
+<p>A support contains only a <code>claimID</code> and an <code>amount</code>, no other properties. Supports function analogously to claims in terms of <a href="#claim-operations">Claim Operations</a> and <a href="#claim-statuses">Claim Statuses</a>, with the exception that they cannot be updated or themselves supported.</p>
 
 <h4 id="claimtrie">Claimtrie</h4>
 
@@ -785,11 +796,11 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 <h3 id="transactions">Transactions</h3>
 
-<p>To support claims, the LBRY blockchain makes the following changes on top of Bitcoin.</p>
+<p>The LBRY blockchain includes the following changes to Bitcoin&rsquo;s transaction scripting language.</p>
 
 <h4 id="operations-and-opcodes">Operations and Opcodes</h4>
 
-<p>To enable <a href="#claim-operations">claim operations</a>, we added three new opcodes to the blockchain scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_UPDATE_CLAIM</code>, and <code>OP_SUPPORT_CLAIM</code>. In Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here&rsquo;s how these opcodes are used:</p>
+<p>To enable <a href="#claim-operations">claim operations</a>, we added three new opcodes to the scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_UPDATE_CLAIM</code>, and <code>OP_SUPPORT_CLAIM</code>. In Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here&rsquo;s how these opcodes are used:</p>
 
 <pre><code>OP_CLAIM_NAME &lt;name&gt; &lt;value&gt; OP_2DROP OP_DROP &lt;outputScript&gt;
 

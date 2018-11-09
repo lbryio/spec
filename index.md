@@ -114,9 +114,21 @@
 
 </noscript>
 
+<!-- 
+fixme final polish checklist:
+
+- go over the paper to make sure we use active voice in most places (though passive is better sometimes)
+- standardize when we say "we do X" vs "LBRY does X"
+- check that all anchors work
+- check css across browsers/mobile
+- 
+
+-->
+
+
 ## Introduction
 
-<!-- fix me -->
+<!-- fixme -->
 
 LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
 
@@ -251,7 +263,7 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 A _support_ is an additional transaction type that lends its _amount_ to an existing claim.
 
-A support contains only a `claimID` and an `amount`, no other properties. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated.
+A support contains only a `claimID` and an `amount`, no other properties. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated or themselves supported.
 
 #### Claimtrie
 
@@ -579,12 +591,11 @@ Finally, it's important to note that _only_ vanity URLs have this property. Extr
 
 ### Transactions
 
-To support claims, the LBRY blockchain makes the following changes on top of Bitcoin.
-
+The LBRY blockchain includes the following changes to Bitcoin's transaction scripting language.
 
 #### Operations and Opcodes
 
-To enable [claim operations](#claim-operations), we added three new opcodes to the blockchain scripting language: `OP_CLAIM_NAME`, `OP_UPDATE_CLAIM`, and `OP_SUPPORT_CLAIM`. In Bitcoin they are respectively `OP_NOP6`, `OP_NOP7`, and `OP_NOP8`. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here's how these opcodes are used:
+To enable [claim operations](#claim-operations), we added three new opcodes to the scripting language: `OP_CLAIM_NAME`, `OP_UPDATE_CLAIM`, and `OP_SUPPORT_CLAIM`. In Bitcoin they are respectively `OP_NOP6`, `OP_NOP7`, and `OP_NOP8`. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here's how these opcodes are used:
 
 ```
 OP_CLAIM_NAME <name> <value> OP_2DROP OP_DROP <outputScript>
