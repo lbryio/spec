@@ -25,7 +25,8 @@
    * [Assumptions](#assumptions)
    * [Conventions and Terminology](#conventions-and-terminology)
 * [Blockchain](#blockchain)
-   * [Claims](#claims)
+   * [Stakes](#stakes)
+      * [Claims](#claims)
       * [Properties](#claim-properties)
       * [Example Claim](#example-claim)
       * [Operations](#claim-operations)
@@ -170,11 +171,17 @@ This document assumes that the reader is familiar with Bitcoin and blockchain te
   <dt>metadata</dt>
   <dd>Information about the contents of a stream (e.g. creator, description, stream descriptor hash, etc). Metadata is stored in the blockchain.</dd>
 
-  <dt>claim</dt>
-  <dd>A single metadata entry in the blockchain.</dd>
-
   <dt>name</dt>
-  <dd>A human-readable UTF8 string that is associated with a published claim.</dd>
+  <dd>A human-readable UTF8 string that is associated with a stream.</dd>
+
+  <dt>stake</dt>
+  <dd>An entry in the blockchain that commits credits toward a name.</dd>
+
+  <dt>claim</dt>
+  <dd>A stake that contains metadata about a stream or channel.</dd>
+
+  <dt>support</dt>
+  <dd>A stake that lends its credits to bolster an existing claim.</dd>
 
   <dt>channel</dt>
   <dd>The unit of pseudonymous publisher identity. Claims may be part of a channel.</dd>
@@ -195,9 +202,23 @@ The LBRY blockchain is a public, proof-of-work blockchain. It serves three key p
 
 The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.
 
-### Claims
+### Stakes
 
-A _claim_ is a single entry in the blockchain that stores metadata. There are two types of claims:
+A _stake_ is a a single entry in the blockchain that commits credits toward a name. The two types of stakes are [_claims_](#claims) and [_supports_](#supports).
+
+All stakes have these properties:
+
+<dl>
+  <dt>id</dt>
+  <dd>A 20-byte hash unique among all stakes. See <a href="#stake-identifier-generation">Stake Identifier Generation</a>.</dd>
+  <dt>amount</dt>
+  <dd>A quantity of tokens used to back the stake. See <a href="#controlling">Controlling</a>.</dd>
+</dl>
+
+
+#### Claims
+
+A _claim_ is a stake that stores metadata. There are two types of claims:
 
 <dl>
   <dt>stream</dt>
@@ -208,15 +229,11 @@ A _claim_ is a single entry in the blockchain that stores metadata. There are tw
 
 #### Properties {#claim-properties}
 
-Claims have four properties:
+In addition to the properties that all stakes have, claims have two more properties:
 
 <dl>
-  <dt>claim_id</dt>
-  <dd>A 20-byte hash unique among all claims. See <a href="#claim-identifier-generation">Claim Identifier Generation</a>.</dd>
   <dt>name</dt>
   <dd>A normalized UTF-8 string of up to 255 bytes used to address the claim. See <a href="#urls">URLs</a> and <a href="#normalization">Normalization</a>.</dd>
-  <dt>amount</dt>
-  <dd>A quantity of tokens used to stake the claim. See <a href="#controlling">Controlling</a>.</dd>
   <dt>value</dt>
   <dd>Metadata about a stream or a channel. See <a href="#metadata">Metadata</a>.</dd>
 </dl>
@@ -261,9 +278,11 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 #### Supports
 
-A _support_ is an additional transaction type that lends its _amount_ to an existing claim.
+A _support_ is a stake that lends its _amount_ to an existing claim.
 
-A support contains only a `claimID` and an `amount`, no other properties. Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated or themselves supported.
+Supports have one extra property on top of the basic stake properties: a `claim_id`. This is the ID of the claim that the support is bolstering. 
+
+Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated or themselves supported.
 
 #### Claimtrie
 
