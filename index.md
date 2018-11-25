@@ -27,19 +27,19 @@
 * [Blockchain](#blockchain)
    * [Stakes](#stakes)
       * [Claims](#claims)
-      * [Properties](#claim-properties)
+      * [Claim Properties](#claim-properties)
       * [Example Claim](#example-claim)
-      * [Operations](#claim-operations)
+      * [Claim Operations](#claim-operations)
       * [Supports](#supports)
       * [Claimtrie](#claimtrie)
-      * [Statuses](#claim-statuses)
+      * [Statuses](#stake-statuses)
          * [Accepted](#accepted)
          * [Abandoned](#abandoned)
          * [Active](#active)
-         * [Controlling](#controlling)
+         * [Controlling (claims only)](#controlling)
       * [Claimtrie Transitions](#claimtrie-transitions)
-         * [Determining Active Claims](#determining-active-claims)
-            * [Claim Transition Example](#claim-transition-example)
+         * [Stake Activation](#stake-activation)
+         * [Example](#transition-example)
       * [Normalization](#normalization)
    * [URLs](#urls)
       * [Components](#components)
@@ -221,13 +221,13 @@ All stakes have these properties:
 A _claim_ is a stake that stores metadata. There are two types of claims:
 
 <dl>
-  <dt>stream</dt>
+  <dt>stream claim</dt>
   <dd>Declares the availability, access method, and publisher of a stream of bytes (an encoded file).</dd>
-  <dt>channel</dt>
+  <dt>channel claim</dt>
   <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
 </dl>
 
-#### Properties {#claim-properties}
+#### Claim Properties
 
 In addition to the properties that all stakes have, claims have two more properties:
 
@@ -261,9 +261,9 @@ Here is an example stream claim:
   }
 }
 ```
-Figure: Note: the blockchain treats the `value` as an opaque byte string and does not impose any structure on it. Structure is applied and validated [higher in the stack](#metadata-validation). In this example, the value is shown for demonstration purposes. 
+Figure: Note: the blockchain treats the `value` as an opaque byte string and does not impose any structure on it. Structure is applied and validated [higher in the stack](#metadata-validation). In this example, the value is shown for demonstration purposes only. 
 
-#### Operations {#claim-operations}
+#### Claim Operations
 
 There are three claim operations: _create_, _update_, and _abandon_.
 
@@ -282,7 +282,7 @@ A _support_ is a stake that lends its _amount_ to an existing claim.
 
 Supports have one extra property on top of the basic stake properties: a `claim_id`. This is the ID of the claim that the support is bolstering. 
 
-Supports function analogously to claims in terms of [Claim Operations](#claim-operations) and [Claim Statuses](#claim-statuses), with the exception that they cannot be updated or themselves supported.
+Supports are created and abandoned just like claims (see [Claim Operations](#claim-operations)). They cannot be updated or themselves supported.
 
 #### Claimtrie
 
@@ -298,41 +298,37 @@ Multiple claims can exist for the same name. They are all stored in the leaf nod
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
-#### Statuses {#claim-statuses}
+#### Statuses {#stake-statuses}
 
-<!-- fix me? is using claims to mean claims and supports okay? -->
-
-Throughout this section we use the word "claim" to refer to both claims and supports, unless otherwise specified.
-
-Claims and supports can have one or more of the following statuses at a given block.
+Stakes can have one or more of the following statuses at a given block.
 
 ##### Accepted
 
-An _accepted_ claim is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.
+An _accepted_ stake is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.
 
-Accepted claims do not affect the intra-leaf claim order until they are [active](#active).
+Accepted stakes do not affect the intra-leaf claim order until they are [active](#active).
 
-The sum of the amount of a claim and all accepted supports is called the _total amount_.
+The sum of the amount of a claim stake and all accepted supports is called the _total amount_.
 
 ##### Abandoned
 
-An _abandoned_ claim is one that was withdrawn by its creator or current owner. Spending a transaction that contains a claim will cause that claim to become abandoned. Abandoned claims are removed from the claimtrie.
+An _abandoned_ stake is one that was withdrawn by its creator or current owner. Spending a transaction that contains a stake will cause that claim to become abandoned. Abandoned claim stakes are removed from the claimtrie.
 
-While data related to abandoned claims technically still resides in the blockchain, it is improper to use this data to fetch the associated content, and active claims signed by abandoned identities will no longer be reported as valid.
+While data related to abandoned stakes still resides in the blockchain, it is improper to use this data to fetch the associated content. Active claim stakes signed by abandoned identities will no longer be reported as valid.
 
 ##### Active
 
 <!-- fix me a lot -->
 
-An _active_ claim is an accepted and non-abandoned claim that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the _activation delay_.
+An _active_ stake is an accepted and non-abandoned stake that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the _activation delay_.
 
-If the claim is an update to an already active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the claim becomes active in the same block it is accepted).
+If the stake is an update to an already active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the stake becomes active in the same block it is accepted).
 
-Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's inputs are the height of the current block, the height at which the claim was accepted, and the height at which the controlling claim last changed.
+Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's inputs are the height of the current block, the height at which the stake was accepted, and the height at which the controlling claim for that name last changed.
 
 The sum of the amount of an active claim and all active supports is called it's _effective amount_. Only the effective amount affects the sort order of claims in a leaf node. Claims that are not active have an effective amount of 0.
 
-##### Controlling
+##### Controlling (claims only) {#controlling}
 
 A _controlling_ claim is the active claim that is first in the sort order of a leaf node. That is, it has the highest effective amount of all claims with the same name. 
 
@@ -344,19 +340,19 @@ To determine the sort order of claims in a leaf node, the following algorithm is
 
 1. For each claim, recalculate the effective amount.
 
-1. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (ascending), then by transaction order within the block (ascending).
+2. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (ascending), then by transaction order within the block (ascending).
 
-1. If the controlling claim from the previous block is still first in the order, then the sort is finished.
+3. If the controlling claim from the previous block is still first in the order, then the sort is finished.
 
-1. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which claims and supports are now active, and return to step 1.
+4. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which stakes are now active, and return to step 1.
 
-1. At this point, the claim with the greatest effective amount is the controlling claim at this block.
+5. At this point, the claim with the greatest effective amount is the controlling claim at this block.
 
-The purpose of 4 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest amount. Step 4 will cause the greater claim to also activate and become the controlling claim.
+The purpose of 4 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest effective amount. Step 4 will cause the greater claim to also activate and become the controlling claim.
 
-##### Determining Active Claims
+##### Stake Activation
 
-If a claim does not become active immediately, it becomes active at the block heigh determined by the following formula:
+If a stake does not become active immediately, it becomes active at the block heigh determined by the following formula:
 
 ```
 C + min(4032, floor((H-T) / 32))
@@ -364,19 +360,19 @@ C + min(4032, floor((H-T) / 32))
 
 Where: 
 
-- C = claim height (height when the claim was accepted)
+- C = stake height (height when the stake was accepted)
 - H = current height
 - T = takeover height (the most recent height at which the controlling claim for the name changed)
 
-In written form, the delay before a claim becomes active is equal to the claim’s height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
+In written form, the delay before a stake becomes active is equal to the stake's height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
 
 The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
 
-###### Claim Transition Example
+##### Example {#transition-example}
 
-Here is a step-by-step example to illustrate the different scenarios. All claims are for the same name.
+Here is a step-by-step example to illustrate the different scenarios. All stakes are for the same name.
 
-**Block 13:** Claim A for 10LBC  is accepted. It is the first claim, so it immediately becomes active and controlling.
+**Block 13:** Claim A for 10LBC is accepted. It is the first claim, so it immediately becomes active and controlling.
 <br>State: A(10) is controlling
 
 **Block 1001:** Claim B for 20LBC is accepted. It’s activation height is `1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031`.
@@ -400,7 +396,7 @@ Here is a step-by-step example to illustrate the different scenarios. All claims
 
 #### Normalization
 
-Names in the claimtrie are normalized to avoid confusion due to Unicode equivalence or casing. All names are converted using [Unicode Normalization Form D](http://unicode.org/reports/tr15/#Norm_Forms) (NFD), then lowercased using the en_US locale when possible. 
+Names in the claimtrie are normalized prior to comparison to avoid confusion due to Unicode equivalence or casing. When names are being compared, they are first converted using [Unicode Normalization Form D](http://unicode.org/reports/tr15/#Norm_Forms) (NFD), then lowercased using the en_US locale when possible. Since claims competing for the same name are stored in the same node in the claimtrie, names are also normalized to determine the claimtrie path to the node.
 
 ### URLs
 
@@ -411,12 +407,12 @@ Names in the claimtrie are normalized to avoid confusion due to Unicode equivale
 
 URLs are human-readable references to claims. All URLs:
 
-1. must contain a name (see [Claim Properties](#claim-properties))
-2. and resolve to a single, specific claim for that name
+1. must contain a name (see [Claim Properties](#claim-properties)), and
+2. resolve to a single, specific claim for that name
 
 The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be provably resolved by clients without a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
 
-It is possible to write extremely short, human-readable and memorabl 
+It is possible to write short, human-readable, and memorable URLs. 
 
 
 #### Components
@@ -425,7 +421,7 @@ A URL is a name with one or more modifiers. A bare name on its own will resolve 
 
 ##### Stream Claim Name
 
-A basic claim for a name.
+A basic stream claim.
 
 ```
 lbry://meet-lbry
@@ -433,7 +429,7 @@ lbry://meet-lbry
 
 ##### Channel Claim Name
 
-A basic claim for a channel.
+A basic channel claim.
 
 ```
 lbry://@lbry
@@ -459,7 +455,7 @@ lbry://@lbry#3f/meet-lbry
 
 ##### Claim Sequence
 
-The _n_th claim for this name, in the order the claims entered the blockchain. _n_ must be a positive number. This can be used to resolve claims in the order in which they were recorded, rather than by which claim has the most support.
+The _n_th claim for this name, in the order the claims entered the blockchain. _n_ must be a positive number. This can be used to resolve claims in the order in which they were accepted, rather than by which claim has the most credits backing it.
 
 ```
 lbry://meet-lbry:1
@@ -468,7 +464,7 @@ lbry://@lbry:1/meet-lbry
 
 ##### Bid Position
 
-The _n_th claim for this name, in order of most support to least total support. _n_ must be a positive number. This is useful for resolving non-winning bids in bid order.
+The _n_th claim for this name, ordered by total amount (highest first). _n_ must be a positive number. This is useful for resolving non-winning bids in bid order.
 
 ```
 lbry://meet-lbry$2
@@ -527,7 +523,7 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 #### Resolution
 
-URL _resolution_ is the process of translating a URL into it's associated claim id and metadata. 
+URL _resolution_ is the process of translating a URL into the associated claim ID and metadata. 
 
 ##### No Modifier
 
@@ -551,7 +547,7 @@ Get all claims for the claim name. Sort the claims in descending order by total 
 
 If both a channel name and a claim name is present, resolution happens in two steps. First, remove the `/` and `StreamClaimNameAndModifier` from the path, and resolve the URL as if it only had a `ChannelClaimNameAndModifier`. Then get the list of all claims in that channel. Finally, resolve the `StreamClaimNameAndModifier` as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.
 
-Technically, if multiple claims for the same name exist inside the same channel, they are resolved via the same resolution rules applied entirely within the sub-scope of the channel. Pragmatically, it rarely makes sense for channels to use the same name twice and support for this functionality may be unreliable in current tooling.
+If multiple claims for the same name exist inside the same channel, they are resolved via the same resolution rules applied entirely within the sub-scope of the channel.
 
 ##### Examples {#url-resolution-examples}
 
@@ -593,15 +589,15 @@ URL                          | Claim ID     | Note
 
 #### Design Notes
 
-The most contentious aspect of this design has been the choice to resolve naked names (sometimes called _vanity names_) to the claim with the largest number of staked credits.
+The most contentious aspect of this design has been the choice to resolve naked names (sometimes called _vanity names_) to the claim with the highest effective amount.
 
 First, it is important to note the problems in existing domain allocation design. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:
 
 1. Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don't intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities (stable prices and price signals),  in this case it is pure value extraction. Speculation also harms the user experience, who will see the vast majority of URLs sitting unused (c.f. Namecoin).
 
-1. Bureaucracy and transaction costs. While a centralized system can allow for an authority to use a process to reassign names based on trademark or other common use reasons, this system is also imperfect. Most importantly, it is a censorship point and an avenue for complete exclusion. Additionally, such processes are often arbitrary, change over time, involve significant transaction costs, and _still_ lead to names being used in ways that are contrary to user expectation (e.g. [nissan.com](http://nissan.com)).
+2. Bureaucracy and transaction costs. While a centralized system can allow for an authority to use a process to reassign names based on trademark or other common use reasons, this system is also imperfect. Most importantly, it is a censorship point and an avenue for complete exclusion. Additionally, such processes are often arbitrary, change over time, involve significant transaction costs, and _still_ lead to names being used in ways that are contrary to user expectation (e.g. [nissan.com](http://nissan.com)).
 
-1. Inefficiencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase.
+3. Inefficiencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase.
 
 We sought an algorithmic design built into consensus that would allow URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.
 
@@ -624,7 +620,7 @@ OP_UPDATE_CLAIM <name> <claimId> <value> OP_2DROP OP_2DROP <outputScript>
 OP_SUPPORT_CLAIM <name> <claimId> OP_2DROP OP_DROP <outputScript>
 ```
 
-The `<name>` parameter is the [[name]] that the claim will be associated with. `<value>` is the protobuf-encoded claim metadata and optional channel signature (see [Metadata](#metadata) for info about this value). The `<claimId>` is the claim ID of a previous claim that is being updated or supported.
+The `<name>` parameter is the [[name]] that the claim is associated with. `<value>` is the protobuf-encoded claim metadata and optional channel signature (see [Metadata](#metadata) for more about this value). The `<claimId>` is the claim ID of a previous claim that is being updated or supported.
 
 Each opcode will push a zero on to the execution stack. Those zeros, as well as any additional parameters after the opcodes, are all dropped by `OP_2DROP` and `OP_DROP`. `<outputScript>` can be any valid script, so a script using these opcodes is also a pay-to-pubkey script. This means that claim scripts can be spent just like regular Bitcoin output scripts.
 
@@ -758,6 +754,7 @@ The `source` property contains information about how to fetch the data from the 
 #### Fees and Fee Structure
 
 <!-- fix me extensively -->
+
 - LBC
 - Currencies?
 - channel signatures and private keys
@@ -772,7 +769,7 @@ The [ISO 639-1](https://www.iso.org/iso-639-language-codes.html) two-letter code
 
 #### Thumbnail
 
-An http or lbry URL to be used to display an image associated with the content.
+A URL to be used to display an image associated with the content.
 
 #### Media Type
 
@@ -847,7 +844,7 @@ Clients are responsible for validating metadata, including data structure and si
 
 <!-- fixme this section -->
 
-Data refers to the full binary data tht which is ultimate distributed by blah blah blah.
+Data refers to the full binary data which is ultimate distributed by blah blah blah.
 
 The purpose of blah blah blah is to blah blah.
 
