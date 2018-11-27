@@ -66,19 +66,19 @@
          * [OP_UPDATE_CLAIM](#op-update-claim)
          * [OP_SUPPORT_CLAIM](#op-support-claim)
       * [Tips](#tips)
-      * [Addresses](#addresses)
       * [Proof of Payment](#proof-of-payment)
    * [Consensus](#consensus)
       * [Block Timing](#block-timing)
       * [Difficulty Adjustment](#difficulty-adjustment)
       * [Block Hash Algorithm](#block-hash-algorithm)
       * [Block Rewards](#block-rewards)
+      * [Addresses](#addresses)
 * [Metadata](#metadata)
    * [Specification](#specification)
       * [Example](#metadata-example)
    * [Key Fields](#key-fields)
-      * [Source and Stream Hashes](#source-and-stream-hashes)
-      * [Fees and Fee Structure](#fees-and-fee-structure)
+      * [Stream Hash](#stream-hash)
+      * [Fee](#fee)
       * [Title, Author, Description](#title-author-description)
       * [Language](#language)
       * [Thumbnail](#thumbnail)
@@ -122,7 +122,9 @@ fixme final polish checklist:
 - standardize when we say "we do X" vs "LBRY does X"
 - check that all anchors work
 - check css across browsers/mobile
-- 
+- create links for [[terms]]
+- ensure that all italicized terms are defined before they are used, or if that doesn't work, that they are linked
+- don't say "the LBRY network". instead say "LBRY" or say nothing.
 
 -->
 
@@ -141,19 +143,15 @@ TODO:
 
 ### Overview
 
-<!-- fix me -->
-
-This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, transformation, and retrieval. 
+This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, encoding, and retrieval. 
 
 ### Assumptions
-
-<!-- fix me -->
 
 This document assumes that the reader is familiar with Bitcoin and blockchain technology. It does not attempt to document the Bitcoin protocol or explain how it works. The [Bitcoin developer reference](https://bitcoin.org/en/developer-reference) is recommended for anyone wishing to understand the technical details.
 
 ### Conventions and Terminology
 
-<!-- fix me - rather than inline this here, I think we should use lbry.tech glossary definitions and the [[keyword]] syntax -->
+<!-- fixme - rather than inline this here, I think we should use lbry.tech glossary definitions and the [[keyword]] syntax -->
 
 <dl>
   <dt>file</dt>
@@ -200,7 +198,7 @@ The LBRY blockchain is a public, proof-of-work blockchain. It serves three key p
 2. A payment system and record of purchases for priced content
 3. Trustful publisher identities
 
-The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.
+The blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.
 
 ### Stakes
 
@@ -278,7 +276,7 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 #### Supports
 
-A _support_ is a stake that lends its _amount_ to an existing claim.
+A _support_ is a stake that lends its amount to an existing claim.
 
 Supports have one extra property on top of the basic stake properties: a `claim_id`. This is the ID of the claim that the support is bolstering. 
 
@@ -290,11 +288,9 @@ The _claimtrie_ is the data structure used to store the set of all claims and pr
 
 The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.
 
-The _root hash_ is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes in the LBRY network use the root hash to efficiently and securely validate the state of the claimtrie.
+The _root hash_ is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes use the root hash to efficiently and securely validate the state of the claimtrie.
 
-Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted by the amount of credits backing the claim (descending), then by block height (ascending), then by transaction order in the block (ascending).
-
-<!-- fix me above? "amount of credits backing each claim" is the effective amount, but that's not defined till later -->
+Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted by [[effective amount]] (descending), then by block height (ascending), then by transaction order in the block (ascending).
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
@@ -318,15 +314,13 @@ While data related to abandoned stakes still resides in the blockchain, it is im
 
 ##### Active
 
-<!-- fix me a lot -->
-
 An _active_ stake is an accepted and non-abandoned stake that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the _activation delay_.
 
-If the stake is an update to an already active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the stake becomes active in the same block it is accepted).
+If the stake is an update to an active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the stake becomes active in the same block it is accepted).
 
 Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's inputs are the height of the current block, the height at which the stake was accepted, and the height at which the controlling claim for that name last changed.
 
-The sum of the amount of an active claim and all active supports is called it's _effective amount_. Only the effective amount affects the sort order of claims in a leaf node. Claims that are not active have an effective amount of 0.
+The sum of the amount of an active claim and all active supports is called it's _effective amount_. The effective amount affects the sort order of claims in a leaf node, and which claim is controlling for that name. Claims that are not active have an effective amount of 0.
 
 ##### Controlling (claims only) {#controlling}
 
@@ -400,7 +394,7 @@ Names in the claimtrie are normalized prior to comparison to avoid confusion due
 
 ### URLs
 
-<!-- fix me:
+<!-- fixme:
   jeremy: @grin does SPV need a mention inside of the document? 
   grin: no, but we should probably include an example for how to do the validation using the root hash. its not strictly necessary because its similar to how bitcoin does it. so maybe link to https://lbry.tech/resources/claimtrie (which needs an update) and add a validation example there?
   -->
@@ -543,9 +537,7 @@ Get all claims for the claim name. Sort the claims in descending order by total 
 
 ##### ChannelName and ClaimName
 
-<!-- fix me: explain how claim signing works, and what it means to be **in** a channel -->
-
-If both a channel name and a claim name is present, resolution happens in two steps. First, remove the `/` and `StreamClaimNameAndModifier` from the path, and resolve the URL as if it only had a `ChannelClaimNameAndModifier`. Then get the list of all claims in that channel. Finally, resolve the `StreamClaimNameAndModifier` as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.
+If both a channel name and a claim name are present, resolution happens in two steps. First, remove the `/` and `StreamClaimNameAndModifier` from the path, and resolve the URL as if it only had a `ChannelClaimNameAndModifier`. Then get the list of all claims in that channel. Finally, resolve the `StreamClaimNameAndModifier` as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.
 
 If multiple claims for the same name exist inside the same channel, they are resolved via the same resolution rules applied entirely within the sub-scope of the channel.
 
@@ -669,14 +661,7 @@ The `<address>` in this script may be the same as the address in the original tr
 
 #### Tips
 
-<!-- fixme: describe how tips are different from supports -->
-
-
-#### Addresses
-
-The address version byte is set to `0x55` for standard (pay-to-public-key-hash) addresses and `0x7a` for multisig (pay-to-script-hash) addresses. P2PKH addresses start with the letter `b`, and P2SH addresses start with `r`.
-
-All the chain parameters are defined [here](https://github.com/lbryio/lbrycrd/blob/master/src/chainparams.cpp).
+Since a claim is updated or abandoned by spending the claim's transaction, most claimtrie transactions spend to an address controlled by the transaction's creator. However, a claimtrie transaction can spend to any address. This can be used to create a _tip_. A tip is a support that also sends credits to the claim's creator. Tips in LBRY are just like tips in real life. They can be used to express gratitude or make an optional payment to a content creator. 
 
 #### Proof of Payment
 
@@ -705,22 +690,28 @@ LBRY uses a combination of SHA-256, SHA-512, and RIPEMD-160. The exact hashing a
 
 The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here](https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594).
 
+#### Addresses
+
+The address version byte is set to `0x55` for standard (pay-to-public-key-hash) addresses and `0x7a` for multisig (pay-to-script-hash) addresses. P2PKH addresses start with the letter `b`, and P2SH addresses start with `r`.
+
+All the chain parameters are defined [here](https://github.com/lbryio/lbrycrd/blob/master/src/chainparams.cpp).
+
 
 ## Metadata
 
-Metadata is structured information about the stream or channel separate from the content itself (e.g. the title, language, media type, etc.). It is stored in the [value property](#claim-properties) of a claim.
+Metadata is structured information about a stream or channel separate from the content itself (e.g. the title, language, media type, etc.). It is stored in the blockchain as the [value property](#claim-properties) of a claim.
 
-Metadata is stored in a serialized binary format via [Protocol Buffers](https://developers.google.com/protocol-buffers/). This allows for metadata to be:
+Metadata is stored in a serialized binary format using [Protocol Buffers](https://developers.google.com/protocol-buffers/). This allows for metadata to be:
 
 - **Extensibile**. Metadata can encompass thousands of fields for dozens of types of content. It must be efficient to both modify the structure and maintain backward compatibility. 
 - **Compact**. Blockchain space is expensive. Data must be stored as compactly as possible.
 - **Interoperabile**. Metadata will be used by many projects written in different languages.
 
-The serialized metadata may be signed to indicate membership in a channel. See [Channels](#channels) for more info.
+The serialized metadata may be cryptographically signed to indicate membership in a channel. See [Channels](#channels) for more info.
 
 ### Specification
 
-As the metadata specification is designed to grow and change frequently, the full specification will not be examined here. The [types](https://github.com/lbryio/types) repository is considered the precise specification.
+The metadata specification is designed to grow and change frequently. The full specification will not be detailed here. The [types](https://github.com/lbryio/types) repository is considered the precise specification.
 
 Instead, let's look at an example and some key fields.
 
@@ -747,17 +738,23 @@ Here’s some example metadata:
 
 Some important metadata fields are highlighted below.
 
-#### Source and Stream Hashes
+#### Stream Hash
 
-The `source` property contains information about how to fetch the data from the network. Within the `source` is a unique identifier to locate and find the content in the data network. More in  [[Data]].
+A unique identifier that is used to locate and fetch the content from the data network. More in [Data](#data).
 
-#### Fees and Fee Structure
+#### Fee
 
-<!-- fix me extensively -->
+Information on how to pay for the content. It includes the address that will receive the payment (the _fee address_), the the amount to be paid, and the currency. Only LBC and USD currencies are supported, though others may be added in the future.
 
-- LBC
-- Currencies?
-- channel signatures and private keys
+Example fee:
+
+```
+"fee": {
+  "address":"bNz8Va7xMyK9eHA5APzLph6cCTjBtGgmDN",
+  "amount":"99.95",
+  "currency":"LBC"
+}
+```
 
 #### Title, Author, Description 
 
@@ -778,7 +775,7 @@ The media type of the item as [defined](https://www.iana.org/assignments/media-t
 
 ### Channels (Identities) {#channels}
 
-Channels are the unit of identity in the LBRY system. A channel is a claim for a name beginning with `@` that contains a metadata structure for identity rather than content. Included in the metadata is the channel's public key. Here's an example:
+Channels are the unit of identity. A channel is a claim for a name beginning with `@` that contains a metadata structure for identity rather than content. Included in the metadata is the channel's public key. Here's an example:
 
 ```
 "claim_id": "6e56325c5351ceda2dd0795a30e864492910ccbf",
@@ -822,9 +819,9 @@ format     | description
 ##### Signing Process
 
 1. Encode the metadata using protobuf.
-1. Hash the encoded claim using SHA-256.
-1. Sign the hash using the private key associated with the channel.
-1. Append all the values (the version, the claim ID of the corresponding channel claim, the signature, and the protobuf-encoded metadata).
+2. Hash the encoded claim using SHA-256.
+3. Sign the hash using the private key associated with the channel.
+4. Append all the values (the version, the claim ID of the corresponding channel claim, the signature, and the protobuf-encoded metadata).
 
 ##### Signature Validation
 
@@ -842,20 +839,18 @@ Clients are responsible for validating metadata, including data structure and si
 
 ## Data
 
-<!-- fixme this section -->
+Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file split into multiple small pieces, encrypted, and announced to the network. It may also be uploaded to other hosts on the network that specialize in rehosting content.
 
-Data refers to the full binary data which is ultimate distributed by blah blah blah.
-
-The purpose of blah blah blah is to blah blah.
+The purpose of this process is to enable file storage without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the Bittorrent protocol and network. 
 
 
 ### Encoding
 
-Content on the LBRY network is encoded to facilitate distribution.
+Content on LBRY is encoded to facilitate distribution.
 
 #### Blobs
 
-The unit of data in the LBRY network is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hash protects against naming collisions and ensures that the content you get is what you expect.
+The smallest unit of data is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hash protects against naming collisions and ensures that the content you get is what you expect.
 
 Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and IV for each blob is stored as described below. 
 
@@ -940,7 +935,8 @@ A file must be encoded into a stream before it can be published. Encoding involv
 1. Compute the stream hash.
 
 An implementation of this process is available [here](https://github.com/lbryio/lbry.go/tree/master/stream).
-fixme: this link is for v0, not v1. need to implement v1 or drop the link.
+
+<!-- fixme: the above link is for v0, not v1. need to implement v1 or drop the link. -->
 
 
 #### Stream Decoding
@@ -957,7 +953,7 @@ Decoding a stream is like encoding in reverse, and with the added step of verify
 
 ### Announce
 
-After a [[stream]] is encoded, it must be _announced_ to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. The LBRY network tracks announced content using a distributed hash table.
+After a [[stream]] is encoded, it must be _announced_ to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. LBRY tracks announced content using a distributed hash table.
 
 #### Distributed Hash Table
 
@@ -988,9 +984,7 @@ Querying works almost the same way as [[announcing]]. A client looking for a tar
 
 #### Blob Exchange Protocol
 
-Downloading a blob from a peer is governed by the _Blob Exchange Protocol_. It is used by hosts and clients to check blob availability, exchange blobs, and negotiate data prices. The protocol is an RPC protocol using Protocol Buffers and the gRPC framework. It has five types of requests.
-
-fixme: protocol does not **negotiate** anything right now. It just checks the price. Should we include negotiation in v1?
+Downloading a blob from a peer is governed by the _Blob Exchange Protocol_. It is used by hosts and clients to exchange blobs and check data pricing and blob availability. The protocol is an RPC protocol using Protocol Buffers and the gRPC framework. It has five types of requests.
 
 ##### PriceCheck
 
