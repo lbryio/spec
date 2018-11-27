@@ -1093,3 +1093,5 @@ _Edit this on Github at https://github.com/lbryio/spec_
 
 
 </div></main> <!-- DONT DELETE THIS, its for the TOC -->
+
+<script src="https://hypothes.is/embed.js" async></script>
