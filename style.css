@@ -17,9 +17,6 @@ main {
     padding: 0 10px;
 }
 
-#content {
-}
-
 .toc {
     height: 100%;
     width: 300px;
@@ -57,7 +54,7 @@ main {
 .toc-menu {
     position: fixed;
     top: 0;
-    right: 0;
+    right: 40px; /* to leave room for hypothes.is bar */
     z-index: 2;
     margin: .25rem;
     padding: .25rem;
@@ -78,6 +75,7 @@ h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
 
 p {
     margin-bottom: 1.4rem;
+    overflow-x: auto;
 }
 
 h1, h2, h3, h4, h5, h6 {
