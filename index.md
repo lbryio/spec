@@ -151,8 +151,6 @@ This document assumes that the reader is familiar with Bitcoin and blockchain te
 
 ### Conventions and Terminology
 
-<!-- fixme - rather than inline this here, I think we should use lbry.tech glossary definitions and the [[keyword]] syntax -->
-
 <dl>
   <dt>file</dt>
   <dd>A single piece of content published using LBRY.</dd>
@@ -161,16 +159,16 @@ This document assumes that the reader is familiar with Bitcoin and blockchain te
   <dd>The unit of data transmission on the data network. A published file is split into many blobs.</dd>
 
   <dt>stream</dt>
-  <dd>A set of blobs that can be reassembled into a file. Every stream has a descriptor blob and one or more content blobs.</dd>
+  <dd>A set of blobs that can be reassembled into a file. Every stream has a manifest blob and one or more content blobs.</dd>
 
   <dt>blob hash</dt>
   <dd>The output of a cryptographic hash function is applied to a blob. Hashes are used to uniquely identify blobs and to verify that the contents of the blob are correct. Unless otherwise specified, LBRY uses SHA384 as the hash function.</dd>
 
   <dt>metadata</dt>
-  <dd>Information about the contents of a stream (e.g. creator, description, stream descriptor hash, etc). Metadata is stored in the blockchain.</dd>
+  <dd>Information about the contents of a stream (e.g. creator, description, stream hash, etc). Metadata is stored in the blockchain.</dd>
 
   <dt>name</dt>
-  <dd>A human-readable UTF8 string that is associated with a stream.</dd>
+  <dd>A human-readable UTF8 string that is associated with a claim.</dd>
 
   <dt>stake</dt>
   <dd>An entry in the blockchain that commits credits toward a name.</dd>
@@ -196,9 +194,9 @@ The LBRY blockchain is a public, proof-of-work blockchain. It serves three key p
 
 1. An index of the content available on the network 
 2. A payment system and record of purchases for priced content
-3. Trustful publisher identities
+3. Cryptographic publisher identities
 
-The blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document will not cover or specify any aspects of LBRY that are identical to Bitcoin, and will instead focus on the differences.
+The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin, and instead focuses on the differences.
 
 ### Stakes
 
@@ -231,7 +229,7 @@ In addition to the properties that all stakes have, claims have two more propert
 
 <dl>
   <dt>name</dt>
-  <dd>A normalized UTF-8 string of up to 255 bytes used to address the claim. See <a href="#urls">URLs</a> and <a href="#normalization">Normalization</a>.</dd>
+  <dd>A normalized UTF-8 string of up to 255 bytes used to address the claim. See <a href="#urls">URLs</a>.</dd>
   <dt>value</dt>
   <dd>Metadata about a stream or a channel. See <a href="#metadata">Metadata</a>.</dd>
 </dl>
@@ -242,7 +240,7 @@ Here is an example stream claim:
 
 ```
 {
-  "claim_id": "6e56325c5351ceda2dd0795a30e864492910ccbf",
+  "claimID": "6e56325c5351ceda2dd0795a30e864492910ccbf",
   "name": "lbry",
   "amount": 1.0,
   "value": {
@@ -254,12 +252,12 @@ Here is an example stream claim:
       "license": "LBRY inc",
       "thumbnail": "https://s3.amazonaws.com/files.lbry.io/logo.png",
       "mediaType": "video/mp4",
-      "stream_hash": "232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752",
+      "streamHash": "232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752",
     },
   }
 }
 ```
-Figure: Note: the blockchain treats the `value` as an opaque byte string and does not impose any structure on it. Structure is applied and validated [higher in the stack](#metadata-validation). In this example, the value is shown for demonstration purposes only. 
+Figure: Note: the blockchain treats the `value` as an opaque byte string and does not impose any structure on it. Structure is applied and validated [higher in the stack](#metadata-validation). The value is shown here for demonstration purposes only. 
 
 #### Claim Operations
 
@@ -278,19 +276,19 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 A _support_ is a stake that lends its amount to an existing claim.
 
-Supports have one extra property on top of the basic stake properties: a `claim_id`. This is the ID of the claim that the support is bolstering. 
+Supports have one extra property on top of the basic stake properties: a claim ID. This is the ID of the claim that the support is bolstering. 
 
 Supports are created and abandoned just like claims (see [Claim Operations](#claim-operations)). They cannot be updated or themselves supported.
 
 #### Claimtrie
 
-The _claimtrie_ is the data structure used to store the set of all claims and prove the correctness of claim resolution.
+A _claimtrie_ is a data structure used to store the set of all claims and prove the correctness of claim resolution.
 
-The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the path from the root node to the leaf node.
+The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the [normalized](#normalization) path from the root node to the leaf node.
 
 The _root hash_ is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes use the root hash to efficiently and securely validate the state of the claimtrie.
 
-Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted by [[effective amount]] (descending), then by block height (ascending), then by transaction order in the block (ascending).
+Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted by [effective amount](#active) (descending), then by block height (ascending), then by transaction order in the block (ascending).
 
 For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
 
@@ -304,13 +302,13 @@ An _accepted_ stake is one that has been been entered into the blockchain. This 
 
 Accepted stakes do not affect the intra-leaf claim order until they are [active](#active).
 
-The sum of the amount of a claim stake and all accepted supports is called the _total amount_.
+The sum of the amount of a claim stake and all of its accepted supports is called its _total amount_.
 
 ##### Abandoned
 
 An _abandoned_ stake is one that was withdrawn by its creator or current owner. Spending a transaction that contains a stake will cause that claim to become abandoned. Abandoned claim stakes are removed from the claimtrie.
 
-While data related to abandoned stakes still resides in the blockchain, it is improper to use this data to fetch the associated content. Active claim stakes signed by abandoned identities will no longer be reported as valid.
+While data related to abandoned stakes still resides in the blockchain, it should be considered invalid and should not be used to resolve URLs or fetch the associated content. Active claim stakes signed by abandoned identities are also considered invalid.
 
 ##### Active
 
@@ -320,7 +318,7 @@ If the stake is an update to an active claim, is the first claim for a name, or 
 
 Otherwise, the activation delay is determined by a formula covered in [Claimtrie Transitions](#claimtrie-transitions). The formula's inputs are the height of the current block, the height at which the stake was accepted, and the height at which the controlling claim for that name last changed.
 
-The sum of the amount of an active claim and all active supports is called it's _effective amount_. The effective amount affects the sort order of claims in a leaf node, and which claim is controlling for that name. Claims that are not active have an effective amount of 0.
+The sum of the amount of an active claim and all of its active supports is called its _effective amount_. The effective amount affects the sort order of claims in a leaf node, and which claim is controlling for that name. Claims that are not active have an effective amount of 0.
 
 ##### Controlling (claims only) {#controlling}
 
@@ -334,11 +332,11 @@ To determine the sort order of claims in a leaf node, the following algorithm is
 
 1. For each claim, recalculate the effective amount.
 
-2. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (ascending), then by transaction order within the block (ascending).
+2. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (lowest first), then by transaction order within the block.
 
 3. If the controlling claim from the previous block is still first in the order, then the sort is finished.
 
-4. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which stakes are now active, and return to step 1.
+4. Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which stakes are now active, and redo steps 1 and 2.
 
 5. At this point, the claim with the greatest effective amount is the controlling claim at this block.
 
@@ -346,21 +344,20 @@ The purpose of 4 is to handle the case when multiple competing claims are made o
 
 ##### Stake Activation
 
-If a stake does not become active immediately, it becomes active at the block heigh determined by the following formula:
+If a stake does not become active immediately, it becomes active at the block height determined by the following formula:
 
 ```
-C + min(4032, floor((H-T) / 32))
+ActivationHeight = AcceptedHeight + min(4032, floor( (AcceptedHeight-TakeoverHeight)/32 ))
 ```
 
 Where: 
 
-- C = stake height (height when the stake was accepted)
-- H = current height
-- T = takeover height (the most recent height at which the controlling claim for the name changed)
+- `AcceptedHeight` is the height when the stake was accepted
+- `TakeoverHeight` is the most recent height at which the controlling claim for the name changed
 
-In written form, the delay before a stake becomes active is equal to the stake's height minus height of the last takeover, divided by 32. The delay is capped at 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). The max delay is reached 224 (7x32) days after the last takeover. 
+In written form, the delay before a stake becomes active is equal to the height at which the stake was accepted minus height of the last takeover, divided by 32. This delay is capped at a maximum of 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). It takes approximately 224 days without a takeover to reach the max delay.
 
-The purpose of this delay function is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
+The purpose of this delay is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
 
 ##### Example {#transition-example}
 
@@ -390,28 +387,26 @@ Here is a step-by-step example to illustrate the different scenarios. All stakes
 
 #### Normalization
 
-Names in the claimtrie are normalized prior to comparison to avoid confusion due to Unicode equivalence or casing. When names are being compared, they are first converted using [Unicode Normalization Form D](http://unicode.org/reports/tr15/#Norm_Forms) (NFD), then lowercased using the en_US locale when possible. Since claims competing for the same name are stored in the same node in the claimtrie, names are also normalized to determine the claimtrie path to the node.
+Names in the claimtrie are normalized when performing any comparisons. This is necessary to avoid confusion due to Unicode equivalence or casing. When names are being compared, they are first converted using [Unicode Normalization Form D](http://unicode.org/reports/tr15/#Norm_Forms) (NFD), then lowercased using the en_US locale. This means names are effectively case-insensitive. Since claims competing for the same name are stored in the same node in the claimtrie, names are also normalized to determine the claimtrie path to the node.
 
 ### URLs
 
 <!-- fixme:
   jeremy: @grin does SPV need a mention inside of the document? 
-  grin: no, but we should probably include an example for how to do the validation using the root hash. its not strictly necessary because its similar to how bitcoin does it. so maybe link to https://lbry.tech/resources/claimtrie (which needs an update) and add a validation example there?
+  grin: no, but we should probably include an example for how to do the validation using the root hash. its not strictly necessary because its similar to how       bitcoin does it. so maybe link to https://lbry.tech/resources/claimtrie (which needs an update) and add a validation example there?
   -->
 
 URLs are human-readable references to claims. All URLs:
 
-1. must contain a name (see [Claim Properties](#claim-properties)), and
+1. contain a name (see [Claim Properties](#claim-properties)), and
 2. resolve to a single, specific claim for that name
 
 The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be provably resolved by clients without a full copy of the blockchain (i.e. [Simplified Payment Verification](https://lbry.tech/glossary#spv) wallets).
 
-It is possible to write short, human-readable, and memorable URLs. 
-
 
 #### Components
 
-A URL is a name with one or more modifiers. A bare name on its own will resolve to the [controlling claim](#controlling) at the latest block height. Common URL structures are:
+A URL is a name with one or more modifiers. A bare name on its own resolves to the [controlling claim](#controlling) at the latest block height. Here are some common URL structures.
 
 ##### Stream Claim Name
 
@@ -449,7 +444,7 @@ lbry://@lbry#3f/meet-lbry
 
 ##### Claim Sequence
 
-The _n_th claim for this name, in the order the claims entered the blockchain. _n_ must be a positive number. This can be used to resolve claims in the order in which they were accepted, rather than by which claim has the most credits backing it.
+The _n_th accepted claim for this name. _n_ must be a positive number. This can be used to resolve claims in the order in which they were made, rather than by the amount of credits backing a claim.
 
 ```
 lbry://meet-lbry:1
@@ -468,7 +463,7 @@ lbry://@lbry$2/meet-lbry
 
 ##### Query Params
 
-These parameters are reserved for future use.
+These parameters have no meaning within the LBRY protocol. They are for use by upstream applications.
 
 ```
 lbry://meet-lbry?arg=value+arg2=value2
@@ -511,7 +506,7 @@ PositiveNumber ::= PositiveDigit Digit*
 HexAlpha ::= [abcdef]
 Hex ::= (Digit | HexAlpha)+
 
-NameChar ::= Char - [=&#:$@?/]  /* any character that is not reserved */
+NameChar ::= Char - [=&#:$@%?/]  /* any character that is not reserved */
 Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] /* any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. */
 ```
 
@@ -581,19 +576,19 @@ URL                          | Claim ID     | Note
 
 #### Design Notes
 
-The most contentious aspect of this design has been the choice to resolve naked names (sometimes called _vanity names_) to the claim with the highest effective amount.
+The most contentious aspect of this design is the choice to resolve naked names (sometimes called _vanity names_) to the claim with the highest effective amount.
 
-First, it is important to note the problems in existing domain allocation design. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:
+First, it is important to note the problems in existing name allocation designs. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:
 
 1. Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don't intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities (stable prices and price signals),  in this case it is pure value extraction. Speculation also harms the user experience, who will see the vast majority of URLs sitting unused (c.f. Namecoin).
 
 2. Bureaucracy and transaction costs. While a centralized system can allow for an authority to use a process to reassign names based on trademark or other common use reasons, this system is also imperfect. Most importantly, it is a censorship point and an avenue for complete exclusion. Additionally, such processes are often arbitrary, change over time, involve significant transaction costs, and _still_ lead to names being used in ways that are contrary to user expectation (e.g. [nissan.com](http://nissan.com)).
 
-3. Inefficiencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, we facilitate speculation and rent-seeking. If the price is too high, we see people excluded from a good that it would otherwise be beneficial for them to purchase.
+3. Inefficiencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, there is speculation and rent-seeking. If the price is too high, people are excluded from a good that it would otherwise be beneficial for them to purchase.
 
-We sought an algorithmic design built into consensus that would allow URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.
+Instead, LBRY has an algorithmic design built into consensus that encourage URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.
 
-Finally, it's important to note that _only_ vanity URLs have this property. Extremely short, memorable URLs like `lbry://myclaimname#a` exist and are available for the minimal cost of issuing a transaction.
+Finally, it's important to note that _only_ vanity URLs have this property. Short, memorable URLs like `lbry://myclaimname#a` exist and are available for the minimal cost of issuing a transaction.
 
 
 ### Transactions
@@ -602,28 +597,28 @@ The LBRY blockchain includes the following changes to Bitcoin's transaction scri
 
 #### Operations and Opcodes
 
-To enable [claim operations](#claim-operations), we added three new opcodes to the scripting language: `OP_CLAIM_NAME`, `OP_UPDATE_CLAIM`, and `OP_SUPPORT_CLAIM`. In Bitcoin they are respectively `OP_NOP6`, `OP_NOP7`, and `OP_NOP8`. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here's how these opcodes are used:
+To enable [claim operations](#claim-operations), three new opcodes were added to the scripting language: `OP_CLAIM_NAME`, `OP_UPDATE_CLAIM`, and `OP_SUPPORT_CLAIM`. In Bitcoin they are respectively `OP_NOP6`, `OP_NOP7`, and `OP_NOP8`. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here's how these opcodes are used:
 
 ```
 OP_CLAIM_NAME <name> <value> OP_2DROP OP_DROP <outputScript>
 
-OP_UPDATE_CLAIM <name> <claimId> <value> OP_2DROP OP_2DROP <outputScript>
+OP_UPDATE_CLAIM <name> <claimID> <value> OP_2DROP OP_2DROP <outputScript>
 
-OP_SUPPORT_CLAIM <name> <claimId> OP_2DROP OP_DROP <outputScript>
+OP_SUPPORT_CLAIM <name> <claimID> OP_2DROP OP_DROP <outputScript>
 ```
 
-The `<name>` parameter is the [[name]] that the claim is associated with. `<value>` is the protobuf-encoded claim metadata and optional channel signature (see [Metadata](#metadata) for more about this value). The `<claimId>` is the claim ID of a previous claim that is being updated or supported.
+The `<name>` parameter is the [[name]] that the claim is associated with. `<value>` is the protobuf-encoded claim metadata and optional channel signature (see [Metadata](#metadata) for more about this value). The `<claimID>` is the claim ID of a previous claim that is being updated or supported.
 
 Each opcode will push a zero on to the execution stack. Those zeros, as well as any additional parameters after the opcodes, are all dropped by `OP_2DROP` and `OP_DROP`. `<outputScript>` can be any valid script, so a script using these opcodes is also a pay-to-pubkey script. This means that claim scripts can be spent just like regular Bitcoin output scripts.
 
 ##### Claim Identifier Generation
 
-Like any standard Bitcoin output script, a claim script will be associated with a transaction hash and output index. This combination of transaction hash and index is called an _outpoint_. Each claim script has a unique outpoint. The outpoint is hashed using SHA-256 and RIPEMD-160 to generate the claim ID for a claim. For the example above, let's say claim script is included in transaction `7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43` at the output index `1`. Then the claim ID would be `529357c3422c6046d3fec76be2358004ba22e323`. An implementation of this is available [here](https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go).
+Like any standard Bitcoin output script, a claim script is associated with a transaction hash and output index. This combination of transaction hash and index is called an _outpoint_. Each claim script has a unique outpoint. The outpoint is hashed using SHA-256 and RIPEMD-160 to generate the claim ID for a claim. For the example above, let's say claim script is included in transaction `7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43` at the output index `1`. Then the claim ID would be `529357c3422c6046d3fec76be2358004ba22e323`. An implementation of this is available [here](https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go).
 
 
 ##### OP\_CLAIM\_NAME
 
-New claims are created using `OP_CLAIM_NAME`. For example, a claim transaction setting the name `Fruit` to the value `Apple` will look like this:
+New claims are created using `OP_CLAIM_NAME`. For example, a claim transaction setting the name `Fruit` to the value `Apple` looks like this:
 
 ```
 OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 <address> OP_EQUALVERIFY OP_CHECKSIG
@@ -632,13 +627,13 @@ OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 <address> OP_EQUALV
 
 ##### OP\_UPDATE\_CLAIM
 
-`OP_UPDATE_CLAIM` updates a claim by replacing its metadata. An update transaction has an added requirement that it must spend the output for the existing claim that it wishes to update. Otherwise, it will be considered invalid and will not make it into the claimtrie. Thus it must have the following redeem script:
+`OP_UPDATE_CLAIM` updates a claim by replacing its metadata. An update transaction has an added requirement that it must spend the output for the existing claim that it wishes to update. Otherwise, it is considered invalid and will not make it into the claimtrie. Thus it must have the following redeem script:
 
 ```
 <signature> <pubKeyForPreviousAddress>
 ```
 
-The syntax is identical to the standard way of redeeming a pay-to-pubkey script in Bitcoin, with the caveat that `<pubKeyForPreviousAddress>` must be the public key for the address of the output that contains the claim that will be updated. 
+The syntax is identical to the standard way of redeeming a pay-to-pubkey script in Bitcoin, with the caveat that `<pubKeyForPreviousAddress>` must be the public key for the address of the output that contains the claim that is being updated. 
 
 To change the value of the previous example claim to “Banana”, the payout script would be
 
@@ -650,7 +645,7 @@ The `<address>` in this script may be the same as the address in the original tr
 
 ##### OP\_SUPPORT\_CLAIM
 
-A support for the original example claim will have the following payout script:
+A support for the original example claim has the following payout script:
 
 ```
 OP_SUPPORT_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 OP_2DROP OP_DROP OP_DUP OP_HASH160 <address> OP_EQUALVERIFY OP_CHECKSIG
@@ -711,7 +706,7 @@ The serialized metadata may be cryptographically signed to indicate membership i
 
 ### Specification
 
-The metadata specification is designed to grow and change frequently. The full specification will not be detailed here. The [types](https://github.com/lbryio/types) repository is considered the precise specification.
+The metadata specification is designed to grow and change frequently. The full specification is not detailed here. The [types](https://github.com/lbryio/types) repository is considered the precise specification.
 
 Instead, let's look at an example and some key fields.
 
@@ -778,7 +773,7 @@ The media type of the item as [defined](https://www.iana.org/assignments/media-t
 Channels are the unit of identity. A channel is a claim for a name beginning with `@` that contains a metadata structure for identity rather than content. Included in the metadata is the channel's public key. Here's an example:
 
 ```
-"claim_id": "6e56325c5351ceda2dd0795a30e864492910ccbf",
+"claimID": "6e56325c5351ceda2dd0795a30e864492910ccbf",
 "name": "@lbry",
 "amount": 6.26,
 "value": {
@@ -833,24 +828,23 @@ format     | description
 
 ### Validation {#metadata-validation}
 
-No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules.
-
-Clients are responsible for validating metadata, including data structure and signatures. This typically happens when the raw binary data stored in the blockchain is decoded client side via Protocol Buffers. 
+No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules. Clients are responsible for validating metadata, including data structure and signatures.
 
 ## Data
 
-Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file split into multiple small pieces, encrypted, and announced to the network. It may also be uploaded to other hosts on the network that specialize in rehosting content.
+Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file is split into multiple small pieces. Each piece is encrypted and announced to the network. The pieces may also be uploaded to other hosts on the network that specialize in rehosting content.
 
-The purpose of this process is to enable file storage without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the Bittorrent protocol and network. 
+The purpose of this process is to enable file storage and access without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the Bittorrent protocol. 
 
 
 ### Encoding
 
 Content on LBRY is encoded to facilitate distribution.
 
+
 #### Blobs
 
-The smallest unit of data is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob contents. Addressing blobs by their hash protects against naming collisions and ensures that the content you get is what you expect.
+The smallest unit of data is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.
 
 Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and IV for each blob is stored as described below. 
 
@@ -943,17 +937,17 @@ An implementation of this process is available [here](https://github.com/lbryio/
 
 Decoding a stream is like encoding in reverse, and with the added step of verifying that the expected blob hashes match the actual data.
 
-1. Verify that the manifest blob hash matches the stream hash you expect.
-1. Parse the manifest blob contents.
-1. Verify the hashes of the content blobs.
-1. Decrypt and remove the padding from each content blob using the key and IVs in the manifest.
-1. Concatenate the decrypted chunks in order.
+1. Compute a SHA384 has of the manifest blob and verify that it matches the stream hash.
+2. Parse the manifest blob contents.
+3. Verify the hashes of the content blobs.
+4. Decrypt and remove the padding from each content blob using the key and IVs in the manifest.
+5. Concatenate the decrypted chunks in order.
 
 
 
 ### Announce
 
-After a [[stream]] is encoded, it must be _announced_ to the network. Announcing is the process of letting other nodes on the network know that you have content available for download. LBRY tracks announced content using a distributed hash table.
+After a [[stream]] is encoded, it must be _announced_ to the network. Announcing is the process of letting other nodes on the network know that a client has content available for download. LBRY tracks announced content using a distributed hash table.
 
 #### Distributed Hash Table
 
@@ -979,7 +973,7 @@ A client wishing to download a [[stream]] must first query the [[DHT]] to find [
 
 #### Querying the DHT
 
-Querying works almost the same way as [[announcing]]. A client looking for a target hash will start by sending iterative `FindValue(target_hash)` requests to the nodes it knows that are closest to the target hash. If a node receives a `FindValue` request and knows of any peers for the target hash, it will respond with a list of those peers. Otherwise, it will respond with the closest nodes to the target hash that it knows about. The client then queries those closer nodes using the same `FindValue` call. This way, each call either finds the client some peers, or brings it closer to finding those peers. If no peers are found and no closer nodes are being returned, the client will determine that the target hash is not available and will give up.
+Querying works almost the same way as [[announcing]]. A client looking for a target hash starts by sending iterative `FindValue(target_hash)` requests to the nodes it knows that are closest to the target hash. If a node receives a `FindValue` request and knows of any peers for the target hash, it responds with a list of those peers. Otherwise, it responds with the closest nodes to the target hash that it knows about. The client then queries those closer nodes using the same `FindValue` call. This way, each call either finds the client some peers, or brings it closer to finding those peers. If no peers are found and no closer nodes are being returned, the client determines that the target hash is not available and gives up.
 
 
 #### Blob Exchange Protocol
@@ -996,7 +990,7 @@ DownloadCheck checks whether the server has certain blobs available for download
 
 ##### Download
 
-Download requests the blob for a given hash. The response contains the blob, its hash, and the address where to send payment for the data transfer. If the blob is not available on the server, the response will instead contain an error.
+Download requests the blob for a given hash. The response contains the blob, its hash, and the address where to send payment for the data transfer. If the blob is not available on the server, the response instead contains an error.
 
 ##### UploadCheck
 
@@ -1016,7 +1010,7 @@ The protocol calls and message types are defined in detail [here](https://github
 
 In order for a client to download content, there must be hosts online that have the content the client wants, when the client wants it. To incentivize the continued hosting of data, the blob exchange protocol supports data upload and payment for data. _Reflectors_ are hosts that accept data uploads. They rehost (reflect) the uploaded data and charge for downloads. Using a reflector is optional, but most publishers will probably choose to use them. Doing so obviates the need for the publisher's server to be online and connectable, which can be especially useful for mobile clients or those behind a firewall.
 
-The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it will charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.
+The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it wants to charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.
 
 
 <pre style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
