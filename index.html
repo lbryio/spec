@@ -70,11 +70,6 @@
 
 <h1 id="lbry-a-decentralized-digital-content-marketplace">LBRY: A Decentralized Digital Content Marketplace</h1>
 
-<div class="notice">
-  <p>Please excuse the unfinished state of this paper. It is being actively worked on. The content here is made available early because it contains useful information for developers.</p>
-  <p>For more technical information about LBRY, visit <a href="https://lbry.tech">lbry.tech</a>.</p>
-</div>
-
 <p><div class="toc-menu">Menu</div>
 <nav class="toc"></nav>
 <div id="content"></p>
@@ -93,19 +88,21 @@
 * [Blockchain](#blockchain)
    * [Stakes](#stakes)
       * [Claims](#claims)
-      * [Claim Properties](#claim-properties)
-      * [Example Claim](#example-claim)
-      * [Claim Operations](#claim-operations)
+         * [Claim Properties](#claim-properties)
+         * [Example Claim](#example-claim)
+         * [Claim Operations](#claim-operations)
       * [Supports](#supports)
+         * [Support Properties](#support-properties)
+         * [Example Support](#example-support)
+         * [Support Operations](#support-operations)
       * [Claimtrie](#claimtrie)
       * [Statuses](#stake-statuses)
          * [Accepted](#accepted)
          * [Abandoned](#abandoned)
          * [Active](#active)
          * [Controlling (claims only)](#controlling)
-      * [Claimtrie Transitions](#claimtrie-transitions)
-         * [Stake Activation](#stake-activation)
-         * [Example](#transition-example)
+      * [Activation Delay](#activation-delay)
+      * [Claim Ordering](#claim-ordering)
       * [Normalization](#normalization)
    * [URLs](#urls)
       * [Components](#components)
@@ -119,11 +116,10 @@
       * [Grammar](#grammar)
       * [Resolution](#resolution)
          * [No Modifier](#no-modifier)
-         * [Claim ID](#claim-id-1)
-         * [Claim Sequence](#claim-sequence-1)
-         * [Bid Position](#bid-position-1)
-         * [ChannelName and ClaimName](#channelname-and-claimname)
-         * [Examples](#url-resolution-examples)
+         * [ClaimID](#claimid)
+         * [ClaimSequence](#claimsequence)
+         * [BidPosition](#bidposition)
+         * [ChannelClaimName and StreamClaimName](#channelclaimname-and-streamclaimname)
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
@@ -177,6 +173,9 @@
          * [UploadCheck](#uploadcheck)
          * [Upload](#upload)
    * [Reflectors and Data Markets](#reflectors-and-data-markets)
+* [Appendix](#appendix)
+   * [Claim Activation Example](#claim-activation-example)
+   * [URL Resolution Examples](#url-resolution-examples)
 <!--te-->
 
 </noscript>
@@ -196,9 +195,7 @@ fixme final polish checklist:
 
 <h2 id="introduction">Introduction</h2>
 
-<!-- fixme -->
-
-<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Anyone can participate and no permission is required, nor can anyone be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
+<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Participation in the network is open to everyone. No permission is required, and no one may be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
 
 <p>TODO:</p>
 
@@ -210,7 +207,7 @@ fixme final polish checklist:
 
 <h3 id="overview">Overview</h3>
 
-<p>This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and several specifications for data structure, encoding, and retrieval.</p>
+<p>This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and specifications for data structure, encoding, and retrieval.</p>
 
 <h3 id="assumptions">Assumptions</h3>
 
@@ -219,17 +216,14 @@ fixme final polish checklist:
 <h3 id="conventions-and-terminology">Conventions and Terminology</h3>
 
 <dl>
-  <dt>file</dt>
-  <dd>A single piece of content published using LBRY.</dd>
-
   <dt>blob</dt>
   <dd>The unit of data transmission on the data network. A published file is split into many blobs.</dd>
 
   <dt>stream</dt>
-  <dd>A set of blobs that can be reassembled into a file. Every stream has a manifest blob and one or more content blobs.</dd>
+  <dd>A set of blobs that can be reassembled into a file. Every stream has one or more content blobs which contain the published file, and a manifest blob which contains a list of the content blob hashes.</dd>
 
   <dt>blob hash</dt>
-  <dd>The output of a cryptographic hash function is applied to a blob. Hashes are used to uniquely identify blobs and to verify that the contents of the blob are correct. Unless otherwise specified, LBRY uses SHA384 as the hash function.</dd>
+  <dd>The cryptographic hash of a blob. Hashes are used to uniquely identify blobs and to verify that the contents of the blob are correct. Unless otherwise specified, LBRY uses [SHA-384](https://en.wikipedia.org/wiki/SHA-2) as the hash function.</dd>
 
   <dt>metadata</dt>
   <dd>Information about the contents of a stream (e.g. creator, description, stream hash, etc). Metadata is stored in the blockchain.</dd>
@@ -238,19 +232,19 @@ fixme final polish checklist:
   <dd>A human-readable UTF8 string that is associated with a claim.</dd>
 
   <dt>stake</dt>
-  <dd>An entry in the blockchain that commits credits toward a name.</dd>
+  <dd>An entry in the blockchain that sets aside some credits and associates them with a name.</dd>
 
   <dt>claim</dt>
   <dd>A stake that contains metadata about a stream or channel.</dd>
 
   <dt>support</dt>
-  <dd>A stake that lends its credits to bolster an existing claim.</dd>
+  <dd>A stake that lends its credits to bolster a claim.</dd>
 
   <dt>channel</dt>
   <dd>The unit of pseudonymous publisher identity. Claims may be part of a channel.</dd>
 
   <dt>URL</dt>
-  <dd>A reference to a claim that specifies how to retrieve it.</dd>
+  <dd>A memorable reference to a claim.</dd>
 </dl>
 
 <h2 id="blockchain">Blockchain</h2>
@@ -284,12 +278,12 @@ fixme final polish checklist:
 
 <dl>
   <dt>stream claim</dt>
-  <dd>Declares the availability, access method, and publisher of a stream of bytes (an encoded file).</dd>
+  <dd>Declares the availability, access method, and publisher of a [[stream]].</dd>
   <dt>channel claim</dt>
-  <dd>Creates a pseudonym that can be declared as the publisher of a set of stream claims.</dd>
+  <dd>Creates a pseudonym that can be declared as the publisher of stream claims.</dd>
 </dl>
 
-<h4 id="claim-properties">Claim Properties</h4>
+<h5 id="claim-properties">Claim Properties</h5>
 
 <p>In addition to the properties that all stakes have, claims have two more properties:</p>
 
@@ -301,21 +295,21 @@ fixme final polish checklist:
 </dl>
   
 
-<h4 id="example-claim">Example Claim</h4>
+<h5 id="example-claim">Example Claim</h5>
 
 <p>Here is an example stream claim:</p>
 <figure>
 <pre><code>{
   &quot;claimID&quot;: &quot;6e56325c5351ceda2dd0795a30e864492910ccbf&quot;,
-  &quot;name&quot;: &quot;lbry&quot;,
   &quot;amount&quot;: 1.0,
+  &quot;name&quot;: &quot;lbry&quot;,
   &quot;value&quot;: {
     &quot;stream&quot;: {
       &quot;title&quot;: &quot;What is LBRY?&quot;,
       &quot;author&quot;: &quot;Samuel Bryan&quot;,
       &quot;description&quot;: &quot;What is LBRY? An introduction with Alex Tabarrok&quot;,
       &quot;language&quot;: &quot;en&quot;,
-      &quot;license&quot;: &quot;LBRY inc&quot;,
+      &quot;license&quot;: &quot;Public Domain&quot;,
       &quot;thumbnail&quot;: &quot;https://s3.amazonaws.com/files.lbry.io/logo.png&quot;,
       &quot;mediaType&quot;: &quot;video/mp4&quot;,
       &quot;streamHash&quot;: &quot;232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752&quot;,
@@ -327,7 +321,7 @@ fixme final polish checklist:
 </figcaption>
 </figure>
 
-<h4 id="claim-operations">Claim Operations</h4>
+<h5 id="claim-operations">Claim Operations</h5>
 
 <p>There are three claim operations: <em>create</em>, <em>update</em>, and <em>abandon</em>.</p>
 
@@ -344,9 +338,29 @@ fixme final polish checklist:
 
 <p>A <em>support</em> is a stake that lends its amount to an existing claim.</p>
 
-<p>Supports have one extra property on top of the basic stake properties: a claim ID. This is the ID of the claim that the support is bolstering.</p>
+<h5 id="support-properties">Support Properties</h5>
 
-<p>Supports are created and abandoned just like claims (see <a href="#claim-operations">Claim Operations</a>). They cannot be updated or themselves supported.</p>
+<p>Supports have one extra property in addition to the stake properties:</p>
+
+<dl>
+  <dt>claimID</dt>
+  <dd>The ID of the claim that this support is bolstering.</dd>
+</dl>
+
+<h5 id="example-support">Example Support</h5>
+
+<p>Here is an example support for the above claim:</p>
+
+<pre><code>{
+  &quot;supportID&quot;: &quot;fbcc019294468e03a5970dd2adec1535c52365e6&quot;,
+  &quot;amount&quot;: 45.12,
+  &quot;claimID&quot;: &quot;6e56325c5351ceda2dd0795a30e864492910ccbf&quot;,
+}
+</code></pre>
+
+<h5 id="support-operations">Support Operations</h5>
+
+<p>Supports are created and abandoned just like claims (see <a href="#claim-operations">Claim Operations</a>). Supports cannot be updated or themselves supported.</p>
 
 <h4 id="claimtrie">Claimtrie</h4>
 
@@ -356,7 +370,7 @@ fixme final polish checklist:
 
 <p>The <em>root hash</em> is the hash of the root node. It is stored in the header of each block in the blockchain. Nodes use the root hash to efficiently and securely validate the state of the claimtrie.</p>
 
-<p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name, sorted by <a href="#active">effective amount</a> (descending), then by block height (ascending), then by transaction order in the block (ascending).</p>
+<p>Multiple claims can exist for the same name. They are all stored in the leaf node for that name. See <a href="#claim-ordering">Claim Ordering</a></p>
 
 <p>For more details on the specific claimtrie implementation, see <a href="https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp">the source code</a>.</p>
 
@@ -374,9 +388,9 @@ fixme final polish checklist:
 
 <h5 id="abandoned">Abandoned</h5>
 
-<p>An <em>abandoned</em> stake is one that was withdrawn by its creator or current owner. Spending a transaction that contains a stake will cause that claim to become abandoned. Abandoned claim stakes are removed from the claimtrie.</p>
+<p>An <em>abandoned</em> stake is one that was withdrawn by its owner. Spending a transaction that contains a stake will cause that claim to become abandoned. Abandoned claim stakes are removed from the claimtrie.</p>
 
-<p>While data related to abandoned stakes still resides in the blockchain, it should be considered invalid and should not be used to resolve URLs or fetch the associated content. Active claim stakes signed by abandoned identities are also considered invalid.</p>
+<p>While data related to abandoned stakes still resides in the blockchain, it is considered invalid and should not be used to resolve URLs or fetch the associated content. Active claim stakes signed by abandoned identities are also considered invalid.</p>
 
 <h5 id="active">Active</h5>
 
@@ -384,7 +398,7 @@ fixme final polish checklist:
 
 <p>If the stake is an update to an active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the stake becomes active in the same block it is accepted).</p>
 
-<p>Otherwise, the activation delay is determined by a formula covered in <a href="#claimtrie-transitions">Claimtrie Transitions</a>. The formula&rsquo;s inputs are the height of the current block, the height at which the stake was accepted, and the height at which the controlling claim for that name last changed.</p>
+<p>Otherwise, the activation delay is determined by a formula covered in <a href="#activation-delay">Activation Delay</a>. The formula&rsquo;s inputs are the height of the current block, the height at which the stake was accepted, and the height at which the controlling claim for that name last changed.</p>
 
 <p>The sum of the amount of an active claim and all of its active supports is called its <em>effective amount</em>. The effective amount affects the sort order of claims in a leaf node, and which claim is controlling for that name. Claims that are not active have an effective amount of 0.</p>
 
@@ -394,25 +408,7 @@ fixme final polish checklist:
 
 <p>Only one claim can be controlling for a given name at a given block.</p>
 
-<h4 id="claimtrie-transitions">Claimtrie Transitions</h4>
-
-<p>To determine the sort order of claims in a leaf node, the following algorithm is used:</p>
-
-<ol>
-<li><p>For each claim, recalculate the effective amount.</p></li>
-
-<li><p>Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (lowest first), then by transaction order within the block.</p></li>
-
-<li><p>If the controlling claim from the previous block is still first in the order, then the sort is finished.</p></li>
-
-<li><p>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which stakes are now active, and redo steps 1 and 2.</p></li>
-
-<li><p>At this point, the claim with the greatest effective amount is the controlling claim at this block.</p></li>
-</ol>
-
-<p>The purpose of 4 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest effective amount. Step 4 will cause the greater claim to also activate and become the controlling claim.</p>
-
-<h5 id="stake-activation">Stake Activation</h5>
+<h4 id="activation-delay">Activation Delay</h4>
 
 <p>If a stake does not become active immediately, it becomes active at the block height determined by the following formula:</p>
 
@@ -430,30 +426,25 @@ fixme final polish checklist:
 
 <p>The purpose of this delay is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.</p>
 
-<h5 id="transition-example">Example</h5>
+<h4 id="claim-ordering">Claim Ordering</h4>
 
-<p>Here is a step-by-step example to illustrate the different scenarios. All stakes are for the same name.</p>
+<p>To determine the order of claims in a leaf node, the following algorithm is used:</p>
 
-<p><strong>Block 13:</strong> Claim A for 10LBC is accepted. It is the first claim, so it immediately becomes active and controlling.
-<br>State: A(10) is controlling</p>
+<ol>
+<li><p>For each claim, recalculate the effective amount.</p></li>
 
-<p><strong>Block 1001:</strong> Claim B for 20LBC is accepted. It’s activation height is <code>1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031</code>.
-<br>State: A(10) is controlling, B(20) is accepted.</p>
+<li><p>Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (lowest first), then by transaction order within the block.</p></li>
 
-<p><strong>Block 1010:</strong> Support X for 14LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.
-<br>State: A(10+14) is controlling, B(20) is accepted.</p>
+<li><p>If the controlling claim from the previous block is still first in the order, then the ordering is finished.</p></li>
 
-<p><strong>Block 1020:</strong> Claim C for 50LBC is accepted. The activation height is <code>1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051</code>.
-<br>State: A(10+14) is controlling, B(20) is accepted, C(50) is accepted.</p>
+<li><p>Otherwise, a takeover is occurring. Set the takeover height for this name to the current height, recalculate which stakes are now active, and redo steps 1 and 2.</p></li>
 
-<p><strong>Block 1031:</strong> Claim B activates. It has 20LBC, while claim A has 24LBC (10 original + 14 from support X). There is no takeover, and claim A remains controlling.
-<br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted.</p>
+<li><p>At this point, the claim with the greatest effective amount is the controlling claim at this block.</p></li>
+</ol>
 
-<p><strong>Block 1040:</strong> Claim D for 300LBC is accepted. The activation height is <code>1040 + min(4032, floor((1040-13) / 32)) = 1040 + 32 = 1072</code>.
-<br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted, D(300) is accepted.</p>
+<p>The purpose of 4 is to handle the case when multiple competing claims are made on the same name in different blocks, and one of those claims becomes active but another still-inactive claim has the greatest effective amount. Step 4 will cause the greater claim to also activate and become the controlling claim.</p>
 
-<p><strong>Block 1051:</strong> Claim C activates. It has 50LBC, while claim A has 24LBC, so a takeover is initiated. The takeover height for this name is set to 1051, and therefore the activation delay for all the claims becomes <code>min(4032, floor((1051-1051) / 32)) = 0</code>. All the claims become active. The totals for each claim are recalculated, and claim D becomes controlling because it has the highest total.
-<br>State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlling.</p>
+<p>See the <a href="#claim-activation-example">example</a> in the appendix for more information.</p>
 
 <h4 id="normalization">Normalization</h4>
 
@@ -466,14 +457,14 @@ fixme final polish checklist:
   grin: no, but we should probably include an example for how to do the validation using the root hash. its not strictly necessary because its similar to how       bitcoin does it. so maybe link to https://lbry.tech/resources/claimtrie (which needs an update) and add a validation example there?
   -->
 
-<p>URLs are human-readable references to claims. All URLs:</p>
+<p>URLs are memorable references to claims. All URLs:</p>
 
 <ol>
 <li>contain a name (see <a href="#claim-properties">Claim Properties</a>), and</li>
 <li>resolve to a single, specific claim for that name</li>
 </ol>
 
-<p>The ultimate purpose of much of the claim and blockchain design is to provide human-readable URLs that can be provably resolved by clients without a full copy of the blockchain (i.e. <a href="https://lbry.tech/glossary#spv">Simplified Payment Verification</a> wallets).</p>
+<p>The ultimate purpose of much of the claim and blockchain design is to provide memorable URLs that can be provably resolved by clients without a full copy of the blockchain (i.e. <a href="https://lbry.tech/glossary#spv">Simplified Payment Verification</a> wallets).</p>
 
 <h4 id="components">Components</h4>
 
@@ -481,14 +472,14 @@ fixme final polish checklist:
 
 <h5 id="stream-claim-name">Stream Claim Name</h5>
 
-<p>A basic stream claim.</p>
+<p>A controlling stream claim.</p>
 
 <pre><code>lbry://meet-lbry
 </code></pre>
 
 <h5 id="channel-claim-name">Channel Claim Name</h5>
 
-<p>A basic channel claim.</p>
+<p>A controlling channel claim.</p>
 
 <pre><code>lbry://@lbry
 </code></pre>
@@ -575,212 +566,33 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 <h4 id="resolution">Resolution</h4>
 
-<p>URL <em>resolution</em> is the process of translating a URL into the associated claim ID and metadata.</p>
+<p>URL <em>resolution</em> is the process of translating a URL into the associated claim ID and metadata. Several URL components are described below. For more information, see the <a href="#url-resolution-examples">URL resolution example</a> in the appendix.</p>
 
 <h5 id="no-modifier">No Modifier</h5>
 
 <p>Return the controlling claim for the name. Stream claims and channel claims are resolved the same way.</p>
 
-<h5 id="claim-id-1">Claim ID</h5>
+<h5 id="claimid">ClaimID</h5>
 
 <p>Get all claims for the claim name whose IDs start with the given <code>ClaimID</code>. Sort the claims in ascending order by block height and position within the block. Return the first claim.</p>
 
-<h5 id="claim-sequence-1">Claim Sequence</h5>
+<h5 id="claimsequence">ClaimSequence</h5>
 
-<p>Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the Nth claim, where N is the given <code>ClaimSequence</code> value.</p>
+<p>Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the <em>n</em>th claim, where <em>n</em> is the given <code>ClaimSequence</code> value.</p>
 
-<h5 id="bid-position-1">Bid Position</h5>
+<h5 id="bidposition">BidPosition</h5>
 
-<p>Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the Nth claim, where N is the given <code>BidSequence</code> value.</p>
+<p>Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the <em>n</em>th claim, where <em>n</em> is the given <code>BidSequence</code> value.</p>
 
-<h5 id="channelname-and-claimname">ChannelName and ClaimName</h5>
+<h5 id="channelclaimname-and-streamclaimname">ChannelClaimName and StreamClaimName</h5>
 
-<p>If both a channel name and a claim name are present, resolution happens in two steps. First, remove the <code>/</code> and <code>StreamClaimNameAndModifier</code> from the path, and resolve the URL as if it only had a <code>ChannelClaimNameAndModifier</code>. Then get the list of all claims in that channel. Finally, resolve the <code>StreamClaimNameAndModifier</code> as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.</p>
+<p>If both a channel name and a stream name are present, resolution happens in two steps. First, remove the <code>/</code> and <code>StreamClaimNameAndModifier</code> from the path, and resolve the URL as if it only had a <code>ChannelClaimNameAndModifier</code>. Then get the list of all claims in that channel. Finally, resolve the <code>StreamClaimNameAndModifier</code> as if it was its own URL, but instead of considering all claims, only consider the set of claims in the channel.</p>
 
 <p>If multiple claims for the same name exist inside the same channel, they are resolved via the same resolution rules applied entirely within the sub-scope of the channel.</p>
 
-<h5 id="url-resolution-examples">Examples</h5>
-
-<p>Suppose the following names were claimed in the following order:</p>
-
-<table>
-<thead>
-<tr>
-<th align="left">Name</th>
-<th align="left">Claim ID</th>
-<th align="left">Amount</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td align="left">apple</td>
-<td align="left">690eea</td>
-<td align="left">1</td>
-</tr>
-
-<tr>
-<td align="left">banana</td>
-<td align="left">714a3f</td>
-<td align="left">2</td>
-</tr>
-
-<tr>
-<td align="left">cherry</td>
-<td align="left">bfaabb</td>
-<td align="left">100</td>
-</tr>
-
-<tr>
-<td align="left">apple</td>
-<td align="left">690eea</td>
-<td align="left">10</td>
-</tr>
-
-<tr>
-<td align="left">@Arthur</td>
-<td align="left">b7bab5</td>
-<td align="left">1</td>
-</tr>
-
-<tr>
-<td align="left">@Bryan</td>
-<td align="left">0da517</td>
-<td align="left">1</td>
-</tr>
-
-<tr>
-<td align="left">@Chris</td>
-<td align="left">b3f7b1</td>
-<td align="left">1</td>
-</tr>
-
-<tr>
-<td align="left">@Chris/banana</td>
-<td align="left">fc861c</td>
-<td align="left">1</td>
-</tr>
-
-<tr>
-<td align="left">@Arthur/apple</td>
-<td align="left">37ee1</td>
-<td align="left">20</td>
-</tr>
-
-<tr>
-<td align="left">@Bryan/cherry</td>
-<td align="left">a18bca</td>
-<td align="left">10</td>
-</tr>
-
-<tr>
-<td align="left">@Chris</td>
-<td align="left">005a7d</td>
-<td align="left">100</td>
-</tr>
-
-<tr>
-<td align="left">@Arthur/cherry</td>
-<td align="left">d39aa0</td>
-<td align="left">20</td>
-</tr>
-</tbody>
-</table>
-<p>Here is how the following URLs should resolve:</p>
-
-<table>
-<thead>
-<tr>
-<th align="left">URL</th>
-<th align="left">Claim ID</th>
-<th align="left">Note</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td align="left"><code>lbry://apple</code></td>
-<td align="left">a37ee1</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://banana</code></td>
-<td align="left">714a3f</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://@Chris</code></td>
-<td align="left">005a7d</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://@Chris/banana</code></td>
-<td align="left"><em>not found</em></td>
-<td align="left">the controlling <code>@Chris</code> does not have a <code>banana</code></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://@Chris:1/banana</code></td>
-<td align="left">fc861c</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://@Chris:#fc8/banana</code></td>
-<td align="left">fc861c</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://cherry</code></td>
-<td align="left">bfaabb</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://@Arthur/cherry</code></td>
-<td align="left">d39aa0</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://@Bryan</code></td>
-<td align="left">0da517</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://banana$1</code></td>
-<td align="left">714a3f</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://banana$2</code></td>
-<td align="left">fc861c</td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://banana$3</code></td>
-<td align="left"><em>not found</em></td>
-<td align="left"></td>
-</tr>
-
-<tr>
-<td align="left"><code>lbry://@Arthur:1</code></td>
-<td align="left">b7bab5</td>
-<td align="left"></td>
-</tr>
-</tbody>
-</table>
-
 <h4 id="design-notes">Design Notes</h4>
 
-<p>The most contentious aspect of this design is the choice to resolve naked names (sometimes called <em>vanity names</em>) to the claim with the highest effective amount.</p>
+<p>The most contentious aspect of this design is the choice to resolve names without modifiers (sometimes called <em>vanity names</em>) to the claim with the highest effective amount.</p>
 
 <p>First, it is important to note the problems in existing name allocation designs. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:</p>
 
@@ -794,7 +606,7 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 <p>Instead, LBRY has an algorithmic design built into consensus that encourage URLs to flow to their highest valued use. Following <a href="https://en.wikipedia.org/wiki/Coase_theorem">Coase</a>, this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.</p>
 
-<p>Finally, it&rsquo;s important to note that <em>only</em> vanity URLs have this property. Short, memorable URLs like <code>lbry://myclaimname#a</code> exist and are available for the minimal cost of issuing a transaction.</p>
+<p>Finally, it&rsquo;s important to note that <em>only</em> vanity URLs have this property. Permanent URLs that are short and memorable (like <code>lbry://myclaimname#a</code>) exist and are available for the minimal cost of issuing a transaction.</p>
 
 <h3 id="transactions">Transactions</h3>
 
@@ -817,7 +629,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h5 id="claim-identifier-generation">Claim Identifier Generation</h5>
 
-<p>Like any standard Bitcoin output script, a claim script is associated with a transaction hash and output index. This combination of transaction hash and index is called an <em>outpoint</em>. Each claim script has a unique outpoint. The outpoint is hashed using SHA-256 and RIPEMD-160 to generate the claim ID for a claim. For the example above, let&rsquo;s say claim script is included in transaction <code>7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43</code> at the output index <code>1</code>. Then the claim ID would be <code>529357c3422c6046d3fec76be2358004ba22e323</code>. An implementation of this is available <a href="https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go">here</a>.</p>
+<p>Like any standard Bitcoin output script, a claim script is associated with a transaction hash and output index. This combination of transaction hash and index is called an <em>outpoint</em>. Each claim script has a unique outpoint. The outpoint is hashed using SHA-256 and RIPEMD-160 to generate the claim ID for a claim. For the example above, let&rsquo;s say claim script is included in transaction <code>7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43</code> at the output index <code>1</code>. Then the claim ID is <code>529357c3422c6046d3fec76be2358004ba22e323</code>. An implementation of this is available <a href="https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go">here</a>.</p>
 
 <h5 id="op-claim-name">OP_CLAIM_NAME</h5>
 
@@ -835,7 +647,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <p>The syntax is identical to the standard way of redeeming a pay-to-pubkey script in Bitcoin, with the caveat that <code>&lt;pubKeyForPreviousAddress&gt;</code> must be the public key for the address of the output that contains the claim that is being updated.</p>
 
-<p>To change the value of the previous example claim to “Banana”, the payout script would be</p>
+<p>To change the value of the previous example claim to “Banana”, the payout script is</p>
 
 <pre><code>OP_UPDATE_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 Banana OP_2DROP OP_2DROP OP_DUP OP_HASH160 &lt;address&gt; OP_EQUALVERIFY OP_CHECKSIG
 </code></pre>
@@ -863,7 +675,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h3 id="consensus">Consensus</h3>
 
-<p>LBRY makes a few small changes to consensus rules.</p>
+<p>In addition to the stake-related changes described above, LBRY makes changes to the following blockchain consensus rules.</p>
 
 <h4 id="block-timing">Block Timing</h4>
 
@@ -917,7 +729,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
     &quot;author&quot;: &quot;Samuel Bryan&quot;,
     &quot;description&quot;: &quot;What is LBRY? An introduction with Alex Tabarrok&quot;,
     &quot;language&quot;: &quot;en&quot;,
-    &quot;license&quot;: &quot;LBRY inc&quot;,
+    &quot;license&quot;: &quot;Public Domain&quot;,
     &quot;thumbnail&quot;: &quot;https://s3.amazonaws.com/files.lbry.io/logo.png&quot;,
     &quot;mediaType&quot;: &quot;video/mp4&quot;,
     &quot;streamHash&quot;: &quot;232068af6d51325c4821ac897d13d7837265812164021ec832cb7f18b9caf6c77c23016b31bac9747e7d5d9be7f4b752&quot;
@@ -935,7 +747,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h4 id="fee">Fee</h4>
 
-<p>Information on how to pay for the content. It includes the address that will receive the payment (the <em>fee address</em>), the the amount to be paid, and the currency. Only LBC and USD currencies are supported, though others may be added in the future.</p>
+<p>Information on how to pay for the content. It includes the address that will receive the payment (the <em>fee address</em>), the the amount to be paid, and the currency.</p>
 
 <p>Example fee:</p>
 
@@ -1083,7 +895,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <p>The smallest unit of data is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.</p>
 
-<p>Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available <a href="https://github.com/lbryio/lbry.go/blob/master/stream/blob.go">here</a>. The encryption key and IV for each blob is stored as described below.</p>
+<p>Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available <a href="https://github.com/lbryio/lbry.go/blob/master/stream/blob.go">here</a>. The encryption key and initialization vector for each blob is stored as described below.</p>
 
 <h4 id="streams">Streams</h4>
 
@@ -1148,15 +960,15 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 <h5 id="setup">Setup</h5>
 
 <ol>
-<li>Generate a random 32-byte key for the stream.</li>
+<li>Generate a random 32-byte key for the stream. This <em>stream key</em> will be used to encrypt each content blob.</li>
 </ol>
 
 <h5 id="content-blobs">Content Blobs</h5>
 
 <ol>
 <li>Break the file into chunks of at most 2097151 bytes.</li>
-<li>Generate a random IV for each chuck.</li>
-<li>Pad each chunk using PKCS7 padding</li>
+<li>Generate a random 32-byte initialization vector (IV) for each chuck.</li>
+<li>Pad each chunk using PKCS7 padding.</li>
 <li>Encrypt each chunk with AES-CBC using the stream key and the IV for that chunk.</li>
 <li>An encrypted chunk is a blob.</li>
 </ol>
@@ -1191,7 +1003,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h4 id="distributed-hash-table">Distributed Hash Table</h4>
 
-<p><em>Distributed hash tables</em> (or DHTs) have proven to be an effective way to build a decentralized content network. Our DHT implementation follows the <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf">Kademlia</a>
+<p><em>Distributed hash tables</em> (or DHTs) are an effective way to build a decentralized content network. Our DHT implementation follows the <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf">Kademlia</a>
 specification fairly closely, with some modifications.</p>
 
 <p>A distributed hash table is a key-value store that is spread over multiple nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.</p>
@@ -1204,7 +1016,7 @@ specification fairly closely, with some modifications.</p>
 
 <p>Finding the closest nodes is done via iterative <code>FindNode</code> DHT requests. The host starts with the closest nodes it knows about and sends a <code>FindNode(target_hash)</code> request to each of them. If any of the requests return nodes that are closer to the target hash, the host sends <code>FindNode</code> requests to those nodes to try to get even closer. When the <code>FindNode</code> requests no longer return nodes that are closer, the search ends.</p>
 
-<p>Once the search is over, the host takes the 8 closest nodes it found and sends a <code>Store(target_hash)</code> request to them. The nodes receiving this request store the fact that the host is a peer for the target hash.</p>
+<p>Once the search is over, the host sends a <code>Store(target_hash)</code> request to the closest several nodes it found. The nodes receiving this request store the fact that the host is a peer for the target hash.</p>
 
 <h3 id="download">Download</h3>
 
@@ -1245,6 +1057,211 @@ specification fairly closely, with some modifications.</p>
 <p>In order for a client to download content, there must be hosts online that have the content the client wants, when the client wants it. To incentivize the continued hosting of data, the blob exchange protocol supports data upload and payment for data. <em>Reflectors</em> are hosts that accept data uploads. They rehost (reflect) the uploaded data and charge for downloads. Using a reflector is optional, but most publishers will probably choose to use them. Doing so obviates the need for the publisher&rsquo;s server to be online and connectable, which can be especially useful for mobile clients or those behind a firewall.</p>
 
 <p>The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it wants to charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.</p>
+
+<h2 id="appendix">Appendix</h2>
+
+<h3 id="claim-activation-example">Claim Activation Example</h3>
+
+<p>Here is a step-by-step example to illustrate how competing claims activate and are ordered. All stakes are for the same name.</p>
+
+<p><strong>Block 13:</strong> Claim A for 10LBC is accepted. It is the first claim, so it immediately becomes active and controlling.
+<br>State: A(10) is controlling</p>
+
+<p><strong>Block 1001:</strong> Claim B for 20LBC is accepted. It’s activation height is <code>1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031</code>.
+<br>State: A(10) is controlling, B(20) is accepted.</p>
+
+<p><strong>Block 1010:</strong> Support X for 14LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.
+<br>State: A(10+14) is controlling, B(20) is accepted.</p>
+
+<p><strong>Block 1020:</strong> Claim C for 50LBC is accepted. The activation height is <code>1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051</code>.
+<br>State: A(10+14) is controlling, B(20) is accepted, C(50) is accepted.</p>
+
+<p><strong>Block 1031:</strong> Claim B activates. It has 20LBC, while claim A has 24LBC (10 original + 14 from support X). There is no takeover, and claim A remains controlling.
+<br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted.</p>
+
+<p><strong>Block 1040:</strong> Claim D for 300LBC is accepted. The activation height is <code>1040 + min(4032, floor((1040-13) / 32)) = 1040 + 32 = 1072</code>.
+<br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted, D(300) is accepted.</p>
+
+<p><strong>Block 1051:</strong> Claim C activates. It has 50LBC, while claim A has 24LBC, so a takeover is initiated. The takeover height for this name is set to 1051, and therefore the activation delay for all the claims becomes <code>min(4032, floor((1051-1051) / 32)) = 0</code>. All the claims become active. The totals for each claim are recalculated, and claim D becomes controlling because it has the highest total.
+<br>State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlling.</p>
+
+<h3 id="url-resolution-examples">URL Resolution Examples</h3>
+
+<p>Suppose the following names were claimed in the following order and no other claims exist.</p>
+
+<table>
+<thead>
+<tr>
+<th align="left">Channel Name</th>
+<th align="left">Stream Name</th>
+<th align="left">Claim ID</th>
+<th align="left">Amount</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">apple</td>
+<td align="left">690eea</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">banana</td>
+<td align="left">714a3f</td>
+<td align="left">2</td>
+</tr>
+
+<tr>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">cherry</td>
+<td align="left">bfaabb</td>
+<td align="left">100</td>
+</tr>
+
+<tr>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">apple</td>
+<td align="left">690eea</td>
+<td align="left">10</td>
+</tr>
+
+<tr>
+<td align="left">@Arthur</td>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">b7bab5</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Bryan</td>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">0da517</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Chris</td>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">b3f7b1</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Chris</td>
+<td align="left">banana</td>
+<td align="left">fc861c</td>
+<td align="left">1</td>
+</tr>
+
+<tr>
+<td align="left">@Arthur</td>
+<td align="left">apple</td>
+<td align="left">37ee1</td>
+<td align="left">20</td>
+</tr>
+
+<tr>
+<td align="left">@Bryan</td>
+<td align="left">cherry</td>
+<td align="left">a18bca</td>
+<td align="left">10</td>
+</tr>
+
+<tr>
+<td align="left">@Chris</td>
+<td align="left"><em>&ndash;</em></td>
+<td align="left">005a7d</td>
+<td align="left">100</td>
+</tr>
+
+<tr>
+<td align="left">@Arthur</td>
+<td align="left">cherry</td>
+<td align="left">d39aa0</td>
+<td align="left">20</td>
+</tr>
+</tbody>
+</table>
+<p>Here is how the following URLs resolve:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left">URL</th>
+<th align="left">Claim ID</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><code>lbry://apple</code></td>
+<td align="left">a37ee1</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana</code></td>
+<td align="left">714a3f</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris</code></td>
+<td align="left">005a7d</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris/banana</code></td>
+<td align="left"><em>not found</em> (the controlling <code>@Chris</code> does not have a <code>banana</code>)</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris:1/banana</code></td>
+<td align="left">fc861c</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Chris:#fc8/banana</code></td>
+<td align="left">fc861c</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://cherry</code></td>
+<td align="left">bfaabb</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Arthur/cherry</code></td>
+<td align="left">d39aa0</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Bryan</code></td>
+<td align="left">0da517</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana$1</code></td>
+<td align="left">714a3f</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana$2</code></td>
+<td align="left">fc861c</td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://banana$3</code></td>
+<td align="left"><em>not found</em></td>
+</tr>
+
+<tr>
+<td align="left"><code>lbry://@Arthur:1</code></td>
+<td align="left">b7bab5</td>
+</tr>
+</tbody>
+</table>
 
 <pre style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
                                                                                            
