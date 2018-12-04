@@ -155,7 +155,7 @@ This document assumes that the reader is familiar with Bitcoin and blockchain te
   <dd>A set of blobs that can be reassembled into a file. Every stream has one or more content blobs which contain the published file, and a manifest blob which contains a list of the content blob hashes.</dd>
 
   <dt>blob hash</dt>
-  <dd>The cryptographic hash of a blob. Hashes are used to uniquely identify blobs and to verify that the contents of the blob are correct. Unless otherwise specified, LBRY uses [SHA-384](https://en.wikipedia.org/wiki/SHA-2) as the hash function.</dd>
+  <dd>The cryptographic hash of a blob. Hashes are used to uniquely identify blobs and to verify that the contents of the blob are correct. Unless otherwise specified, LBRY uses <a href="https://en.wikipedia.org/wiki/SHA-2">SHA-384</a> as the hash function.</dd>
 
   <dt>metadata</dt>
   <dd>Information about the contents of a stream (e.g. creator, description, stream hash, etc). Metadata is stored in the blockchain.</dd>
