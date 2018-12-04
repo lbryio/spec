@@ -328,7 +328,7 @@ While data related to abandoned stakes still resides in the blockchain, it is co
 
 An _active_ stake is an accepted and non-abandoned stake that has been in the blockchain for an algorithmically determined number of blocks. This length of time required is called the _activation delay_.
 
-If the stake is an update to an active claim, is the first claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the stake becomes active in the same block it is accepted).
+If the stake is an update to an active claim, is the only accepted non-abandoned claim for a name, or does not cause a change in which claim is controlling the name, the activation delay is 0 (i.e. the stake becomes active immediately).
 
 Otherwise, the activation delay is determined by a formula covered in [Activation Delay](#activation-delay). The formula's inputs are the height of the current block, the height at which the stake was accepted, and the height at which the controlling claim for that name last changed.
 
