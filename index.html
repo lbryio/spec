@@ -123,7 +123,7 @@
       * [Design Notes](#design-notes)
    * [Transactions](#transactions)
       * [Operations and Opcodes](#operations-and-opcodes)
-         * [Claim Identifier Generation](#claim-identifier-generation)
+         * [Stake Identifier Generation](#stake-identifier-generation)
          * [OP_CLAIM_NAME](#op-claim-name)
          * [OP_UPDATE_CLAIM](#op-update-claim)
          * [OP_SUPPORT_CLAIM](#op-support-claim)
@@ -885,7 +885,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <p>Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file is split into multiple small pieces. Each piece is encrypted and announced to the network. The pieces may also be uploaded to other hosts on the network that specialize in rehosting content.</p>
 
-<p>The purpose of this process is to enable file storage and access without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the Bittorrent protocol.</p>
+<p>The purpose of this process is to enable file storage and access without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the <a href="https://en.wikipedia.org/wiki/BitTorrent">BitTorrent protocol</a>.</p>
 
 <h3 id="encoding">Encoding</h3>
 

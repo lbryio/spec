@@ -789,7 +789,7 @@ No enforcement or validation on metadata happens at the blockchain level. Instea
 
 Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file is split into multiple small pieces. Each piece is encrypted and announced to the network. The pieces may also be uploaded to other hosts on the network that specialize in rehosting content.
 
-The purpose of this process is to enable file storage and access without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the Bittorrent protocol. 
+The purpose of this process is to enable file storage and access without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the [BitTorrent protocol](https://en.wikipedia.org/wiki/BitTorrent).
 
 
 ### Encoding
