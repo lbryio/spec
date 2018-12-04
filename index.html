@@ -486,7 +486,7 @@ fixme final polish checklist:
 
 <h5 id="channel-claim-name-and-stream-claim-name">Channel Claim Name and Stream Claim Name</h5>
 
-<p>A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to it&rsquo;s associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.</p>
+<p>A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to its associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.</p>
 
 <pre><code>lbry://@lbry/meet-lbry
 </code></pre>
@@ -722,7 +722,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 <h4 id="metadata-example">Example</h4>
 
 <p>Here’s some example metadata:</p>
-
+<figure>
 <pre><code>{
   &quot;stream&quot;: {
     &quot;title&quot;: &quot;What is LBRY?&quot;,
@@ -736,6 +736,9 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
   }
 }
 </code></pre>
+<figcaption>Some fields are omitted.
+</figcaption>
+</figure>
 
 <h3 id="key-fields">Key Fields</h3>
 
@@ -893,7 +896,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h4 id="blobs">Blobs</h4>
 
-<p>The smallest unit of data is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA-384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.</p>
+<p>The smallest unit of data is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA-384 hash of the blob. Addressing blobs by their hashes protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.</p>
 
 <p>Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available <a href="https://github.com/lbryio/lbry.go/blob/master/stream/blob.go">here</a>. The encryption key and initialization vector for each blob is stored as described below.</p>
 
@@ -1044,7 +1047,7 @@ specification fairly closely, with some modifications.</p>
 
 <h5 id="upload">Upload</h5>
 
-<p>Upload sends a blob to the server. If uploading many blobs, the client should use the UploadCheck request to check which blobs the server actually needs. This avoids needlessly uploading blobs that the server already has. If a client tries to upload too many blobs that the server does not want, this may be consider a denial of service attack.</p>
+<p>Upload sends a blob to the server. If uploading many blobs, the client should use the UploadCheck request to check which blobs the server actually needs. This avoids needlessly uploading blobs that the server already has. If a client tries to upload too many blobs that the server does not want, the server may consider it a denial of service attack.</p>
 
 <p>The protocol calls and message types are defined in detail <a href="https://github.com/lbryio/lbry.go/blob/master/blobex/blobex.proto">here</a>.</p>
 
@@ -1063,7 +1066,7 @@ specification fairly closely, with some modifications.</p>
 <p><strong>Block 13:</strong> Claim A for 10LBC is accepted. It is the first claim, so it immediately becomes active and controlling.
 <br>State: A(10) is controlling</p>
 
-<p><strong>Block 1001:</strong> Claim B for 20LBC is accepted. It’s activation height is <code>1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031</code>.
+<p><strong>Block 1001:</strong> Claim B for 20LBC is accepted. Its activation height is <code>1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031</code>.
 <br>State: A(10) is controlling, B(20) is accepted.</p>
 
 <p><strong>Block 1010:</strong> Support X for 14LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.

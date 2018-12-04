@@ -418,7 +418,7 @@ lbry://@lbry
 
 ##### Channel Claim Name and Stream Claim Name
 
-A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to it's associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
+A URL containing both a channel and a stream claim name. URLs containing both are resolved in two steps. First, the channel is resolved to its associated claim. Then the stream claim name is resolved to get the appropriate claim from among the claims in the channel.
 
 ```
 lbry://@lbry/meet-lbry
@@ -683,6 +683,8 @@ Here’s some example metadata:
   }
 }
 ```
+Figure: Some fields are omitted.
+
 
 ### Key Fields
 
@@ -799,7 +801,7 @@ Content on LBRY is encoded to facilitate distribution.
 
 #### Blobs
 
-The smallest unit of data is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA-384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.
+The smallest unit of data is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA-384 hash of the blob. Addressing blobs by their hashes protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.
 
 Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and initialization vector for each blob is stored as described below. 
 
@@ -951,7 +953,7 @@ UploadCheck asks the server whether blobs can be uploaded to it. For each hash i
 
 ##### Upload
 
-Upload sends a blob to the server. If uploading many blobs, the client should use the UploadCheck request to check which blobs the server actually needs. This avoids needlessly uploading blobs that the server already has. If a client tries to upload too many blobs that the server does not want, this may be consider a denial of service attack.
+Upload sends a blob to the server. If uploading many blobs, the client should use the UploadCheck request to check which blobs the server actually needs. This avoids needlessly uploading blobs that the server already has. If a client tries to upload too many blobs that the server does not want, the server may consider it a denial of service attack.
 
 
 The protocol calls and message types are defined in detail [here](https://github.com/lbryio/lbry.go/blob/master/blobex/blobex.proto).
@@ -975,7 +977,7 @@ Here is a step-by-step example to illustrate how competing claims activate and a
 **Block 13:** Claim A for 10LBC is accepted. It is the first claim, so it immediately becomes active and controlling.
 <br>State: A(10) is controlling
 
-**Block 1001:** Claim B for 20LBC is accepted. It’s activation height is `1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031`.
+**Block 1001:** Claim B for 20LBC is accepted. Its activation height is `1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031`.
 <br>State: A(10) is controlling, B(20) is accepted.
 
 **Block 1010:** Support X for 14LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.
