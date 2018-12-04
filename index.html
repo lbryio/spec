@@ -267,7 +267,7 @@ fixme final polish checklist:
 
 <dl>
   <dt>id</dt>
-  <dd>A 20-byte hash unique among all stakes. See <a href="#stake-identifier-generation">Stake Identifier Generation</a>.</dd>
+  <dd>A 20-byte hash, unique among all stakes. See <a href="#stake-identifier-generation">Stake Identifier Generation</a>.</dd>
   <dt>amount</dt>
   <dd>A quantity of tokens used to back the stake. See <a href="#controlling">Controlling</a>.</dd>
 </dl>
@@ -614,7 +614,7 @@ Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] 
 
 <h4 id="operations-and-opcodes">Operations and Opcodes</h4>
 
-<p>To enable <a href="#claim-operations">claim operations</a>, three new opcodes were added to the scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_UPDATE_CLAIM</code>, and <code>OP_SUPPORT_CLAIM</code>. In Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>. The opcodes are used in output scripts to interact with the claimtrie. Each opcode is followed by one or more parameters. Here&rsquo;s how these opcodes are used:</p>
+<p>To enable interaction with the claimtrie, three new opcodes were added to the scripting language: <code>OP_CLAIM_NAME</code>, <code>OP_UPDATE_CLAIM</code>, and <code>OP_SUPPORT_CLAIM</code>. In Bitcoin they are respectively <code>OP_NOP6</code>, <code>OP_NOP7</code>, and <code>OP_NOP8</code>. The opcodes are used in output scripts to change the state of the claimtrie. Each opcode is followed by one or more parameters. Here&rsquo;s how these opcodes are used:</p>
 
 <pre><code>OP_CLAIM_NAME &lt;name&gt; &lt;value&gt; OP_2DROP OP_DROP &lt;outputScript&gt;
 
@@ -623,13 +623,13 @@ OP_UPDATE_CLAIM &lt;name&gt; &lt;claimID&gt; &lt;value&gt; OP_2DROP OP_2DROP &lt
 OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&gt;
 </code></pre>
 
-<p>The <code>&lt;name&gt;</code> parameter is the [[name]] that the claim is associated with. <code>&lt;value&gt;</code> is the protobuf-encoded claim metadata and optional channel signature (see <a href="#metadata">Metadata</a> for more about this value). The <code>&lt;claimID&gt;</code> is the claim ID of a previous claim that is being updated or supported.</p>
+<p>The <code>&lt;name&gt;</code> parameter is the [[name]] that the claim is associated with. The <code>&lt;value&gt;</code> is the protobuf-encoded claim metadata and optional channel signature (see <a href="#metadata">Metadata</a> for more about this value). The <code>&lt;claimID&gt;</code> is the claim ID of a previous claim that is being updated or supported.</p>
 
-<p>Each opcode will push a zero on to the execution stack. Those zeros, as well as any additional parameters after the opcodes, are all dropped by <code>OP_2DROP</code> and <code>OP_DROP</code>. <code>&lt;outputScript&gt;</code> can be any valid script, so a script using these opcodes is also a pay-to-pubkey script. This means that claim scripts can be spent just like regular Bitcoin output scripts.</p>
+<p>Each opcode will push a zero on to the execution stack. Those zeros, as well as any additional parameters after the opcodes, are all dropped by <code>OP_2DROP</code> and <code>OP_DROP</code>. <code>&lt;outputScript&gt;</code> can be any valid script, so a script using these opcodes is also a pay-to-pubkey script. This means that claimtrie scripts can be spent just like regular Bitcoin output scripts.</p>
 
-<h5 id="claim-identifier-generation">Claim Identifier Generation</h5>
+<h5 id="stake-identifier-generation">Stake Identifier Generation</h5>
 
-<p>Like any standard Bitcoin output script, a claim script is associated with a transaction hash and output index. This combination of transaction hash and index is called an <em>outpoint</em>. Each claim script has a unique outpoint. The outpoint is hashed using SHA-256 and RIPEMD-160 to generate the claim ID for a claim. For the example above, let&rsquo;s say claim script is included in transaction <code>7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43</code> at the output index <code>1</code>. Then the claim ID is <code>529357c3422c6046d3fec76be2358004ba22e323</code>. An implementation of this is available <a href="https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go">here</a>.</p>
+<p>Like any standard Bitcoin output script, a claimtrie script is associated with a transaction hash and output index. This combination of transaction hash and index is called an <em>outpoint</em>. Each claimtrie script has a unique outpoint. The outpoint is hashed using SHA-256 and RIPEMD-160 to generate the ID for a stake. For the example above, let&rsquo;s say claimtrie script is included in transaction <code>7560111513bea7ec38e2ce58a58c1880726b1515497515fd3f470d827669ed43</code> at the output index <code>1</code>. Then the ID is <code>529357c3422c6046d3fec76be2358004ba22e323</code>. An implementation of this is available <a href="https://github.com/lbryio/lbry.go/blob/master/lbrycrd/blockchain.go">here</a>.</p>
 
 <h5 id="op-claim-name">OP_CLAIM_NAME</h5>
 
