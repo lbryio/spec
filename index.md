@@ -799,7 +799,7 @@ Content on LBRY is encoded to facilitate distribution.
 
 #### Blobs
 
-The smallest unit of data is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.
+The smallest unit of data is called a _blob_. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA-384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.
 
 Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and initialization vector for each blob is stored as described below. 
 
@@ -811,15 +811,7 @@ The blob hash of the manifest blob is called the _stream hash_. It uniquely iden
 
 #### Manifest Contents
 
-A manifest blob's contents are encoded using a canonical JSON encoding. The JSON encoding must be canonical to support consistent hashing and validation. The encoding is the same as standard JSON, but adds the following rules:
-
-- Object keys must be quoted and lexicographically sorted.
-- All strings are hex-encoded. Hex letters must be lowercase.
-- Whitespace before, after, or between tokens is not permitted.
-- Floating point numbers, leading zeros, and "minus 0" for integers are not permitted.
-- Trailing commas after the last item in an array or object are not permitted.
-
-Here's an example manifest: 
+A manifest blob's contents are encoded using [canonical JSON encoding](http://wiki.laptop.org/go/Canonical_JSON). The JSON encoding must be canonical to support consistent hashing and validation. Here's an example manifest: 
 
 <!-- originally from 053b2f0f0e82e7f022837382733d5f5817dcd67027103fe43f00fa7a6f9fa8742c1022a851616c1ac15d1c60e89db3f4 -->
 
@@ -833,18 +825,18 @@ Here's the same manifest, with whitespace added for readability:
 {
   "blobs":[
     {
-      "blob_hash":"a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61",
+      "blobHash":"a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61",
       "iv":"ef6caef207a207ca5b14c0282d25ce21",
       "length":2097152
     },
     {
-      "blob_hash":"bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc",
+      "blobHash":"bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc",
       "iv":"a37b291a37337fc1ff90ae655c244c1d",
       "length":2097152
     },
     ...,
     {
-      "blob_hash":"322973617221ddfec6e53bff4b74b9c21c968cd32ba5a5094d84210e660c4b2ed0882b114a2392a08b06183f19330aaf",
+      "blobHash":"322973617221ddfec6e53bff4b74b9c21c968cd32ba5a5094d84210e660c4b2ed0882b114a2392a08b06183f19330aaf",
       "iv": "a00f5f458695bdc9d50d3dbbc7905abc",
       "length": 600160
     }  
@@ -855,7 +847,13 @@ Here's the same manifest, with whitespace added for readability:
 }
 ```
 
-The `key` field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The `version` field is always 1. It is intended to signal structure changes in future versions of this protocol. The `length` field for each blob is the length of the encrypted blob, not the original file chunk.
+The `blobs` field is an ordered list of blobs in the stream. Each item in the list has the blob hash for that blob, the hex-encoded initialization vector used to create the blob, and the length of the encrypted blob (not the original file chunk).
+
+The `filename` is the hex-encoded name of the original file.
+
+The `key` field contains the hex-encoded _stream key_, which is used to decrypt the blobs in the stream. This field is optional. The stream key may instead be stored by a third party and made available to a client when presented with proof that the content was purchased. 
+
+The `version` field is always 1. It is intended to signal structure changes in future versions of this protocol. 
 
 Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.
 
@@ -867,7 +865,7 @@ A file must be encoded into a stream before it can be published. Encoding involv
 
 ##### Setup
 
-1. Generate a random 32-byte key for the stream. This _stream key_ will be used to encrypt each content blob.
+1. Generate a random 32-byte stream key. This key will be used to encrypt each content blob in the stream.
 
 ##### Content Blobs
 
@@ -879,9 +877,9 @@ A file must be encoded into a stream before it can be published. Encoding involv
 
 ##### Manifest Blob
 
-1. Fill in the manifest data.
-1. Encode the data using the canonical JSON encoding described above.
-1. Compute the stream hash.
+1. Fill in the manifest data as described in the [Manifest Contents](#manifest-contents).
+2. Encode the data using the canonical JSON encoding.
+3. Compute the stream hash.
 
 An implementation of this process is available [here](https://github.com/lbryio/lbry.go/tree/master/stream).
 
@@ -892,10 +890,10 @@ An implementation of this process is available [here](https://github.com/lbryio/
 
 Decoding a stream is like encoding in reverse, and with the added step of verifying that the expected blob hashes match the actual data.
 
-1. Compute a SHA384 has of the manifest blob and verify that it matches the stream hash.
-2. Parse the manifest blob contents.
+1. Verify that the hash of the manifest blob and matches the stream hash.
+2. Parse the JSON in manifest blob.
 3. Verify the hashes of the content blobs.
-4. Decrypt and remove the padding from each content blob using the key and IVs in the manifest.
+4. Decrypt and remove the padding from each content blob using the stream key and IVs in the manifest.
 5. Concatenate the decrypted chunks in order.
 
 

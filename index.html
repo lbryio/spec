@@ -893,7 +893,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h4 id="blobs">Blobs</h4>
 
-<p>The smallest unit of data is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.</p>
+<p>The smallest unit of data is called a <em>blob</em>. A blob is an encrypted chunk of data up to 2MiB in size. Each blob is indexed by its <em>blob hash</em>, which is a SHA-384 hash of the blob. Addressing blobs by their hash protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.</p>
 
 <p>Blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available <a href="https://github.com/lbryio/lbry.go/blob/master/stream/blob.go">here</a>. The encryption key and initialization vector for each blob is stored as described below.</p>
 
@@ -905,17 +905,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h4 id="manifest-contents">Manifest Contents</h4>
 
-<p>A manifest blob&rsquo;s contents are encoded using a canonical JSON encoding. The JSON encoding must be canonical to support consistent hashing and validation. The encoding is the same as standard JSON, but adds the following rules:</p>
-
-<ul>
-<li>Object keys must be quoted and lexicographically sorted.</li>
-<li>All strings are hex-encoded. Hex letters must be lowercase.</li>
-<li>Whitespace before, after, or between tokens is not permitted.</li>
-<li>Floating point numbers, leading zeros, and &ldquo;minus 0&rdquo; for integers are not permitted.</li>
-<li>Trailing commas after the last item in an array or object are not permitted.</li>
-</ul>
-
-<p>Here&rsquo;s an example manifest:</p>
+<p>A manifest blob&rsquo;s contents are encoded using <a href="http://wiki.laptop.org/go/Canonical_JSON">canonical JSON encoding</a>. The JSON encoding must be canonical to support consistent hashing and validation. Here&rsquo;s an example manifest:</p>
 
 <!-- originally from 053b2f0f0e82e7f022837382733d5f5817dcd67027103fe43f00fa7a6f9fa8742c1022a851616c1ac15d1c60e89db3f4 -->
 
@@ -927,18 +917,18 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 <pre><code>{
   &quot;blobs&quot;:[
     {
-      &quot;blob_hash&quot;:&quot;a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61&quot;,
+      &quot;blobHash&quot;:&quot;a6daea71be2bb89fab29a2a10face08143411a5245edcaa5efff48c2e459e7ec01ad20edfde6da43a932aca45b2cec61&quot;,
       &quot;iv&quot;:&quot;ef6caef207a207ca5b14c0282d25ce21&quot;,
       &quot;length&quot;:2097152
     },
     {
-      &quot;blob_hash&quot;:&quot;bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc&quot;,
+      &quot;blobHash&quot;:&quot;bf2717e2c445052366d35bcd58edb108cbe947af122d8f76b4856db577aeeaa2def5b57dbb80f7b1531296bd3e0256fc&quot;,
       &quot;iv&quot;:&quot;a37b291a37337fc1ff90ae655c244c1d&quot;,
       &quot;length&quot;:2097152
     },
     ...,
     {
-      &quot;blob_hash&quot;:&quot;322973617221ddfec6e53bff4b74b9c21c968cd32ba5a5094d84210e660c4b2ed0882b114a2392a08b06183f19330aaf&quot;,
+      &quot;blobHash&quot;:&quot;322973617221ddfec6e53bff4b74b9c21c968cd32ba5a5094d84210e660c4b2ed0882b114a2392a08b06183f19330aaf&quot;,
       &quot;iv&quot;: &quot;a00f5f458695bdc9d50d3dbbc7905abc&quot;,
       &quot;length&quot;: 600160
     }  
@@ -949,7 +939,13 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 }
 </code></pre>
 
-<p>The <code>key</code> field contains the key to decrypt the stream, and is optional. The key may be stored by a third party and made available to a client when presented with proof that the content was purchased. The <code>version</code> field is always 1. It is intended to signal structure changes in future versions of this protocol. The <code>length</code> field for each blob is the length of the encrypted blob, not the original file chunk.</p>
+<p>The <code>blobs</code> field is an ordered list of blobs in the stream. Each item in the list has the blob hash for that blob, the hex-encoded initialization vector used to create the blob, and the length of the encrypted blob (not the original file chunk).</p>
+
+<p>The <code>filename</code> is the hex-encoded name of the original file.</p>
+
+<p>The <code>key</code> field contains the hex-encoded <em>stream key</em>, which is used to decrypt the blobs in the stream. This field is optional. The stream key may instead be stored by a third party and made available to a client when presented with proof that the content was purchased.</p>
+
+<p>The <code>version</code> field is always 1. It is intended to signal structure changes in future versions of this protocol.</p>
 
 <p>Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.</p>
 
@@ -960,7 +956,7 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 <h5 id="setup">Setup</h5>
 
 <ol>
-<li>Generate a random 32-byte key for the stream. This <em>stream key</em> will be used to encrypt each content blob.</li>
+<li>Generate a random 32-byte stream key. This key will be used to encrypt each content blob in the stream.</li>
 </ol>
 
 <h5 id="content-blobs">Content Blobs</h5>
@@ -976,8 +972,8 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 <h5 id="manifest-blob">Manifest Blob</h5>
 
 <ol>
-<li>Fill in the manifest data.</li>
-<li>Encode the data using the canonical JSON encoding described above.</li>
+<li>Fill in the manifest data as described in the <a href="#manifest-contents">Manifest Contents</a>.</li>
+<li>Encode the data using the canonical JSON encoding.</li>
 <li>Compute the stream hash.</li>
 </ol>
 
@@ -990,10 +986,10 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 <p>Decoding a stream is like encoding in reverse, and with the added step of verifying that the expected blob hashes match the actual data.</p>
 
 <ol>
-<li>Compute a SHA384 has of the manifest blob and verify that it matches the stream hash.</li>
-<li>Parse the manifest blob contents.</li>
+<li>Verify that the hash of the manifest blob and matches the stream hash.</li>
+<li>Parse the JSON in manifest blob.</li>
 <li>Verify the hashes of the content blobs.</li>
-<li>Decrypt and remove the padding from each content blob using the key and IVs in the manifest.</li>
+<li>Decrypt and remove the padding from each content blob using the stream key and IVs in the manifest.</li>
 <li>Concatenate the decrypted chunks in order.</li>
 </ol>
 
