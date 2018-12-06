@@ -15,8 +15,8 @@
 
 <!--ts-->
 * [Introduction](#introduction)
-   * [Overview](#overview)
    * [Assumptions](#assumptions)
+   * [Overview](#overview)
    * [Conventions and Terminology](#conventions-and-terminology)
 * [Blockchain](#blockchain)
    * [Stakes](#stakes)
@@ -47,7 +47,7 @@
          * [Bid Position](#bid-position)
          * [Query Params](#query-params)
       * [Grammar](#grammar)
-      * [Resolution](#resolution)
+      * [Resolution](#url-resolution)
          * [No Modifier](#no-modifier)
          * [ClaimID](#claimid)
          * [ClaimSequence](#claimsequence)
@@ -60,7 +60,6 @@
          * [OP_CLAIM_NAME](#op-claim-name)
          * [OP_UPDATE_CLAIM](#op-update-claim)
          * [OP_SUPPORT_CLAIM](#op-support-claim)
-      * [Tips](#tips)
       * [Proof of Payment](#proof-of-payment)
    * [Consensus](#consensus)
       * [Block Timing](#block-timing)
@@ -129,7 +128,7 @@ fixme final polish checklist:
 
 ## Introduction
 
-LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Participation in the network is open to everyone. No permission is required, and no one may be blocked from participating. The system is distributed, so no single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
+LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Participation in the network is open to everyone. No permission is required, and no one may be blocked from participating. No single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
 
 TODO:
 
@@ -137,13 +136,13 @@ TODO:
 - whom does it help
 - why is it different/better than what existed before
 
+### Assumptions
+
+This document assumes that the reader is familiar with distributed hash tables (DHTs), the BitTorrent protocol, Bitcoin, and blockchain technology. It does not attempt to document these technologies or explain how they work. The [Bitcoin developer reference](https://bitcoin.org/en/developer-reference) and [BitTorrent protocol specification](http://www.bittorrent.org/beps/bep_0003.html) are recommended for anyone wishing to understand the technical details.
+
 ### Overview
 
 This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and specifications for data structure, encoding, and retrieval. 
-
-### Assumptions
-
-This document assumes that the reader is familiar with Bitcoin and blockchain technology. It does not attempt to document the Bitcoin protocol or explain how it works. The [Bitcoin developer reference](https://bitcoin.org/en/developer-reference) is recommended for anyone wishing to understand the technical details.
 
 ### Conventions and Terminology
 
@@ -183,13 +182,14 @@ This document assumes that the reader is familiar with Bitcoin and blockchain te
 ## Blockchain
 
 
-The LBRY blockchain is a public, proof-of-work blockchain. It serves three key purposes: 
+The LBRY blockchain is a public, proof-of-work blockchain. The design is based on the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin, and instead focuses on the differences.
+
+The blockchain serves three key purposes: 
 
 1. An index of the content available on the network 
 2. A payment system and record of purchases for priced content
 3. Cryptographic publisher identities
 
-The LBRY blockchain is a fork of the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin, and instead focuses on the differences.
 
 ### Stakes
 
@@ -267,7 +267,7 @@ There are three claim operations: _create_, _update_, and _abandon_.
 
 #### Supports
 
-A _support_ is a stake that lends its amount to an existing claim.
+A _support_ is a stake that lends its amount to bolster an existing claim.
 
 ##### Support Properties
 
@@ -296,7 +296,7 @@ Supports are created and abandoned just like claims (see [Claim Operations](#cla
 
 #### Claimtrie
 
-A _claimtrie_ is a data structure used to store the set of all claims and prove the correctness of claim resolution.
+A _claimtrie_ is a data structure used to store the set of all claims and prove the correctness of [URL resolution](#url-resolution).
 
 The claimtrie is implemented as a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that maps names to claims. Claims are stored as leaf nodes in the tree. Names are stored as the [normalized](#normalization) path from the root node to the leaf node.
 
@@ -426,7 +426,7 @@ lbry://@lbry/meet-lbry
 
 ##### Claim ID
 
-A claim for this name with this claim ID. Partial prefix matches are allowed (see [Resolution](#resolution)).
+A claim for this name with this claim ID. Partial prefix matches are allowed (see [URL Resolution](#url-resolution)).
 
 ```
 lbry://meet-lbry#7a0aa95c5023c21c098
@@ -502,7 +502,7 @@ NameChar ::= Char - [=&#:$@%?/]  /* any character that is not reserved */
 Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] /* any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. */
 ```
 
-#### Resolution
+#### Resolution {#url-resolution}
 
 URL _resolution_ is the process of translating a URL into the associated claim ID and metadata. Several URL components are described below. For more information, see the [URL resolution example](#url-resolution-examples) in the appendix.
 
@@ -531,9 +531,9 @@ If multiple claims for the same name exist inside the same channel, they are res
 
 #### Design Notes
 
-The most contentious aspect of this design is the choice to resolve names without modifiers (sometimes called _vanity names_) to the claim with the highest effective amount.
+The most contentious aspect of this design is the choice to resolve names without modifiers (sometimes called _vanity names_) to the claim with the highest effective amount. Before discussing the reasoning behind this decision, it should be noted that _only_ vanity URLs resolve this way. Permanent URLs that are short and memorable (e.g. `lbry://myclaimname#a`) exist and are available for the minimal cost of issuing a transaction.
 
-First, it is important to note the problems in existing name allocation designs. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:
+LBRY's resolution semantics stem from a dissatisfaction with existing name allocation designs. Most existing public name schemes are first-come, first-serve with a fixed price. This leads to several bad outcomes:
 
 1. Speculation and extortion. Entrepreneurs are incentivized to register common names even if they don't intend to use them, in hopes of selling them to the proper owner in the future for an exorbitant price. While speculation in general can have positive externalities (stable prices and price signals),  in this case it is pure value extraction. Speculation also harms the user experience, who will see the vast majority of URLs sitting unused (c.f. Namecoin).
 
@@ -542,8 +542,6 @@ First, it is important to note the problems in existing name allocation designs.
 3. Inefficiencies from price controls. Any system that does not allow a price to float freely creates inefficiencies. If the set price is too low, there is speculation and rent-seeking. If the price is too high, people are excluded from a good that it would otherwise be beneficial for them to purchase.
 
 Instead, LBRY has an algorithmic design built into consensus that encourage URLs to flow to their highest valued use. Following [Coase](https://en.wikipedia.org/wiki/Coase_theorem), this staking design allows for clearly defined rules, low transaction costs, and no information asymmetry, minimizing inefficiency in URL allocation.
-
-Finally, it's important to note that _only_ vanity URLs have this property. Permanent URLs that are short and memorable (like `lbry://myclaimname#a`) exist and are available for the minimal cost of issuing a transaction.
 
 
 ### Transactions
@@ -608,10 +606,6 @@ OP_SUPPORT_CLAIM Fruit 529357c3422c6046d3fec76be2358004ba22e323 OP_2DROP OP_DROP
 
 The `<address>` in this script may be the same as the address in the original transaction, or it may be a new address.
 
-
-#### Tips
-
-Since a claim is updated or abandoned by spending the claim's transaction, most claimtrie transactions spend to an address controlled by the transaction's creator. However, a claimtrie transaction can spend to any address. This can be used to create a _tip_. A tip is a support that also sends credits to the claim's creator. Tips in LBRY are just like tips in real life. They can be used to express gratitude or make an optional payment to a content creator. 
 
 #### Proof of Payment
 
@@ -783,13 +777,16 @@ format     | description
 1. Look up the channel claim to ensure it exists and contains a public key.
 1. Use the public key to verify the signature.
 
+
 ### Validation {#metadata-validation}
 
-No enforcement or validation on metadata happens at the blockchain level. Instead, metadata encoding, decoding, and validation is done by clients. This allows evolution of the metadata without changes to consensus rules. Clients are responsible for validating metadata, including data structure and signatures.
+The blockchain treats metadata as an opaque series of bytes. Clients should not trust the metadata they read from the blockchain. Each client is responsible for correctly encoding and decoding the metadata, and for validating its structure and signatures. This allows evolution of the metadata definition without changes to blockchain consensus rules.
+
+
 
 ## Data
 
-Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file is split into multiple small pieces. Each piece is encrypted and announced to the network. The pieces may also be uploaded to other hosts on the network that specialize in rehosting content.
+Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file is split into multiple small pieces. Each piece is encrypted and [announced](#announce) to the network. The pieces may also be uploaded to other hosts on the network that specialize in rehosting content.
 
 The purpose of this process is to enable file storage and access without relying on centralized infrastructure, and to create a marketplace for data that allows hosts to be paid for their services. The design is strongly influenced by the [BitTorrent protocol](https://en.wikipedia.org/wiki/BitTorrent).
 
@@ -906,7 +903,7 @@ After a [[stream]] is encoded, it must be _announced_ to the network. Announcing
 
 #### Distributed Hash Table
 
-_Distributed hash tables_ (or DHTs) are an effective way to build a decentralized content network. Our DHT implementation follows the [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
+_Distributed hash tables_ (or DHTs) are an effective way to build a peer-to-peer content network. Our DHT implementation follows the [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
 specification fairly closely, with some modifications.
 
 A distributed hash table is a key-value store that is spread over multiple nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.
@@ -963,7 +960,9 @@ The protocol calls and message types are defined in detail [here](https://github
 
 ### Reflectors and Data Markets
 
-In order for a client to download content, there must be hosts online that have the content the client wants, when the client wants it. To incentivize the continued hosting of data, the blob exchange protocol supports data upload and payment for data. _Reflectors_ are hosts that accept data uploads. They rehost (reflect) the uploaded data and charge for downloads. Using a reflector is optional, but most publishers will probably choose to use them. Doing so obviates the need for the publisher's server to be online and connectable, which can be especially useful for mobile clients or those behind a firewall.
+In order for a client to download content, there must be hosts online that have the content the client wants, when the client wants it. To incentivize the continued hosting of data, the blob exchange protocol supports data upload and payment for data. _Reflectors_ are hosts that accept data uploads. They rehost (reflect) the uploaded data and charge for downloads. 
+
+Using a reflector is optional, but most publishers will probably choose to use them. Doing so obviates the need for the publisher's server to be online and connectable, which can be especially useful for mobile clients or those behind a firewall.
 
 The current version of the protocol does not support sophisticated price negotiation between clients and hosts. The host simply chooses the price it wants to charge. Clients check this price before downloading, and pay the price after the download is complete. Future protocol versions will include more options for price negotiation, as well as stronger proofs of payment.
 

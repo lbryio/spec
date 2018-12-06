@@ -194,3 +194,13 @@ figcaption {
     padding-left: 10px;
     padding-right: 10px;
 }
+
+dl {
+    margin-left: 10px;
+}
+dt {
+    font-style: italic;
+}
+dd + dt {
+    margin-top: 10px;
+}
