@@ -128,13 +128,11 @@ fixme final polish checklist:
 
 ## Introduction
 
-LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Participation in the network is open to everyone. No permission is required, and no one may be blocked from participating. No single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
+LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. LBRY uses a public blockchain to provide shared, consistent metadata across the network, as well for payment and content discovery.
 
-TODO:
+Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Participation in the network is open to everyone. No permission is required, and no one may be blocked from participating. No single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.
 
-- why is it significant
-- whom does it help
-- why is it different/better than what existed before
+LBRY is a step forward from previous generations of decentralized networks, which provide no discovery or payment mechanisms. For creators, LBRY is unparalleled in trust and earning potential. For consumers, LBRY is the first system that provides end-to-end digital content consumption that does not require trusting a third-party. For the world, LBRY is designed to engender the most complete catalog of information to ever exist, and to be controlled by the only party that could be trusted with such monumental responsibility: no one.
 
 ### Assumptions
 
