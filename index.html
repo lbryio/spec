@@ -194,15 +194,11 @@ fixme final polish checklist:
 
 <h2 id="introduction">Introduction</h2>
 
-<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Participation in the network is open to everyone. No permission is required, and no one may be blocked from participating. No single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
+<p>LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. LBRY uses a public blockchain to provide shared, consistent metadata across the network, as well for payment and content discovery.</p>
 
-<p>TODO:</p>
+<p>Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. Participation in the network is open to everyone. No permission is required, and no one may be blocked from participating. No single entity has unilateral control, nor will the removal of any single entity prevent the system from functioning.</p>
 
-<ul>
-<li>why is it significant</li>
-<li>whom does it help</li>
-<li>why is it different/better than what existed before</li>
-</ul>
+<p>LBRY is a step forward from previous generations of decentralized networks, which provide no discovery or payment mechanisms. For creators, LBRY is unparalleled in trust and earning potential. For consumers, LBRY is the first system that provides end-to-end digital content consumption that does not require trusting a third-party. For the world, LBRY is designed to engender the most complete catalog of information to ever exist, and to be controlled by the only party that could be trusted with such monumental responsibility: no one.</p>
 
 <h3 id="assumptions">Assumptions</h3>
 
@@ -662,9 +658,26 @@ OP_SUPPORT_CLAIM &lt;name&gt; &lt;claimID&gt; OP_2DROP OP_DROP &lt;outputScript&
 
 <h4 id="proof-of-payment">Proof of Payment</h4>
 
-<!-- fixme -->
+<p>No system can strongly enforce digital intellectual property rights, especially not a decentralized one. Therefore, the protocol must be able to produce evidence that differentiates legitimate and illegitimate use. In LBRY, this is done via blockchain transactions and proofs of payment.</p>
 
-<p>TODO: Explain how transactions serve as proof that a client has made a valid payment for a piece of content.</p>
+<p>A proof of payment has two components:</p>
+
+<ol>
+<li>A transaction on the blockchain that spends credits to the fee address for a claim (the transaction must send a number of credits equal to or greater than the fee amount for the claim).</li>
+<li>Proof that a client knows the private key of the address that the transaction spends from.</li>
+</ol>
+
+<p>To prove 1, it is sufficient to provide the transaction ID and input index of the spend. Proving 2 requires signing a nonce using the associated private key.</p>
+
+<p>Verifying a proof of payment is done as follows:</p>
+
+<ol>
+<li>Look up the fee amount and fee address of the claim that the proof is for.</li>
+<li>Use the transaction ID from the proof to find the transaction. verify that it spends the correct amount to the correct address.</li>
+<li>Use the public key from the transaction output to verify the signed nonce.</li>
+</ol>
+
+<p>The protocol is likely to be extended in the future to enable stricter proofs of payment.</p>
 
 <h3 id="consensus">Consensus</h3>
 

@@ -607,10 +607,22 @@ The `<address>` in this script may be the same as the address in the original tr
 
 #### Proof of Payment
 
-<!-- fixme -->
+No system can strongly enforce digital intellectual property rights, especially not a decentralized one. Therefore, the protocol must be able to produce evidence that differentiates legitimate and illegitimate use. In LBRY, this is done via blockchain transactions and proofs of payment.
 
-TODO: Explain how transactions serve as proof that a client has made a valid payment for a piece of content.
+A proof of payment has two components:
 
+1. A transaction on the blockchain that spends credits to the fee address for a claim (the transaction must send a number of credits equal to or greater than the fee amount for the claim).
+2. Proof that a client knows the private key of the address that the transaction spends from.
+
+To prove 1, it is sufficient to provide the transaction ID and input index of the spend. Proving 2 requires signing a nonce using the associated private key.
+
+Verifying a proof of payment is done as follows:
+
+1. Look up the fee amount and fee address of the claim that the proof is for.
+2. Use the transaction ID from the proof to find the transaction. verify that it spends the correct amount to the correct address.
+3. Use the public key from the transaction output to verify the signed nonce.
+
+The protocol is likely to be extended in the future to enable stricter proofs of payment.
 
 ### Consensus
 
