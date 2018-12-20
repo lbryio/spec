@@ -220,7 +220,7 @@ In addition to the properties that all stakes have, claims have two more propert
 
 <dl>
   <dt>name</dt>
-  <dd>A normalized UTF-8 string of up to 255 bytes used to address the claim. See <a href="#urls">URLs</a>.</dd>
+  <dd>A UTF-8 string of up to 255 bytes used to address the claim. See <a href="#urls">URLs</a>.</dd>
   <dt>value</dt>
   <dd>Metadata about a stream or a channel. See <a href="#metadata">Metadata</a>.</dd>
 </dl>
