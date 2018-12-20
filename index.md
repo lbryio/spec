@@ -122,6 +122,7 @@ fixme final polish checklist:
 - create links for [[terms]]
 - ensure that all italicized terms are defined before they are used, or if that doesn't work, that they are linked
 - don't say "the LBRY network". instead say "LBRY" or say nothing.
+- make sure something is published at the URLs that we reference in this paper
 
 -->
 
@@ -352,7 +353,7 @@ Where:
 - `AcceptedHeight` is the height when the stake was accepted
 - `TakeoverHeight` is the most recent height at which the controlling claim for the name changed
 
-In written form, the delay before a stake becomes active is equal to the height at which the stake was accepted minus height of the last takeover, divided by 32. This delay is capped at a maximum of 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (our target block time). It takes approximately 224 days without a takeover to reach the max delay.
+In written form, the delay before a stake becomes active is equal to the height at which the stake was accepted minus height of the last takeover, divided by 32. This delay is capped at a maximum of 4032 blocks, which is 7 days of blocks at 2.5 minutes per block (the target block time). It takes approximately 224 days without a takeover to reach the max delay.
 
 The purpose of this delay is to give long-standing claimants time to respond to changes, while still keeping takeover times reasonable and allowing recent or contentious claims to change state quickly.
 
@@ -913,7 +914,7 @@ After a [[stream]] is encoded, it must be _announced_ to the network. Announcing
 
 #### Distributed Hash Table
 
-_Distributed hash tables_ (or DHTs) are an effective way to build a peer-to-peer content network. Our DHT implementation follows the [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
+_Distributed hash tables_ (or DHTs) are an effective way to build a peer-to-peer content network. LBRY's DHT implementation follows the [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
 specification fairly closely, with some modifications.
 
 A distributed hash table is a key-value store that is spread over multiple nodes in a network. Nodes may join or leave the network anytime, with no central coordination necessary. Nodes communicate with each other using a peer-to-peer protocol to advertise what data they have and what they are best positioned to store.
