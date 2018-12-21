@@ -204,7 +204,7 @@ The sum of the amount of a claim stake and all of its accepted supports is calle
 
 ##### Abandoned
 
-An _abandoned_ stake is one that was withdrawn by its owner. Spending a transaction that contains a stake will cause that claim to become abandoned. Abandoned claim stakes are removed from the claimtrie.
+An _abandoned_ stake is one that was withdrawn by its owner. Spending a transaction that contains a stake will cause that stake to become abandoned. Abandoned stakes are removed from the claimtrie.
 
 While data related to abandoned stakes still resides in the blockchain, it is considered invalid and should not be used to resolve URLs or fetch the associated content. Active claim stakes signed by abandoned identities are also considered invalid.
 
@@ -993,6 +993,6 @@ URL                          | Claim ID
 ---
 
 
-_Edit this on Github at https://github.com/lbryio/spec_
+_[Edit this on Github](https://github.com/lbryio/spec)_
 
 
