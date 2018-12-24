@@ -196,7 +196,7 @@ Stakes can have one or more of the following statuses at a given block.
 
 ##### Accepted
 
-An _accepted_ stake is one that has been been entered into the blockchain. This happens when the transaction containing it is included in a block.
+An _accepted_ stake is one that has been entered into the blockchain. This happens when the transaction containing it is included in a block.
 
 Accepted stakes do not affect the intra-leaf claim order until they are [active](#active).
 
@@ -500,7 +500,7 @@ To prove 1, it is sufficient to provide the transaction ID and input index of th
 Verifying a proof of payment is done as follows:
 
 1. Look up the fee amount and fee address of the claim that the proof is for.
-2. Use the transaction ID from the proof to find the transaction. verify that it spends the correct amount to the correct address.
+2. Use the transaction ID from the proof to find the transaction. Verify that it spends the correct amount to the correct address.
 3. Use the public key from the transaction output to verify the signed nonce.
 
 The protocol is likely to be extended in the future to enable stricter proofs of payment.
@@ -581,7 +581,7 @@ A unique identifier that is used to locate and fetch the content from the data n
 
 #### Fee
 
-Information on how to pay for the content. It includes the address that will receive the payment (the _fee address_), the the amount to be paid, and the currency.
+Information on how to pay for the content. It includes the address that will receive the payment (the _fee address_), the amount to be paid, and the currency.
 
 Example fee:
 
