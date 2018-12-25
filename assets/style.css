@@ -1,0 +1,211 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-size: 18px;
+    line-height: 1.5;
+    color: #333;
+    background: #ffffff;
+    font-family: Constantia, "Lucida Bright", Lucidabright, "Lucida Serif", Lucida, "DejaVu Serif," "Bitstream Vera Serif", "Liberation Serif", Georgia, serif;
+    /* font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif; */
+}
+
+main {
+    margin: 40px auto;
+    max-width: 1000px;
+    padding: 0 10px;
+}
+
+.toc {
+    height: 100%;
+    width: 300px;
+    position: absolute;
+    right: 0;
+    padding-left: 20px;
+    padding-top: 20px;
+    background-color: rgba(255,255,255,0.95);
+    transition: all 300ms ease-in-out;
+    transform: translateX(100%);
+}
+.toc.open {
+    box-shadow: 0 0 5px #c8c8c8;
+    transform: translateX(0);
+}
+@media (min-width: 1000px) {
+    #content {
+        margin-right: 300px;
+    }
+    .toc {
+        right: calc((100% - 1000px) / 2);
+        transform: translateX(0);
+    }
+    .toc-menu {
+        display: none;
+    }
+}
+.toc .is-active-link::before {
+    background-color: #0074D9;
+}
+.is-position-fixed {
+    position: fixed !important;
+    top: 0;
+}
+.toc-menu {
+    position: fixed;
+    top: 0;
+    right: 40px; /* to leave room for hypothes.is bar */
+    z-index: 2;
+    margin: .25rem;
+    padding: .25rem;
+    background-color: #f4f4f4;
+    line-height: 1;
+    border-radius: .125rem;
+    border-color: #999;
+    border-style: solid;
+    border-width: 1px;
+}
+h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
+    display: block;
+    content: " ";
+    height: 40px;
+    margin-top: -40px;
+    visibility: hidden;
+}
+
+p {
+    margin-bottom: 1.4rem;
+    overflow-x: auto;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+}
+h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
+    /* fix weird outline when clicking a TOC link */
+    outline: 0;
+}
+
+h1 {
+    margin-top: 0;
+    font-size: 4rem;
+}
+
+h2 {
+    font-size: 3rem;
+}
+
+h3 {
+    font-size: 2.25rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+h5 {
+    font-size: 1.25rem;
+    font-variant: small-caps;
+    margin-bottom: 1rem;
+}
+
+h6 {
+    font-size: 1.125rem;
+    font-variant: small-caps;
+    margin-bottom: 1rem;
+}
+
+small {
+    font-size: 0.8rem;
+}
+
+a {
+    color: #0074D9;
+}
+
+a.external-link::after {
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" color="#0074D9" width="13px" height="13px" class="ext-link-icon"><path fill="currentColor" d="M576 24v127.984c0 21.461-25.96 31.98-40.971 16.971l-35.707-35.709-243.523 243.523c-9.373 9.373-24.568 9.373-33.941 0l-22.627-22.627c-9.373-9.373-9.373-24.569 0-33.941L442.756 76.676l-35.703-35.705C391.982 25.9 402.656 0 424.024 0H552c13.255 0 24 10.745 24 24zM407.029 270.794l-16 16A23.999 23.999 0 0 0 384 303.765V448H64V128h264a24.003 24.003 0 0 0 16.97-7.029l16-16C376.089 89.851 365.381 64 344 64H48C21.49 64 0 85.49 0 112v352c0 26.51 21.49 48 48 48h352c26.51 0 48-21.49 48-48V287.764c0-21.382-25.852-32.09-40.971-16.97z" class=""></path></svg>');
+    padding-left: 3px;
+}
+
+code {
+    /* font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace; */
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9rem;
+    color: #B10DC9;
+}
+
+pre {
+    display: block;
+    color: #212529;
+    overflow: auto;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.notice {
+    position: relative;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+.notice p:first-child {
+    margin-top: 0;
+}
+
+.notice p:last-child {
+    margin-bottom: 0;
+}
+
+ol ol {
+    list-style-type: lower-alpha;
+}
+
+#toc ul {
+    list-style-type: none;
+}
+
+#toc>ul {
+    padding-left: 0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+table tr {
+    border-top: 1px solid #dee2e6;
+}
+table thead tr {
+    border-bottom: 2px solid #dee2e6;
+}
+table tbody tr:nth-child(odd) {
+    background-color: rgba(0,0,0,.05);
+}
+
+figure {
+    margin-left: 0;
+    margin-right: 0;
+}
+figcaption {
+    color: #888;
+    font-size: 90%;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+dl {
+    margin-left: 10px;
+}
+dt {
+    font-style: italic;
+}
+dd + dt {
+    margin-top: 10px;
+}
