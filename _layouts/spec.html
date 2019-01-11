@@ -12,7 +12,7 @@
 <body>
 
   <main>
-    <h1>LBRY: A Decentralized Digital Content Marketplace</h1>  
+    <h1>LBRY: A Decentralized Digital Content Marketplace</h1>
     <div class="toc-menu">Menu</div>
     <nav class="toc"></nav>
     <div id="content">
@@ -65,6 +65,7 @@
         headingSelector: 'h2, h3, h4, h5, h6',
         collapseDepth: 3,
         positionFixedSelector: ".toc",
+        onClick: (e) => { history.replaceState(null,null,e.target.href); }, // put anchor into url on toc link click
       };
 
       tocbot.init(options);
