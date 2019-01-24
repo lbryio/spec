@@ -17,7 +17,7 @@ To view the content locally, you must have [Ruby](https://www.ruby-lang.org/en/d
 To edit the spec:
 
 - run `bundle exec jekyll serve --watch`
-- make changes in `v1.md`
+- make changes to the markdown
 - refresh `localhost:4000` in your browser to see the effect of your changes.
 
 Contributions to this project are welcome, encouraged, and compensated. For more details, [click here](https://lbry.io/faq/contributing).

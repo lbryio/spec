@@ -144,7 +144,7 @@ There are three claim operations: _create_, _update_, and _abandon_.
   <dt>create</dt>
   <dd>Makes a new claim.</dd>
   <dt>update</dt>
-  <dd>Changes the value or amount of an existing claim, without changing the claim ID.</dd>
+  <dd>Changes the value, amount, or channel of an existing claim. Does not change the claim's ID.</dd>
   <dt>abandon</dt>
   <dd>Withdraws a claim, freeing the associated credits to be used for other purposes.</dd>
 </dl>
