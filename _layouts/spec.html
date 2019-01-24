@@ -65,7 +65,12 @@
         headingSelector: 'h2, h3, h4, h5, h6',
         collapseDepth: 3,
         positionFixedSelector: ".toc",
-        onClick: (e) => { history.replaceState(null,null,e.target.href); }, // put anchor into url on toc link click
+        onClick: (e) => {  // put anchor into url on toc link click, and send to parent window if this is iframed
+          history.replaceState(null,null,e.target.href);
+          if (window.parent) {
+            window.parent.postMessage(e.target.href.substr(e.target.href.lastIndexOf('#')+1), "*");
+          }
+        },
       };
 
       tocbot.init(options);
