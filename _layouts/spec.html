@@ -79,6 +79,12 @@
         toggleClass(document.querySelector('.toc'), "open");
       });
 
+      document.querySelectorAll('pre').forEach((e) => {
+        if (e.scrollWidth > e.clientWidth /* && e.clientHeight < 30*/) {
+          toggleClass(e, "has-scroll");
+        }
+      });
+
 
       // need this part to fix toc offset height if content above toc changes height
       var resizeTimer;

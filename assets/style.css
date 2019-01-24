@@ -211,3 +211,10 @@ dt {
 dd + dt {
     margin-top: 10px;
 }
+
+/* add padding to compensate for overlay scrollbars on mac.*/
+/* overlay scrollbars on one-line-high code blocks hide the code */
+/* ideally id only target mac but idk how */
+.has-scroll {
+  padding-bottom: 13px;
+}
