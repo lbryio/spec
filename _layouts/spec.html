@@ -13,8 +13,11 @@
 
   <main>
     <h1>LBRY: A Decentralized Digital Content Marketplace</h1>
-    <div class="toc-menu">Menu</div>
-    <nav class="toc"></nav>
+    <a href="javascript:;" class="pdf-hide" onclick="this.setAttribute('href', 'https://v2.convertapi.com/convert/web/to/pdf?secret=9XShsyNjNpjmaIz2&hideelements=.pdf-hide&download=attachment&url=' + encodeURI(window.location))">
+      Save as PDF
+    </a>
+    <div class="toc-menu pdf-hide">Menu</div>
+    <nav class="toc pdf-hide"></nav>
     <div id="content">
         {{ content }}
     </div>
@@ -50,7 +53,7 @@
       // Handle external links
       const links = document.links;
       for (var i = 0; i < links.length; i++) {
-        if (links[i].hostname != window.location.hostname) {
+        if (links[i].hostname != window.location.hostname && !links[i].href.startsWith("javascript:")) {
           links[i].target = '_blank';
           links[i].className += ' external-link';
           links[i].rel = "noopener";
