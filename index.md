@@ -993,6 +993,6 @@ URL                          | Claim ID
 ---
 
 
-_[Edit this on Github](https://github.com/lbryio/spec)_
+_[Edit this on Github](https://github.com/lbryio/spec/blob/master/index.md)_
 
 
