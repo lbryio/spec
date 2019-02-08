@@ -66,9 +66,9 @@ This document defines the LBRY protocol, its components, and how they fit togeth
 ## Blockchain
 
 
-The LBRY blockchain is a public, proof-of-work blockchain. The design is based on the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin, and instead focuses on the differences.
+The LBRY blockchain is a public, proof-of-work blockchain. The design is based on the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin and instead focuses on the differences, primarily the claim operations and claimtrie.
 
-The blockchain serves three key purposes: 
+Our blockchain serves three key purposes:
 
 1. An index of the content available on the network 
 2. A payment system and record of purchases for priced content
