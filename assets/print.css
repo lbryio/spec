@@ -1,0 +1,73 @@
+@page {
+  size: letter portrait;
+  margin: 1.5cm 1.5cm 2.5cm;
+}
+
+html {
+  -webkit-print-color-adjust: exact;
+  font-size: 8px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #fff !important;
+  color: #000;
+}
+
+#content {
+  margin-right: 0;
+}
+
+.pdf-hide {
+  display: none;
+}
+
+h2:first-of-type {
+  margin-top: 15rem;
+}
+
+a, code {
+  color: black;
+}
+
+pre {
+  border: 0.25pt solid #333;
+  padding: 0.75em;
+  font-size: 0.9em;
+}
+
+
+p, pre {
+  orphans: 3;
+  widows: 3;
+}
+
+
+a[href^="http"]:not([href^="javascript:"]):not([href^="#"]):after {
+  /*content: ' → ' attr(href) '';*/
+  content: ' <' attr(href) '>';
+  font-size: 0.9em;
+  word-break: break-all;
+  word-wrap: break-word;
+}
+
+
+a, blockquote, p, table, dl {
+  break-inside: avoid;
+}
+ul, ol, dl, pre, div.highlighter-rouge {
+  break-before: avoid;
+}
+img, h1, h2, h3, h4, h5, h6 {
+  break-inside: avoid;
+  break-after: avoid !important;
+  page-break-after: avoid !important;
+}
+h2:not(:first-of-type) {
+  break-before: page;
+}
+
+hr {
+  margin-top: 5rem;
+}

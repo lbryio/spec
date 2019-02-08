@@ -923,7 +923,7 @@ URL                          | Claim ID
 `lbry://@Arthur:1`           |  b7bab5
 
 
-<pre style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
+<pre class="pdf-hide" style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
                                                                                            
                                              ++                                            
                                            :+++++                                          
@@ -994,5 +994,3 @@ URL                          | Claim ID
 
 
 _[Edit this on Github](https://github.com/lbryio/spec/blob/master/index.md)_
-
-
