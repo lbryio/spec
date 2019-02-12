@@ -26,7 +26,11 @@ This document assumes that the reader is familiar with distributed hash tables (
 
 ### Overview
 
-This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and specifications for data structure, encoding, and retrieval. 
+This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and specifications for data structure, encoding, and retrieval.
+
+### Status
+
+LBRY is not a theoretical system design, but one that has been in live usage since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the LBRY protocol. On a monthly basis, tens of thousands of users will access hundreds of thousands of pieces of content, downloading and uploading terrabytes of data. Graphical, end-user consumer browsers and wallets exist on all major operating systems and are available on LBRY's consumer portal at [lbry.io/get](https://lbry.io/get).
 
 ### Conventions and Terminology
 
