@@ -2,16 +2,6 @@
 layout: spec
 ---
 
-<!-- 
-fixme final polish checklist:
-
-- go over the paper to make sure we use active voice in most places (though passive is better sometimes)
-- check css across browsers/mobile
-- make sure something is published at the lbry URLs that we reference in this paper
-
--->
-
-
 ## Introduction
 
 LBRY is a protocol for accessing and publishing digital content in a global, decentralized marketplace. LBRY uses a public blockchain to provide a single shared index of published content, as well as content discovery and payment.
@@ -30,7 +20,7 @@ This document defines the LBRY protocol, its components, and how they fit togeth
 
 ### Status
 
-LBRY is not a theoretical system design, but one that has been in live usage since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the LBRY protocol. On a monthly basis, tens of thousands of users will access hundreds of thousands of pieces of content, downloading and uploading terrabytes of data. Graphical, end-user consumer browsers and wallets exist on all major operating systems and are available on LBRY's consumer portal at [lbry.io/get](https://lbry.io/get).
+LBRY has been in public use since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terrabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded on LBRY's user-facing portal at [lbry.io/get](https://lbry.io/get).
 
 ### Conventions and Terminology
 
