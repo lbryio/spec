@@ -825,7 +825,7 @@ Downloading a blob from a peer is governed by the _Blob Exchange Protocol_. It i
 
 ##### PriceCheck
 
-PriceCheck gets the price that the server is charging for data transfer. It returns the prices in deweys per KB.
+PriceCheck gets the price that the server is charging for data transfer. It returns the price in LBC per KB.
 
 ##### DownloadCheck
 
