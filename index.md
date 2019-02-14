@@ -18,6 +18,22 @@ This document assumes that the reader is familiar with distributed hash tables (
 
 This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and specifications for data structure, encoding, and retrieval.
 
+### Justification
+
+LBRY was created to address problems with existing decentralized data networks like BitTorrent and the problems of censorship and abuse by centralized data networks like YouTube.
+
+BitTorrent suffers from three problems that LBRY addresses:
+
+1. **Discovery**. BitTorrent works well once one possesses a hash to enter the network, but there is way to discover hashes without using a centralized system. Additionally, no centralized system can provide a comprehensive list of what is available on the network.
+1. **Economics**. BitTorrent largely works because people are nice (or fail to understand what their clients are doing). While it's wonderful that people are willing to contribute to BitTorrent for free and encourage LBRY users to do the same,  incentives can help ensure that old content does not disappear as well as improve performance and robustness.
+1. **Infringement**. The majority of content on BitTorrent infringes on copyright. By providing a way to monetize content and publisher identities rather than anonymous publishing, LBRY can avoid the same fate. 
+
+Centralized networks like YouTube, Amazon, or cable networks suffer from problems as well:
+
+1. **Rent-seeking**. Creators regularly lose 30-55+% of profits to middleman. Distributing bits at high reliability and low latency is hard, but it's not 50%-of-profits-hard. LBRY gives creators 100% of the price they choose.
+1. **Trust**. A single, centralized provider can change the rules of the game at any time and without warning, as YouTube and Amazon have shown repeatedly. By building an open-source standard that can only be modified with permission of the community, creators and developers can build on top of granite, not quicksand.
+1. **Censorship**. No single corporation or state government can be trusted to protect freedom of speech. Every major tech company in the United States has catered to the whims of repressive regimes for profits. The vast majority of people in the world do not live in a place that respects freedom of communinication. LBRY represents a major advance for unfettered information exchange between humans.
+
 ### Status
 
 LBRY has been in public use since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terrabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded on LBRY's user-facing portal at [lbry.io/get](https://lbry.io/get).
@@ -58,7 +74,6 @@ LBRY has been in public use since June 2016. As of February 2019, approximately 
 
 
 ## Blockchain
-
 
 The LBRY blockchain is a public, proof-of-work blockchain. The design is based on the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin and instead focuses on the differences, primarily the claim operations and claimtrie.
 
