@@ -916,6 +916,15 @@ URL                          | Claim ID
 `lbry://banana$3`            | _not found_
 `lbry://@Arthur:1`           |  b7bab5
 
+### Additional Resources
+
+- [lbry.tech](https://lbry.tech) is LBRY's website designed specifically for anyone capable of understanding this document.
+- [github.com/lbryio](https://github.com/lbryio) contains MIT-licensed source code and implementation details for everything explained by this document.
+- [lbry.io](https://lbry.io) is LBRY's consumer, creator, and end-user website.
+- [lbry.io/get](https://lbry.io/get) provides downloads for LBRY's end-user applications. They're significantly less stuffy than this spec.
+- [lbry.tech/resources](https://lbry.tech/resources) provides API specifications, additional resources, and other items of technical interest.
+- [lbry.tech/contribute](https://lbry.tech/contribute) explains how you can get involved. If you're still reading at this point then you're probably interested, but if you're on the fence then [please watch this video](http://spee.ch/doit.mp4).
+- [lbry.tech/community](https://lbry.tech/community) lists how you can interact with us, other users, and keep up-to-date.
 
 <pre class="pdf-hide" style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
                                                                                            
