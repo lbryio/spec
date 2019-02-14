@@ -25,7 +25,7 @@ LBRY was created to address problems with existing decentralized data networks l
 BitTorrent suffers from three problems that LBRY addresses:
 
 1. **Discovery**. BitTorrent works well once one possesses a hash to enter the network, but there is way to discover hashes without using a centralized system. Additionally, no centralized system can provide a comprehensive list of what is available on the network.
-1. **Economics**. BitTorrent largely works because people are nice (or fail to understand what their clients are doing). While it's wonderful that people are willing to contribute to BitTorrent for free and encourage LBRY users to do the same,  incentives can help ensure that old content does not disappear as well as improve performance and robustness.
+1. **Economics**. BitTorrent largely works because people are nice (or fail to understand what their clients are doing). While it's wonderful that people contribute to BitTorrent for free and we encourage LBRY users to do the same, incentives can help ensure that old content does not disappear as well as improve performance and robustness.
 1. **Infringement**. The majority of content on BitTorrent infringes on copyright. By providing a way to monetize content and publisher identities rather than anonymous publishing, LBRY can avoid the same fate. 
 
 Centralized networks like YouTube, Amazon, or cable networks suffer from problems as well:
