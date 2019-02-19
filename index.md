@@ -996,4 +996,4 @@ URL                          | Claim ID
 ---
 
 
-_[Edit this on Github](https://github.com/lbryio/spec/blob/master/index.md)_
+_[Improve this page on Github](https://github.com/lbryio/spec/blob/master/index.md)_
