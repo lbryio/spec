@@ -307,18 +307,18 @@ lbry://meet-lbry#7a
 lbry://@lbry#3f/meet-lbry
 ```
 
-##### Claim Sequence
+##### Sequence
 
-The _n_th accepted claim for this name. _n_ must be a positive number. This can be used to resolve claims in the order in which they were made, rather than by the amount of credits backing a claim.
+The _n_th accepted claim for this name. _n_ must be a positive number. This can be used to reference claims in the order in which they were made, rather than by the amount of credits backing a claim.
 
 ```
 lbry://meet-lbry:1
 lbry://@lbry:1/meet-lbry
 ```
 
-##### Bid Position
+##### Amount Order
 
-The _n_th claim for this name, ordered by total amount (highest first). _n_ must be a positive number. This is useful for resolving non-winning bids in bid order.
+The _n_th claim for this name, ordered by total amount (highest first). _n_ must be a positive number. This is useful for resolving non-controlling claims that may become controlling.
 
 ```
 lbry://meet-lbry$2
@@ -353,10 +353,10 @@ ChannelClaimNameAndModifier ::= ChannelClaimName Modifier?
 StreamClaimName ::= NameChar+
 ChannelClaimName ::= '@' NameChar+
 
-Modifier ::= ClaimID | ClaimSequence | BidPosition
+Modifier ::= ClaimID | Sequence | AmountOrder
 ClaimID ::= '#' Hex+
-ClaimSequence ::= ':' PositiveNumber
-BidPosition ::= '$' PositiveNumber
+Sequence ::= ':' PositiveNumber
+AmountOrder ::= '$' PositiveNumber
 
 Query ::= '?' QueryParameterList
 QueryParameterList ::= QueryParameter ( '&' QueryParameterList )*
@@ -387,13 +387,13 @@ Return the controlling claim for the name. Stream claims and channel claims are 
 
 Get all claims for the claim name whose IDs start with the given `ClaimID`. Sort the claims in ascending order by block height and position within the block. Return the first claim.
 
-##### ClaimSequence
+##### Sequence
 
-Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the _n_th claim, where _n_ is the given `ClaimSequence` value.
+Get all claims for the claim name. Sort the claims in ascending order by block height and position within the block. Return the _n_th claim, where _n_ is the given `Sequence` value.
 
-##### BidPosition
+##### AmountOrder
 
-Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the _n_th claim, where _n_ is the given `BidSequence` value.
+Get all claims for the claim name. Sort the claims in descending order by total effective amount. Return the _n_th claim, where _n_ is the given `AmountOrder` value.
 
 ##### ChannelClaimName and StreamClaimName
 
