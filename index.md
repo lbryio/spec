@@ -917,6 +917,15 @@ URL                          | Claim ID
 `lbry://@Arthur:1`           |  b7bab5
 
 
+
+### Additional Resources
+
+- [lbry.tech](https://lbry.tech) is designed specifically for a technical audience. There you will find detailed explanations and examples, ways to interact with the LBRY community, and guidance for anyone who wants to get more involved.
+- [github.com/lbryio](https://github.com/lbryio) contains MIT-licensed source code and implementation details for the protocol and related software.
+- [lbry.io](https://lbry.io) is an application built on top of LBRY. It's one example of the type of end-to-end experience that is possible to create using this technology.
+
+
+
 <pre class="pdf-hide" style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
                                                                                            
                                              ++                                            
