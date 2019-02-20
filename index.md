@@ -8,19 +8,23 @@ LBRY is a protocol for accessing and publishing digital content in a global, dec
 
 Clients can use LBRY to publish, host, find, download, and pay for content — books, movies, music, or anything else that can be represented as a stream of bits. The protocol is permissionless and censorship-resistant, which means that participation is open to everyone and no one can unilaterally block or remove content.
 
-LBRY is a step forward from previous generations of decentralized networks, which provide no discovery or payment mechanisms. For creators, LBRY is unparalleled in trust and earning potential. For consumers, LBRY is the first system that provides end-to-end digital content consumption that does not require trusting a third-party. For the world, LBRY is designed to engender the most complete catalog of information to ever exist, and to be controlled by the only party that could be trusted with such monumental responsibility: no one.
+Before LBRY, publishers had to choose between a centralized host such as Amazon or Youtube, or a protocol like Bittorrent. Centralized platforms suffer from several problems because their incentives are not aligned with the incentives of their users. Hosts engage in rent-seeking behavior, often extracting 30-55% of creator profits. They enforce opaque and arbitrary rules on creators, and change those rules without warning or community input. They choose to censor content at the behest of repressive regimes around the world, in exchange for access to more users and higher profits for themselves.
 
-### Assumptions
+Bittorrent does not have these faults, but it has problems of its own. It is only useful if one already knows the infohash of the content they seek, and there is no way to discover these hashes within the protocol. Even using an external search engine does not provide a comprehensive list of what is available on the network. The are no incentives for users to seed content, and Bittorrent largely works because users earn status through private communities, are nice, or simply fail to understand what their client is doing. Finally, a lot of content on BitTorrent infringes on copyright, which taints the protocol's public perception and overshadows the many positives it has.
 
-This document assumes that the reader is familiar with distributed hash tables (DHTs), the BitTorrent protocol, Bitcoin, and blockchain technology in general. It does not attempt to document these technologies or explain how they work. The [Bitcoin developer reference](https://bitcoin.org/en/developer-reference) and [BitTorrent protocol specification](http://www.bittorrent.org/beps/bep_0003.html) are recommended for anyone wishing to understand the technical details.
+LBRY offers a significant improvement over both options. It uses a blockchain to replace the good parts of a centralized host (a single place to store data, find interesting content, build a brand, and get rewarded for contributing), while removing the downsides (opaque and arbitrary rules, rent extraction, censorship). It is public and no one can be censored or blocked from using it. Its rules are clearly defined and cannot be changed without community consensus. The blockchain records everything that is published to LBRY, so interesting content is easy to find and infringing content is difficult to hide. Accessing the blockchain data is free, the costs for downloading content are transparent, and publishers earn 100% of the price they set.
+
+### Status
+
+LBRY has been in public use since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded on at [lbry.io/get](https://lbry.io/get).
 
 ### Overview
 
 This document defines the LBRY protocol, its components, and how they fit together. LBRY consists of several discrete components that are used together in order to provide the end-to-end capabilities of the protocol. There are two distributed data stores (blockchain and DHT), a peer-to-peer protocol for exchanging data, and specifications for data structure, encoding, and retrieval.
 
-### Status
+### Assumptions
 
-LBRY has been in public use since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terrabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded on LBRY's user-facing portal at [lbry.io/get](https://lbry.io/get).
+This document assumes that the reader is familiar with distributed hash tables (DHTs), the BitTorrent protocol, Bitcoin, and blockchain technology in general. It does not attempt to document these technologies or explain how they work. The [Bitcoin developer reference](https://bitcoin.org/en/developer-reference) and [BitTorrent protocol specification](http://www.bittorrent.org/beps/bep_0003.html) are recommended for anyone wishing to understand the technical details.
 
 ### Conventions and Terminology
 
