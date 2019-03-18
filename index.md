@@ -16,7 +16,7 @@ LBRY offers a significant improvement over both options. It uses a blockchain to
 
 ### Status
 
-LBRY has been in public use since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded on at [lbry.io/get](https://lbry.io/get).
+LBRY has been in public use since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded on at [lbry.com/get](https://lbry.com/get).
 
 ### Overview
 
@@ -926,7 +926,7 @@ URL                          | Claim ID
 
 - [lbry.tech](https://lbry.tech) is designed specifically for a technical audience. There you will find detailed explanations and examples, ways to interact with the LBRY community, and guidance for anyone who wants to get more involved.
 - [github.com/lbryio](https://github.com/lbryio) contains MIT-licensed source code and implementation details for the protocol and related software.
-- [lbry.io](https://lbry.io) is an application built on top of LBRY. It's one example of the type of end-to-end experience that is possible to create using this technology.
+- [lbry.com](https://lbry.com) is an application built on top of LBRY. It's one example of the type of end-to-end experience that is possible to create using this technology.
 
 
 

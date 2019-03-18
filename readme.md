@@ -7,7 +7,7 @@ This repo contains the official protocol specification for LBRY. It is built wit
 
 ## Usage
 
-The spec is available at https://spec.lbry.io. 
+The spec is available at https://spec.lbry.com. 
 
 To view the content locally, you must have [Ruby](https://www.ruby-lang.org/en/documentation/installation/) and [bundler](https://bundler.io#getting-started) installed. Then run `bundle install` and `bundle exec jekyll serve`, and open `localhost:4000` in your browser.
 
@@ -20,7 +20,7 @@ To edit the spec:
 - make changes to the markdown
 - refresh `localhost:4000` in your browser to see the effect of your changes.
 
-Contributions to this project are welcome, encouraged, and compensated. For more details, [click here](https://lbry.io/faq/contributing).
+Contributions to this project are welcome, encouraged, and compensated. For more details, [click here](https://lbry.com/faq/contributing).
 
 
 ## License
@@ -30,9 +30,9 @@ This project is MIT licensed. For the full license, see [LICENSE](LICENSE).
 
 ## Security
 
-We take security seriously. Please contact security@lbry.io regarding any security issues. [Our GPG key is here](https://lbry.io/faq/gpg-key) if you need it.
+We take security seriously. Please contact security@lbry.com regarding any security issues. [Our GPG key is here](https://lbry.com/faq/gpg-key) if you need it.
 
 
 ## Contact
 
-The primary contact for this project is [@lyoshenka](https://github.com/lyoshenka) (grin@lbry.io).
+The primary contact for this project is [@lyoshenka](https://github.com/lyoshenka) (grin@lbry.com).
