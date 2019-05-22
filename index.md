@@ -263,6 +263,10 @@ See the [example](#claim-activation-example) in the appendix for more informatio
 
 Names in the claimtrie are normalized when performing any comparisons. This is necessary to avoid confusion due to Unicode equivalence or casing. When names are being compared, they are first converted using [Unicode Normalization Form D](http://unicode.org/reports/tr15/#Norm_Forms) (NFD), then lowercased using the en_US locale. This means names are effectively case-insensitive. Since claims competing for the same name are stored in the same node in the claimtrie, names are also normalized to determine the claimtrie path to the node.
 
+#### Expiration
+
+In an earlier version of the protocol, stakes would expire (i.e. automatically become abandoned) 262974 blocks after they were accepted. A hard fork was deployed that effectively disables expiration. Any stakes that expired before the fork took effect are treated as if they were abandoned. For details see [this pull request](https://github.com/lbryio/lbrycrd/pull/137).
+
 ### URLs
 
 URLs are memorable references to claims. All URLs:
