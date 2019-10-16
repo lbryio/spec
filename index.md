@@ -89,14 +89,7 @@ All stakes have these properties:
 
 #### Claims
 
-A _claim_ is a stake that stores metadata. There are two types of claims:
-
-<dl>
-  <dt>stream claim</dt>
-  <dd>Declares the availability, access method, and publisher of a stream.</dd>
-  <dt>channel claim</dt>
-  <dd>Creates a pseudonym that can be declared as the publisher of stream claims.</dd>
-</dl>
+A _claim_ is a stake that stores metadata. There are two types of claims. _Stream claims_ declare the availability, access method, and publisher of a stream. _Channel claims_ create a pseudonym that can be used as the publisher of stream claims.
 
 ##### Claim Properties
 

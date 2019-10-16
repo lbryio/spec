@@ -106,16 +106,18 @@ h1 {
 }
 h2 {
     font-size: 3rem;
+    border-bottom: solid 1px black;
+    padding-bottom: 5px;
 }
 h3 {
-    font-size: 2.25rem;
+    font-size: 2.5rem;
 }
 h4 {
     font-size: 2rem;
     margin-bottom: 1.5rem;
 }
 h5 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     margin-bottom: 1rem;
 }
 
@@ -183,8 +185,17 @@ table {
 table tr {
     border-bottom: 1px solid #dee2e6;
 }
+td {
+  border-left: solid 1px #dee2e6;
+  border-right: solid 1px #dee2e6;
+}
 th, td {
     padding-left: 5px;
+}
+th {
+  font-size: 1.5rem;
+  font-weight: normal;
+  text-transform: uppercase;
 }
 table thead tr {
     border-bottom: 2px solid #dee2e6;
