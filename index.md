@@ -64,7 +64,7 @@ This document assumes that the reader is familiar with distributed hash tables (
 ## Blockchain
 
 
-The LBRY blockchain is a public, proof-of-work blockchain. The design is based on the [Bitcoin](https://bitcoin.org/bitcoin.pdf) blockchain, with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin and instead focuses on the differences, primarily the claim operations and claimtrie.
+The LBRY blockchain is a public proof-of-work blockchain. The design is based on [Bitcoin](https://bitcoin.org/bitcoin.pdf), with substantial modifications. This document does not cover or specify any aspects of LBRY that are identical to Bitcoin and instead focuses on the differences, primarily the claim operations and claimtrie.
 
 Our blockchain serves three key purposes:
 
@@ -628,15 +628,15 @@ The purpose of channels is to allow content to be clustered under a single pseud
 
 #### Signing
 
-A claim is considered part of a channel when its metadata is signed by the channel's private key. Here's the structure of a signed metadata value:
+A claim is considered part of a channel when the metadata in it's value is signed by the channel's private key. Here's the structure of a signed value:
 
 
-field          | size     | description
-:---           | :---     | :---
-Version        | 1 byte   | Format version. See [Format Versions](#format-versions).
-Channel ID     | 20 bytes | Claim ID of the channel claim that contains the matching public key. _Skip this field if there is no signature._
-Signature      | 64 bytes | The signature. _Skip this field if there is no signature._
-Payload        | variable | The protobuf-encoded metadata.
+field            | size     | description
+:---             | :---     | :---
+Version          | 1 byte   | Format version. See [Format Versions](#format-versions).
+Channel Claim ID | 20 bytes | Claim ID of the channel claim that contains the matching public key. _Skip this field if there is no signature._
+Signature        | 64 bytes | The signature. _Skip this field if there is no signature._
+Metadata         | variable | The protobuf-encoded metadata.
 
 
 ##### Format Versions
@@ -651,9 +651,13 @@ format     | description
 ##### Signing Process
 
 1. Encode the metadata using protobuf.
-2. Hash the encoded claim using SHA-256.
-3. Sign the hash using the private key associated with the channel.
-4. Append all the values (the version, the claim ID of the corresponding channel claim, the signature, and the protobuf-encoded metadata).
+1. Create the payload to be signed by concatenating the following:
+  - The outpoint hash the first transaction input of this claim's transaction. This is in the payload to prevent replay attacks.
+  - The claim ID of the channel. See <a href="#stake-identifier-generation">this</a> for more on outpoints and claim IDs.
+  - The encoded metadata
+1. Hash the payload using SHA-256.
+1. Sign the payload hash using the private key associated with the channel.
+1. Concatenate the version, the channel claim ID, the payload signature, and the protobuf-encoded metadata. This is the claim value.
 
 ##### Signature Validation
 
@@ -661,7 +665,8 @@ format     | description
 1. Check the version field. If it indicates that there is no signature, then no validation is necessary.
 1. Split out the channel ID and signature from the rest of the data.
 1. Look up the channel claim to ensure it exists and contains a public key.
-1. Use the public key to verify the signature.
+1. Create the payload hash as described <a href="#signing-process">above</a>.
+1. Use the public key to verify that the payload hash signature is valid.
 
 
 ### Validation {#metadata-validation}
