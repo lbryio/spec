@@ -303,18 +303,20 @@ lbry://@lbry/meet-lbry
 A claim for this name with this claim ID. Partial prefix matches are allowed (see [URL Resolution](#url-resolution)).
 
 ```
-lbry://meet-lbry#7a0aa95c5023c21c098
-lbry://meet-lbry#7a
-lbry://@lbry#3f/meet-lbry
+lbry://meet-lbry:7a0aa95c5023c21c098
+lbry://meet-lbry:7a
+lbry://@lbry:3f/meet-lbry
 ```
+
+*Note: in a previous version of this spec, the `#` character was used to signify the claim ID portion of the url. This charater is now deprecated and will stop being supported in the future.*
 
 ##### Sequence
 
 The _n_th accepted claim for this name. _n_ must be a positive number. This can be used to reference claims in the order in which they were made, rather than by the amount of credits backing a claim.
 
 ```
-lbry://meet-lbry:1
-lbry://@lbry:1/meet-lbry
+lbry://meet-lbry*1
+lbry://@lbry*1/meet-lbry
 ```
 
 ##### Amount Order
@@ -355,8 +357,8 @@ StreamClaimName ::= NameChar+
 ChannelClaimName ::= '@' NameChar+
 
 Modifier ::= ClaimID | Sequence | AmountOrder
-ClaimID ::= '#' Hex+
-Sequence ::= ':' PositiveNumber
+ClaimID ::= ':' Hex+
+Sequence ::= '*' PositiveNumber
 AmountOrder ::= '$' PositiveNumber
 
 Query ::= '?' QueryParameterList
@@ -372,7 +374,7 @@ PositiveNumber ::= PositiveDigit Digit*
 HexAlpha ::= [abcdef]
 Hex ::= (Digit | HexAlpha)+
 
-NameChar ::= Char - [=&#:$@%?/]  /* any character that is not reserved */
+NameChar ::= Char - [=&#:*$@%?/]  /* any character that is not reserved */
 Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] /* any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. */
 ```
 
@@ -912,15 +914,15 @@ URL                          | Claim ID
 `lbry://banana`              | 714a3f
 `lbry://@Chris`              | 005a7d
 `lbry://@Chris/banana`       | _not found_ (the controlling `@Chris` does not have a `banana`)
-`lbry://@Chris:1/banana`     | fc861c
-`lbry://@Chris:#fc8/banana`  | fc861c
+`lbry://@Chris*1/banana`     | fc861c
+`lbry://@Chris:fc8/banana`   | fc861c
 `lbry://cherry`              | bfaabb
 `lbry://@Arthur/cherry`      | d39aa0
 `lbry://@Bryan`              | 0da517
 `lbry://banana$1`            | 714a3f
 `lbry://banana$2`            | fc861c
 `lbry://banana$3`            | _not found_
-`lbry://@Arthur:1`           |  b7bab5
+`lbry://@Arthur*1`           |  b7bab5
 
 
 
