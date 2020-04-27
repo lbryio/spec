@@ -901,7 +901,7 @@ _--_         | apple       | 690eea    | 10
 @Bryan       | _--_        | 0da517    | 1
 @Chris       | _--_        | b3f7b1    | 1
 @Chris       | banana      | fc861c    | 1
-@Arthur      | apple       | 37ee1     | 20
+@Arthur      | apple       | a37ee1    | 20
 @Bryan       | cherry      | a18bca    | 10
 @Chris       | _--_        | 005a7d    | 100
 @Arthur      | cherry      | d39aa0    | 20
