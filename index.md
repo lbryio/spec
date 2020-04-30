@@ -179,7 +179,7 @@ The _root hash_ is the hash of the root node. It is stored in the header of each
 
 Multiple claims can exist for the same name. They are all stored in the leaf node for that name. See [Claim Ordering](#claim-ordering)
 
-For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/master/src/claimtrie.cpp).
+For more details on the specific claimtrie implementation, see [the source code](https://github.com/lbryio/lbrycrd/blob/v0.17.3.2/src/claimtrie.cpp).
 
 #### Statuses {#stake-statuses}
 
@@ -512,21 +512,21 @@ The target block time was lowered from 10 minutes to 2.5 minutes to facilitate f
 
 #### Difficulty Adjustment
 
-The proof-of-work target is adjusted every block to better adapt to sudden changes in hash rate. The exact adjustment algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/master/src/lbry.cpp).
+The proof-of-work target is adjusted every block to better adapt to sudden changes in hash rate. The exact adjustment algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/v0.17.3.2/src/lbry.cpp).
 
 #### Block Hash Algorithm
 
-LBRY uses a combination of SHA-256, SHA-512, and RIPEMD-160. The exact hashing algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/master/src/hash.cpp#L18).
+LBRY uses a combination of SHA-256, SHA-512, and RIPEMD-160. The exact hashing algorithm can be seen [here](https://github.com/lbryio/lbrycrd/blob/v0.17.3.2/src/hash.cpp#L15).
 
 #### Block Rewards
 
-The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here](https://github.com/lbryio/lbrycrd/blob/master/src/main.cpp#L1594).
+The block reward schedule was adjusted to provide an initial testing period, a quick ramp-up to max block rewards, then a logarithmic decay to 0. The source for the algorithm is [here](https://github.com/lbryio/lbrycrd/blob/v0.17.3.2/src/validation.cpp#L1025).
 
 #### Addresses
 
 The address version byte is set to `0x55` for standard (pay-to-public-key-hash) addresses and `0x7a` for multisig (pay-to-script-hash) addresses. P2PKH addresses start with the letter `b`, and P2SH addresses start with `r`.
 
-All the chain parameters are defined [here](https://github.com/lbryio/lbrycrd/blob/master/src/chainparams.cpp).
+All the chain parameters are defined [here](https://github.com/lbryio/lbrycrd/blob/v0.17.3.2/src/chainparams.cpp).
 
 
 ## Metadata
