@@ -16,7 +16,7 @@ LBRY offers a significant improvement over both options. It uses a blockchain to
 
 ### Status
 
-LBRY has been in public use since June 2016. As of February 2019, approximately 750,000 pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded on at [lbry.com/get](https://lbry.com/get).
+LBRY has been in public use since June 2016. As of May 2020, over 3.3 million pieces of digital content have been published via the protocol. Millions of users access this content each month, downloading and uploading terabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded at [lbry.com/get](https://lbry.com/get).
 
 ### Overview
 
@@ -866,25 +866,25 @@ The current version of the protocol does not support sophisticated price negotia
 
 Here is a step-by-step example to illustrate how competing claims activate and are ordered. All stakes are for the same name.
 
-**Block 13:** Claim A for 10LBC is accepted. It is the first claim, so it immediately becomes active and controlling.
+**Block 13:** Claim A for 10 LBC is accepted. It is the first claim, so it immediately becomes active and controlling.
 <br>State: A(10) is controlling
 
-**Block 1001:** Claim B for 20LBC is accepted. Its activation height is `1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031`.
+**Block 1001:** Claim B for 20 LBC is accepted. Its activation height is `1001 + min(4032, floor((1001-13) / 32)) = 1001 + 30 = 1031`.
 <br>State: A(10) is controlling, B(20) is accepted.
 
-**Block 1010:** Support X for 14LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.
+**Block 1010:** Support X for 14 LBC for claim A is accepted. Since it is a support for the controlling claim, it activates immediately.
 <br>State: A(10+14) is controlling, B(20) is accepted.
 
-**Block 1020:** Claim C for 50LBC is accepted. The activation height is `1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051`.
+**Block 1020:** Claim C for 50 LBC is accepted. The activation height is `1020 + min(4032, floor((1020-13) / 32)) = 1020 + 31 = 1051`.
 <br>State: A(10+14) is controlling, B(20) is accepted, C(50) is accepted.
 
-**Block 1031:** Claim B activates. It has 20LBC, while claim A has 24LBC (10 original + 14 from support X). There is no takeover, and claim A remains controlling.
+**Block 1031:** Claim B activates. It has 20 LBC, while claim A has 24 LBC (10 original + 14 from support X). There is no takeover, and claim A remains controlling.
 <br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted.
 
-**Block 1040:** Claim D for 300LBC is accepted. The activation height is `1040 + min(4032, floor((1040-13) / 32)) = 1040 + 32 = 1072`.
+**Block 1040:** Claim D for 300 LBC is accepted. The activation height is `1040 + min(4032, floor((1040-13) / 32)) = 1040 + 32 = 1072`.
 <br>State: A(10+14) is controlling, B(20) is active, C(50) is accepted, D(300) is accepted.
 
-**Block 1051:** Claim C activates. It has 50LBC, while claim A has 24LBC, so a takeover is initiated. The takeover height for this name is set to 1051, and therefore the activation delay for all the claims becomes `min(4032, floor((1051-1051) / 32)) = 0`. All the claims become active. The totals for each claim are recalculated, and claim D becomes controlling because it has the highest total.
+**Block 1051:** Claim C activates. It has 50 LBC, while claim A has 24 LBC, so a takeover is initiated. The takeover height for this name is set to 1051, and therefore the activation delay for all the claims becomes `min(4032, floor((1051-1051) / 32)) = 0`. All the claims become active. The totals for each claim are recalculated, and claim D becomes controlling because it has the highest total.
 <br>State: A(10+14) is active, B(20) is active, C(50) is active, D(300) is controlling.
 
 ### URL Resolution Examples
