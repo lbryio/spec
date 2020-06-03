@@ -16,7 +16,7 @@ LBRY offers a significant improvement over both options. It uses a blockchain to
 
 ### Status
 
-LBRY has been in public use since June 2016. As of May 2020, over 3.3 million pieces of digital content have been published via the protocol. Tens of thousands of users access hundreds of thousands of pieces of content each month, downloading and uploading terabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded at [lbry.com/get](https://lbry.com/get).
+LBRY has been in public use since June 2016. As of May 2020, over 3.3 million pieces of digital content have been published via the protocol. Millions of users access this content each month, downloading and uploading terabytes of data. Graphical browsers and wallets are available for all major operating systems and can be downloaded at [lbry.com/get](https://lbry.com/get).
 
 ### Overview
 
