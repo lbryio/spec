@@ -691,13 +691,13 @@ Content on LBRY is encoded to facilitate distribution.
 
 #### Blobs
 
-The smallest unit of data is called a _blob_. A blob is a chunk of data up to 2MiB in size. Each blob is indexed by its _blob hash_, which is a SHA-384 hash of the blob. Addressing blobs by their hashes protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.
+The smallest unit of data is called a _blob_. A blob is a chunk of data up to 2MB in size. Each blob is indexed by its _blob hash_, which is a SHA-384 hash of the blob. Addressing blobs by their hashes protects against naming collisions and ensures that data cannot be accidentally or maliciously modified.
 
 #### Streams
 
 Multiple blobs are combined into a _stream_. A stream may be a book, a movie, a CAD file, etc. All content on the network is shared as streams. Every stream begins with the _manifest blob_, followed by one or more _content blobs_. The content blobs hold the actual content of the stream. The manifest blob contains information necessary to find the content blobs and decode them into a file. This includes the hashes of the content blobs, their order in the stream, and cryptographic material for decrypting them.
 
-Content blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MiB max, a blob can hold at most 2097151 bytes (2MiB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and the initialization vectors for each blob are stored in the manifest blob. 
+Content blobs are encrypted using AES-256 in CBC mode and PKCS7 padding. In order to keep each encrypted blob at 2MB max, a blob can hold at most 2097151 bytes (2MB minus 1 byte) of plaintext data. The source code for the exact algorithm is available [here](https://github.com/lbryio/lbry.go/blob/master/stream/blob.go). The encryption key and the initialization vectors for each blob are stored in the manifest blob. 
 
 The blob hash of the manifest blob is called the _stream hash_. It uniquely identifies each stream.
 
