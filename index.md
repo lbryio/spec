@@ -630,7 +630,7 @@ The purpose of channels is to allow content to be clustered under a single pseud
 
 #### Signing
 
-A claim is considered part of a channel when the metadata in it's value is signed by the channel's private key. Here's the structure of a signed value:
+A claim is considered part of a channel when the metadata in its value is signed by the channel's private key. Here's the structure of a signed value:
 
 
 field            | size     | description
