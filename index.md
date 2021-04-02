@@ -308,7 +308,7 @@ lbry://meet-lbry:7a
 lbry://@lbry:3f/meet-lbry
 ```
 
-*Note: in a previous version of this spec, the `#` character was used to signify the claim ID portion of the url. This charater is now deprecated and will stop being supported in the future.*
+*Note: in a previous version of this spec, the `#` character was used to signify the claim ID portion of the url. This character is now deprecated and will stop being supported in the future.*
 
 ##### Sequence
 
