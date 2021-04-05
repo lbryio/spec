@@ -239,7 +239,7 @@ To determine the order of claims in a leaf node, the following algorithm is used
 
 1. For each claim, recalculate the effective amount.
 
-2. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (lowest first), then by transaction order within the block.
+2. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (the lowest first), then by transaction order within the block.
 
 3. If the controlling claim from the previous block is still first in the order, then the ordering is finished.
 
@@ -308,7 +308,7 @@ lbry://meet-lbry:7a
 lbry://@lbry:3f/meet-lbry
 ```
 
-*Note: in a previous version of this spec, the `#` character was used to signify the claim ID portion of the url. This charater is now deprecated and will stop being supported in the future.*
+*Note: in a previous version of this spec, the `#` character was used to signify the claim ID portion of the url. This character is now deprecated and will stop being supported in the future.*
 
 ##### Sequence
 
@@ -321,7 +321,7 @@ lbry://@lbry*1/meet-lbry
 
 ##### Amount Order
 
-The _n_th claim for this name, ordered by total amount (highest first). _n_ must be a positive number. This is useful for resolving non-controlling claims that may become controlling.
+The _n_th claim for this name, ordered by total amount (the highest first). _n_ must be a positive number. This is useful for resolving non-controlling claims that may become controlling.
 
 ```
 lbry://meet-lbry$2
@@ -456,7 +456,7 @@ OP_CLAIM_NAME Fruit Apple OP_2DROP OP_DROP OP_DUP OP_HASH160 <address> OP_EQUALV
 
 ##### OP\_UPDATE\_CLAIM
 
-`OP_UPDATE_CLAIM` updates a claim by replacing its metadata. An update transaction has an added requirement that it must spend the output for the existing claim that it wishes to update. Otherwise, it is considered invalid and will not make it into the claimtrie. Thus it must have the following redeem script:
+`OP_UPDATE_CLAIM` updates a claim by replacing its metadata. An update transaction has an added requirement that it must spend the output for the existing claim that it wishes to update. Otherwise, it is considered invalid and will not make it into the claimtrie. Thus, it must have the following redeem script:
 
 ```
 <signature> <pubKeyForPreviousAddress>
@@ -630,7 +630,7 @@ The purpose of channels is to allow content to be clustered under a single pseud
 
 #### Signing
 
-A claim is considered part of a channel when the metadata in it's value is signed by the channel's private key. Here's the structure of a signed value:
+A claim is considered part of a channel when the metadata in its value is signed by the channel's private key. Here's the structure of a signed value:
 
 
 field            | size     | description
