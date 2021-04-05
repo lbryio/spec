@@ -239,7 +239,7 @@ To determine the order of claims in a leaf node, the following algorithm is used
 
 1. For each claim, recalculate the effective amount.
 
-2. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (the lowest first), then by transaction order within the block.
+2. Sort the claims by effective amount in descending order. Claims tied for the same amount are ordered by block height (lowest first), then by transaction order within the block.
 
 3. If the controlling claim from the previous block is still first in the order, then the ordering is finished.
 
@@ -321,7 +321,7 @@ lbry://@lbry*1/meet-lbry
 
 ##### Amount Order
 
-The _n_th claim for this name, ordered by total amount (the highest first). _n_ must be a positive number. This is useful for resolving non-controlling claims that may become controlling.
+The _n_th claim for this name, ordered by total amount (highest first). _n_ must be a positive number. This is useful for resolving non-controlling claims that may become controlling.
 
 ```
 lbry://meet-lbry$2
