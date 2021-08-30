@@ -762,7 +762,7 @@ A file must be encoded into a stream before it can be published. Encoding involv
 ##### Content Blobs
 
 1. Break the file into chunks of at most 2097151 bytes.
-1. Generate a random 32-byte initialization vector (IV) for each chuck.
+1. Generate a random 32-byte initialization vector (IV) for each chunk.
 1. Pad each chunk using PKCS7 padding.
 1. Encrypt each chunk with AES-CBC using the stream key and the IV for that chunk.
 1. An encrypted chunk is a blob.
