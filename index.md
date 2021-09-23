@@ -676,7 +676,6 @@ format     | description
 The blockchain treats metadata as an opaque series of bytes. Clients should not trust the metadata they read from the blockchain. Each client is responsible for correctly encoding and decoding the metadata, and for validating its structure and signatures. This allows evolution of the metadata definition without changes to blockchain consensus rules.
 
 
-
 ## Data
 
 Files published using LBRY are stored in a distributed fashion by the clients participating in the network. Each file is split into many small pieces. Each piece is encrypted and [announced](#announce) to the network. The pieces may also be uploaded to other hosts on the network that specialize in rehosting content.
@@ -750,7 +749,6 @@ The `version` field is always 1. It is intended to signal structure changes in f
 Every stream must have at least two blobs - the manifest blob and a content blob. Consequently, zero-length streams are not allowed.
 
 
-
 #### Stream Encoding
 
 A file must be encoded into a stream before it can be published. Encoding involves breaking the file into chunks, encrypting the chunks into content blobs, and creating the manifest blob. Here are the steps:
@@ -787,7 +785,6 @@ Decoding a stream is like encoding in reverse, and with the added step of verify
 3. Verify the hashes of the content blobs.
 4. Decrypt and remove the padding from each content blob using the stream key and IVs in the manifest.
 5. Concatenate the decrypted chunks in order.
-
 
 
 ### Announce
@@ -847,8 +844,6 @@ Upload sends a blob to the server. If uploading many blobs, the client should us
 
 
 The protocol methods and message types are defined in detail [here](https://github.com/lbryio/lbry.go/blob/master/blobex/blobex.proto).
-
-
 
 
 ### Reflectors and Data Markets
@@ -925,13 +920,11 @@ URL                          | Claim ID
 `lbry://@Arthur*1`           |  b7bab5
 
 
-
 ### Additional Resources
 
 - [lbry.tech](https://lbry.tech) is designed specifically for a technical audience. There you will find detailed explanations and examples, ways to interact with the LBRY community, and guidance for anyone who wants to get more involved.
 - [github.com/lbryio](https://github.com/lbryio) contains MIT-licensed source code and implementation details for the protocol and related software.
 - [lbry.com](https://lbry.com) is an application built on top of LBRY. It's one example of the type of end-to-end experience that is possible to create using this technology.
-
 
 
 <pre class="pdf-hide" style="font: 10px/5px monospace;overflow:hidden;text-align: center;margin: 10rem 0">
