@@ -535,9 +535,9 @@ Metadata is structured information about a stream or channel separate from the c
 
 Metadata is stored in a serialized binary format using [Protocol Buffers](https://developers.google.com/protocol-buffers/). This allows for metadata to be:
 
-- **Extensibile**. Metadata can encompass thousands of fields for dozens of types of content. It must be efficient to both modify the structure and maintain backward compatibility. 
+- **Extensible**. Metadata can encompass thousands of fields for dozens of types of content. It must be efficient to both modify the structure and maintain backward compatibility. 
 - **Compact**. Blockchain space is expensive. Data must be stored as compactly as possible.
-- **Interoperabile**. Metadata will be used by many projects written in different languages.
+- **Interoperable**. Metadata will be used by many projects written in different languages.
 
 The serialized metadata may be cryptographically signed to indicate membership in a channel. See [Channels](#channels) for more info.
 
