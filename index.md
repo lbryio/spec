@@ -780,8 +780,8 @@ An implementation of this process is available [here](https://github.com/lbryio/
 
 Decoding a stream is like encoding in reverse, and with the added step of verifying that the expected blob hashes match the actual data.
 
-1. Verify that the hash of the manifest blob and matches the stream hash.
-2. Parse the JSON in manifest blob.
+1. Verify that the hash of the manifest blob matches the stream hash.
+2. Parse the JSON in the manifest blob.
 3. Verify the hashes of the content blobs.
 4. Decrypt and remove the padding from each content blob using the stream key and IVs in the manifest.
 5. Concatenate the decrypted chunks in order.
