@@ -75,7 +75,7 @@ Our blockchain serves three key purposes:
 
 ### Stakes
 
-A _stake_ is a a single entry in the blockchain that commits credits toward a name. The two types of stakes are [_claims_](#claims) and [_supports_](#supports).
+A _stake_ is a single entry in the blockchain that commits credits toward a name. The two types of stakes are [_claims_](#claims) and [_supports_](#supports).
 
 All stakes have these properties:
 
